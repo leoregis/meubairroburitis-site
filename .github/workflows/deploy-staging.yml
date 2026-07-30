@@ -1,0 +1,48 @@
+name: Deploy Staging (teste manual)
+
+# Workflow separado do deploy.yml real -- só roda quando disparado manualmente.
+# Publica em public_html/_staging_test/ (pasta isolada, nunca servida por
+# nada hoje) pra teste manual completo antes de qualquer virada de produção.
+# Não mexe em public_html/_current/, .htaccess ou qualquer coisa que a
+# produção (WordPress) já serve.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npm run generate
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NUXT_PUBLIC_MP_PUBLIC_KEY: ${{ secrets.NUXT_PUBLIC_MP_PUBLIC_KEY }}
+          # prefixa todos os caminhos de asset/rota com /_staging_test/ --
+          # sem isso o build assume que vive na raiz do domínio e os
+          # assets (JS/CSS/imagens) dariam 404 dentro da subpasta.
+          NUXT_APP_BASE_URL: /_staging_test/
+
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Sobe pra pasta de staging isolada
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftps://$FTP_SERVER" <<EOF
+          set ssl:verify-certificate no
+          mkdir -p public_html/_staging_test
+          mirror -R --parallel=4 .output/public/ public_html/_staging_test/
+          bye
+          EOF
+
+          echo "Staging publicado em https://meubairroburitis.com.br/_staging_test/"

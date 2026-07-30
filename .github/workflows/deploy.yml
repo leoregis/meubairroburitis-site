@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npm run generate
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Sobe o build pra uma pasta nova e faz o swap atômico
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          RELEASE="_release_${GITHUB_SHA::8}"
+          OLD="_old_$(date +%s)"
+
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftps://$FTP_SERVER" <<EOF
+          set ssl:verify-certificate no
+          set cmd:fail-exit no
+          mkdir -p public_html/$RELEASE
+          mirror -R --parallel=4 .output/public/ public_html/$RELEASE/
+          set cmd:fail-exit yes
+          mv public_html/_current public_html/$OLD
+          mv public_html/$RELEASE public_html/_current
+          bye
+          EOF
+
+          echo "Release $RELEASE agora é public_html/_current. Versão anterior guardada em public_html/$OLD para rollback."
+
+      # Nota: a regra de rewrite em public_html/.htaccess que faz
+      # "/" -> "/_current/" (exceto /guia/ e /.well-known/) é configurada
+      # manualmente UMA VEZ, só no dia da virada de fato (desligamento do
+      # WordPress) — não faz parte deste workflow.

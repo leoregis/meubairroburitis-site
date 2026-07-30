@@ -1,0 +1,28 @@
+project_id = "meubairroburitis-site"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[functions.criar_pagamento]
+# checkout é anônimo por design (sem conta de usuário) — a proteção do
+# endpoint é rate limiting + revalidação de preço no servidor, não JWT de
+# usuário. verify_jwt continua true (exige ao menos a anon key), mas
+# nenhuma identidade é checada dentro da função.
+verify_jwt = true
+
+[functions.consultar_pagamento]
+verify_jwt = true
+
+[functions.mp_webhook]
+# o Mercado Pago não envia um JWT do Supabase — a autenticidade da chamada
+# é garantida pela validação de x-signature dentro da função, não aqui.
+verify_jwt = false

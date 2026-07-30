@@ -50,6 +50,7 @@ const cases = [
             format="avif,webp"
             :width="220"
             :height="164"
+            sizes="220px"
             :img-attrs="{ class: 'mb-4 h-16 w-auto object-contain' }"
           />
           <p v-else class="mb-4 font-serif font-bold text-stone-900">{{ c.empresa }}</p>

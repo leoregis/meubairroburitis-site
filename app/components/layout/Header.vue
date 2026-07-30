@@ -22,6 +22,7 @@ const { quantidadeTotal } = useCarrinho()
           format="webp"
           :width="140"
           :height="68"
+          sizes="140px"
           fetchpriority="high"
           loading="eager"
           :img-attrs="{ class: 'h-9 w-auto' }"

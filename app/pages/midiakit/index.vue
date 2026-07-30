@@ -65,6 +65,7 @@ const links = [
           format="avif,webp"
           :width="280"
           :height="210"
+          sizes="280px"
           loading="lazy"
           :img-attrs="{ class: 'h-24 w-full object-contain grayscale transition hover:grayscale-0' }"
         />

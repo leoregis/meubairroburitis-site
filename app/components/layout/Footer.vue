@@ -21,6 +21,7 @@ const canais = [
           format="webp"
           :width="140"
           :height="68"
+          sizes="140px"
           :img-attrs="{ class: 'mb-3 h-9 w-auto' }"
         />
         <p class="text-sm text-stone-300">A maior comunidade online do Buritis e Estoril, desde 2012.</p>

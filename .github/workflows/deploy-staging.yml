@@ -43,7 +43,13 @@ jobs:
           # a primeira tentativa (parallel=4, sem timeout) ficou pendurada
           # por 18min sem log nenhum; isso aqui é só pra ter visibilidade
           # real caso trave de novo, em vez de esperar às cegas.
-          lftp -d -u "$FTP_USERNAME,$FTP_PASSWORD" "ftps://$FTP_SERVER" <<EOF
+          # ftps:// (porta 990, TLS implicito) trava a conexao TCP nessa
+          # hospedagem -- o ci.yml do meubairro-app ja prova que essa mesma
+          # conta funciona via FTPS EXPLICITO (porta 21, upgrade AUTH TLS),
+          # que é o que ftp:ssl-force faz com o esquema ftp://.
+          lftp -d -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
           set ssl:verify-certificate no
           set net:timeout 15
           set net:max-retries 3

@@ -1,5 +1,13 @@
 RewriteEngine On
 
+# 🔒 bloqueio explicito do backup do WordPress -- NUNCA deve ser acessivel
+# pela web. Precisa vir ANTES de qualquer outra regra: a regra abaixo que
+# serve "arquivo que existe direto na raiz" (pensada só pra coisas tipo
+# verificacao do Google) tambem batia em qualquer arquivo real dentro
+# dessa pasta -- inclusive os .php, que chegavam a EXECUTAR (WordPress
+# real rodando, achado num teste de seguranca real).
+RewriteRule ^wordpress_backup_2026/ - [F,L]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

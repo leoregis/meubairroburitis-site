@@ -55,8 +55,12 @@ jobs:
           set cmd:fail-exit no
           mkdir -p public_html/$RELEASE
           mirror -R --parallel=6 .output/public/ public_html/$RELEASE/
-          set cmd:fail-exit yes
+          # no 1o deploy de sempre, public_html/_current ainda nao existe --
+          # esse mv falha (550 doesn't exist) e é normal; por isso continua
+          # tolerando erro aqui. O rename final (release -> _current), esse
+          # sim tem que funcionar, daí o fail-exit yes só a partir dele.
           mv public_html/_current public_html/$OLD
+          set cmd:fail-exit yes
           mv public_html/$RELEASE public_html/_current
           bye
           EOF

@@ -29,6 +29,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lftp
 
       - name: Sobe o build pra uma pasta nova e faz o swap atômico
+        timeout-minutes: 30
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -37,11 +38,23 @@ jobs:
           RELEASE="_release_${GITHUB_SHA::8}"
           OLD="_old_$(date +%s)"
 
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftps://$FTP_SERVER" <<EOF
+          # ftps:// (porta 990, TLS implicito) trava a conexao TCP nessa
+          # hospedagem -- confirmado com o deploy de staging (3 tentativas
+          # até achar a causa: a conexão em si nunca abria). Essa mesma
+          # conta de FTP já prova, com o ci.yml do meubairro-app e agora
+          # com o deploy-staging.yml deste projeto, que funciona via FTPS
+          # EXPLICITO (porta 21, upgrade AUTH TLS) -- ftp:ssl-force com o
+          # esquema ftp://.
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
           set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set net:reconnect-interval-base 5
           set cmd:fail-exit no
           mkdir -p public_html/$RELEASE
-          mirror -R --parallel=4 .output/public/ public_html/$RELEASE/
+          mirror -R --parallel=6 .output/public/ public_html/$RELEASE/
           set cmd:fail-exit yes
           mv public_html/_current public_html/$OLD
           mv public_html/$RELEASE public_html/_current

@@ -6,5 +6,6 @@
     </main>
     <LayoutFooter />
     <LayoutWhatsappFloat />
+    <LayoutToastCarrinho />
   </div>
 </template>

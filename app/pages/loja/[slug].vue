@@ -9,6 +9,7 @@ if (!produto.value) {
 }
 
 const { adicionar } = useCarrinho()
+const { mostrar: mostrarToast } = useToastCarrinho()
 const quantidade = ref(1)
 
 function adicionarAoCarrinho() {
@@ -22,6 +23,7 @@ function adicionarAoCarrinho() {
     },
     quantidade.value,
   )
+  mostrarToast(produto.value.nome)
 }
 
 useSeoMeta({

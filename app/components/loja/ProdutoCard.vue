@@ -4,6 +4,7 @@ import type { Produto } from '~/composables/useProdutos'
 const props = defineProps<{ produto: Produto }>()
 
 const { adicionar } = useCarrinho()
+const { mostrar: mostrarToast } = useToastCarrinho()
 
 function adicionarAoCarrinho() {
   adicionar({
@@ -12,6 +13,7 @@ function adicionarAoCarrinho() {
     nome: props.produto.nome,
     precoCentavos: props.produto.preco_centavos,
   })
+  mostrarToast(props.produto.nome)
 }
 </script>
 

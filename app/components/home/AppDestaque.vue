@@ -9,8 +9,8 @@
           Além do site, temos um app inteiro dedicado ao bairro
         </h2>
         <p class="mt-4 max-w-lg text-orange-100">
-          Busca de empresas e prestadores, avaliações de moradores, achados e perdidos, radar do
-          bairro e muito mais — tudo feito por quem vive o Buritis todos os dias.
+          Busca de empresas e prestadores de serviço, avaliações de moradores, mensagens direto com
+          quem presta o serviço — tudo feito por quem vive o Buritis todos os dias.
         </p>
         <a
           href="/guia/"

@@ -41,6 +41,17 @@ async function pagarComCartao(dadosCartao: {
 }) {
   const resposta = await pagar(comprador.value, 'cartao', dadosCartao)
   if (!resposta) return
+
+  // 🐛 cartão recusado/em análise navegava pro /pedido/[id] igual um
+  // pagamento aprovado -- a tela lá só distingue "pago" de "todo o
+  // resto", então um cartão recusado ficava preso pra sempre em
+  // "Aguardando confirmação do pagamento" (nunca vai confirmar, já foi
+  // recusado). Mantém o carrinho intacto e deixa a pessoa tentar de novo.
+  if (resposta.status === 'rejected') {
+    erro.value = 'Cartão recusado pelo Mercado Pago. Confira os dados ou tente outro cartão/método.'
+    return
+  }
+
   limpar()
   router.push(`/pedido/${resposta.pedido_id}`)
 }

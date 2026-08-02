@@ -67,6 +67,21 @@ const linkWhatsapp = computed(() => `https://wa.me/${config.public.whatsappNumer
       </div>
     </template>
 
+    <template v-else-if="statusAtual === 'recusado' || statusAtual === 'rejected' || statusAtual === 'cancelado'">
+      <p class="text-4xl">❌</p>
+      <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Pagamento não aprovado</h1>
+      <p class="mt-3 text-stone-600">
+        Pedido <span class="font-mono">#{{ pedidoId.slice(0, 8) }}</span> não foi aprovado pelo Mercado
+        Pago. Volte ao carrinho pra tentar de novo com outro cartão ou PIX.
+      </p>
+      <NuxtLink
+        to="/carrinho"
+        class="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700"
+      >
+        Voltar ao carrinho
+      </NuxtLink>
+    </template>
+
     <template v-else>
       <p class="text-4xl">⏳</p>
       <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Aguardando confirmação do pagamento</h1>

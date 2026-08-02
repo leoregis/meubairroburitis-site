@@ -1,0 +1,43 @@
+RewriteEngine On
+
+# Se o arquivo existe direto na raiz do public_html (fora de _current/,
+# ex: verificacao de propriedade do Google, algum arquivo herdado do
+# hosting), serve ele como esta -- sem redirecionar pro site novo.
+RewriteCond %{REQUEST_URI} !^/guia/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{REQUEST_URI} !^/_current/
+RewriteCond %{REQUEST_URI} !^/_old_
+RewriteCond %{REQUEST_URI} !^/_release_
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+RewriteRule ^ - [L]
+
+# existe um arquivo real dentro de _current/ pra esse caminho exato?
+# (assets: /_nuxt/xxx.js, /robots.txt, etc.)
+RewriteCond %{REQUEST_URI} !^/guia/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{REQUEST_URI} !^/_current/
+RewriteCond %{REQUEST_URI} !^/_old_
+RewriteCond %{REQUEST_URI} !^/_release_
+RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI} -f
+RewriteRule ^(.*)$ /_current/$1 [L]
+
+# ou existe como pagina pre-renderizada (pasta/index.html)? cobre tanto
+# "/loja" quanto "/loja/" apontando pro mesmo arquivo real -- sem isso,
+# toda pagina prerenderizada (inclusive a home, "/") cairia no shell
+# client-only em vez do HTML real (perderia SEO/first paint).
+RewriteCond %{REQUEST_URI} !^/guia/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{REQUEST_URI} !^/_current/
+RewriteCond %{REQUEST_URI} !^/_old_
+RewriteCond %{REQUEST_URI} !^/_release_
+RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI}/index.html -f
+RewriteRule ^(.*)$ /_current/$1/index.html [L]
+
+# senao (rota dinamica sem HTML pre-gerado, ex: /carrinho, /pedido/[id],
+# /admin/*), cai no shell client-only (200.html) e o Vue Router assume dali
+RewriteCond %{REQUEST_URI} !^/guia/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{REQUEST_URI} !^/_current/
+RewriteCond %{REQUEST_URI} !^/_old_
+RewriteCond %{REQUEST_URI} !^/_release_
+RewriteRule ^(.*)$ /_current/200.html [L]

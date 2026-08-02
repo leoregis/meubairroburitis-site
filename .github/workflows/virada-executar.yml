@@ -1,0 +1,81 @@
+name: Virada - Executar (WordPress -> site novo)
+
+# Executa o DEPLOY_PLAN.md: backup do WordPress (rename, nao apaga) +
+# publica o .htaccess novo. So dispara manualmente, uma vez.
+on:
+  workflow_dispatch:
+
+jobs:
+  virada:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Backup do WordPress (rename) + publica .htaccess novo
+        timeout-minutes: 10
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set net:reconnect-interval-base 5
+          set cmd:fail-exit yes
+          cd public_html
+
+          mkdir -p wordpress_backup_2026
+
+          mv wp-activate.php wordpress_backup_2026/wp-activate.php
+          mv wp-admin wordpress_backup_2026/wp-admin
+          mv wp-blog-header.php wordpress_backup_2026/wp-blog-header.php
+          mv wp-comments-post.php wordpress_backup_2026/wp-comments-post.php
+          mv wp-config-sample.php wordpress_backup_2026/wp-config-sample.php
+          mv wp-config.php wordpress_backup_2026/wp-config.php
+          mv wp-content wordpress_backup_2026/wp-content
+          mv wp-cron.php wordpress_backup_2026/wp-cron.php
+          mv wp-includes wordpress_backup_2026/wp-includes
+          mv wp-links-opml.php wordpress_backup_2026/wp-links-opml.php
+          mv wp-load.php wordpress_backup_2026/wp-load.php
+          mv wp-login.php wordpress_backup_2026/wp-login.php
+          mv wp-mail.php wordpress_backup_2026/wp-mail.php
+          mv wp-settings.php wordpress_backup_2026/wp-settings.php
+          mv wp-signup.php wordpress_backup_2026/wp-signup.php
+          mv wp-trackback.php wordpress_backup_2026/wp-trackback.php
+          mv xmlrpc.php wordpress_backup_2026/xmlrpc.php
+          mv index.php wordpress_backup_2026/index.php
+          mv license.txt wordpress_backup_2026/license.txt
+          mv readme.html wordpress_backup_2026/readme.html
+
+          mv .htaccess wordpress_backup_2026/.htaccess.wordpress
+
+          echo "=== conferindo backup ==="
+          ls -la wordpress_backup_2026/
+
+          echo "=== conferindo raiz apos backup (nao deve ter mais wp-*) ==="
+          ls -la
+
+          bye
+          EOF
+
+          echo "--- subindo .htaccess novo ---"
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          put deploy/htaccess-producao -o .htaccess
+          echo "=== confirmando .htaccess novo ==="
+          ls -la .htaccess
+          bye
+          EOF

@@ -62,14 +62,21 @@ Deno.serve(async (req) => {
       return json({ erro: `Muitas tentativas. Tente novamente em ${minutos} minuto(s).` }, 429);
     }
 
-    // --- idempotência: se já existe um pedido com essa chave, retorna o estado atual em vez de recriar/recobrar ---
+    // --- idempotência: se já existe um pedido com essa chave E o MESMO
+    // método, retorna o estado atual em vez de recriar/recobrar (protege
+    // contra retry duplicado da mesma tentativa). Se o método for
+    // diferente, a chave foi reaproveitada de uma tentativa antiga (bug
+    // já corrigido no client, mas mantém essa defesa aqui também) --
+    // trata como pedido novo em vez de devolver o status de um pedido
+    // completamente diferente (ex: um PIX já pago sendo devolvido como
+    // se fosse a resposta de uma tentativa de cartão).
     const { data: pedidoExistente } = await supabase
       .from("pedidos")
       .select("*")
       .eq("idempotency_key", idempotency_key)
       .maybeSingle();
 
-    if (pedidoExistente) {
+    if (pedidoExistente && pedidoExistente.metodo_pagamento === metodo) {
       return json({ pedido_id: pedidoExistente.id, status: pedidoExistente.status, reaproveitado: true });
     }
 

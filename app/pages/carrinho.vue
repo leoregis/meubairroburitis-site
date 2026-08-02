@@ -17,6 +17,16 @@ const mostrarFormulario = ref(false)
 const resultadoPix = ref<{ qr_code: string; qr_code_base64: string; pedido_id: string } | null>(null)
 
 function comecarCheckout() {
+  // 🐛 a idempotency_key ficava presa no sessionStorage pra sempre (só
+  // existia pra evitar cobrar 2x um retry da MESMA tentativa) -- então
+  // uma tentativa de PIX de HOJE podia deixar a chave salva, e uma
+  // tentativa de CARTÃO amanhã (ou minutos depois) reaproveitava essa
+  // MESMA chave: o criar_pagamento achava o pedido antigo (já pago via
+  // PIX) e devolvia ele como se fosse a resposta do cartão -- tela de
+  // "pagamento confirmado" sem o cartão ter sido cobrado de verdade.
+  // Gerar uma chave nova a cada novo checkout (mantém a mesma se for só
+  // um retry dentro do mesmo formulário aberto) resolve na origem.
+  if (import.meta.client) sessionStorage.removeItem('mbb-idempotency-key')
   mostrarFormulario.value = true
 }
 

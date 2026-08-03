@@ -27,6 +27,10 @@ export default defineNuxtConfig({
     '/pedido/**': { prerender: false, robots: false },
     '/admin/**': { prerender: false, robots: false },
     '/carrinho': { prerender: false, robots: false },
+    // páginas 2+ da listagem de notícias -- conteúdo já indexado via a
+    // página do artigo em si, não precisa disputar posição no Google nem
+    // aparecer no sitemap (página 1, /noticias, continua indexável normal)
+    '/noticias/pagina/**': { robots: false },
   },
 
   // combinado com routeRules acima, o manifesto client-side de route-rules
@@ -87,9 +91,32 @@ export default defineNuxtConfig({
         const { createClient } = await import('@supabase/supabase-js')
         const supabase = createClient(url, key)
         const { data } = await supabase.from('produtos').select('slug').eq('ativo', true)
-        const rotas = (data || []).map((p: { slug: string }) => `/loja/${p.slug}`)
+        const rotasProdutos = (data || []).map((p: { slug: string }) => `/loja/${p.slug}`)
+
+        // notícias: cada slug publicado vira uma rota, mais uma rota por
+        // página da listagem (paginação em caminho de verdade -- /noticias,
+        // /noticias/pagina/2, etc. -- query string tipo ?pagina=2 não
+        // funciona em host 100% estático, o Apache serve sempre o mesmo
+        // arquivo pra mesma URL não importa a query).
+        const { data: noticiasData } = await supabase
+          .from('noticias')
+          .select('slug', { count: 'exact' })
+          .eq('status', 'publicado')
+
+        const rotasNoticias = (noticiasData || []).map((n: { slug: string }) => `/noticias/${n.slug}`)
+
+        const NOTICIAS_POR_PAGINA = 12
+        const totalNoticias = noticiasData?.length ?? 0
+        const totalPaginas = Math.max(1, Math.ceil(totalNoticias / NOTICIAS_POR_PAGINA))
+        const rotasPaginacao = Array.from({ length: totalPaginas - 1 }, (_, i) => `/noticias/pagina/${i + 2}`)
+
         nitroConfig.prerender ||= {}
-        nitroConfig.prerender.routes = [...(nitroConfig.prerender.routes || []), ...rotas]
+        nitroConfig.prerender.routes = [
+          ...(nitroConfig.prerender.routes || []),
+          ...rotasProdutos,
+          ...rotasNoticias,
+          ...rotasPaginacao,
+        ]
       } catch {
         // build-time best-effort — se o Supabase não estiver acessível no
         // momento do build, o crawler ainda cobre as rotas linkadas da home

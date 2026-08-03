@@ -1,0 +1,116 @@
+<script setup lang="ts">
+const route = useRoute()
+const slug = route.params.slug as string
+
+const { data: noticia } = await useNoticia(slug)
+
+if (!noticia.value) {
+  throw createError({ statusCode: 404, message: 'Notícia não encontrada' })
+}
+
+const tituloSeo = noticia.value.seo_meta_titulo || noticia.value.titulo
+const descricaoSeo = noticia.value.seo_meta_descricao || noticia.value.subtitulo || undefined
+const imagemSeo = noticia.value.seo_imagem_og || noticia.value.imagem_destaque_url || undefined
+
+useSeoMeta({
+  title: () => `${tituloSeo} — Meu Bairro Buritis`,
+  description: () => descricaoSeo,
+  ogTitle: () => tituloSeo,
+  ogDescription: () => descricaoSeo,
+  ogImage: () => imagemSeo,
+  ogType: 'article',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => tituloSeo,
+  twitterDescription: () => descricaoSeo,
+  twitterImage: () => imagemSeo,
+  keywords: () => noticia.value?.seo_palavras_chave || undefined,
+})
+
+useJsonLd({
+  '@type': 'NewsArticle',
+  headline: noticia.value.titulo,
+  description: descricaoSeo,
+  image: imagemSeo ? [imagemSeo] : undefined,
+  datePublished: noticia.value.data_publicacao ?? undefined,
+  author: noticia.value.autor
+    ? { '@type': 'Person', name: noticia.value.autor }
+    : undefined,
+})
+</script>
+
+<template>
+  <div v-if="noticia" class="mx-auto max-w-2xl px-4 py-16">
+    <NuxtLink to="/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Voltar pras notícias</NuxtLink>
+
+    <p v-if="noticia.categoria" class="mt-6 text-xs font-semibold uppercase tracking-wide text-orange-700">
+      {{ noticia.categoria }}
+    </p>
+
+    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">{{ noticia.titulo }}</h1>
+
+    <p v-if="noticia.subtitulo" class="mt-3 text-lg text-stone-600">{{ noticia.subtitulo }}</p>
+
+    <div class="mt-4 flex items-center gap-2 text-sm text-stone-400">
+      <span v-if="noticia.autor">{{ noticia.autor }}</span>
+      <span v-if="noticia.autor && noticia.data_publicacao">·</span>
+      <span v-if="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</span>
+    </div>
+
+    <img
+      v-if="noticia.imagem_destaque_url"
+      :src="noticia.imagem_destaque_url"
+      :alt="noticia.imagem_destaque_alt || noticia.titulo"
+      class="mt-6 w-full rounded-2xl object-cover"
+    />
+
+    <!-- eslint-disable-next-line vue/no-v-html -->
+    <div class="noticia-conteudo mt-8" v-html="noticia.conteudo" />
+  </div>
+</template>
+
+<style>
+.noticia-conteudo h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.noticia-conteudo h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.noticia-conteudo p {
+  margin: 0.75rem 0;
+  color: #44403c;
+  line-height: 1.7;
+}
+
+.noticia-conteudo ul,
+.noticia-conteudo ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.noticia-conteudo ul {
+  list-style: disc;
+}
+
+.noticia-conteudo ol {
+  list-style: decimal;
+}
+
+.noticia-conteudo blockquote {
+  border-left: 3px solid #d6d3d1;
+  padding-left: 1rem;
+  color: #57534e;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.noticia-conteudo a {
+  color: #c2410c;
+  text-decoration: underline;
+}
+</style>

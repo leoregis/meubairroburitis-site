@@ -28,6 +28,13 @@ async function sair() {
           >
             Produtos
           </NuxtLink>
+          <NuxtLink
+            to="/admin/noticias"
+            class="text-sm font-medium"
+            :class="route.path.startsWith('/admin/noticias') ? 'text-orange-700' : 'text-stone-500 hover:text-stone-800'"
+          >
+            Notícias
+          </NuxtLink>
         </div>
         <button type="button" class="text-sm text-stone-500 hover:text-stone-800" @click="sair">Sair</button>
       </div>

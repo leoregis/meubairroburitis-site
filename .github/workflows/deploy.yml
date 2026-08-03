@@ -3,6 +3,11 @@ name: Deploy
 on:
   push:
     branches: [main]
+  # disparado pelo admin de produtos (/admin/produtos) via API do GitHub,
+  # sempre que um produto e criado/editado/excluido -- o site e estatico
+  # (SSG), entao qualquer mudanca no banco só aparece pro publico depois
+  # de um build novo.
+  workflow_dispatch:
 
 jobs:
   deploy:

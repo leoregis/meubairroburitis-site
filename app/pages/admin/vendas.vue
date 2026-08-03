@@ -40,11 +40,6 @@ async function carregar() {
 
 onMounted(carregar)
 
-async function sair() {
-  await $supabase?.auth.signOut()
-  navigateTo('/admin/login')
-}
-
 const pacotesDisponiveis = computed(() => {
   const nomes = new Set<string>()
   pedidos.value.forEach((p) => p.itens.forEach((i) => nomes.add(i.nome)))
@@ -62,7 +57,6 @@ const pedidosFiltrados = computed(() => {
   <div class="mx-auto max-w-6xl px-4 py-10">
     <div class="mb-8 flex items-center justify-between">
       <h1 class="font-serif text-2xl font-bold text-stone-900">Histórico de vendas</h1>
-      <button type="button" class="text-sm text-stone-500 hover:text-stone-800" @click="sair">Sair</button>
     </div>
 
     <div class="mb-6 flex flex-wrap gap-3">

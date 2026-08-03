@@ -25,6 +25,23 @@ function linhasItens(itens: ItemPedido[]) {
     .join("");
 }
 
+// logo tem texto branco (pensado pra fundo escuro/colorido, mesmo arquivo
+// usado no header vermelho do site) -- por isso a faixa vermelha atrás
+// dele aqui, em vez de jogar direto num fundo branco de e-mail (ficaria
+// invisível).
+function cabecalhoEmail() {
+  return `
+    <div style="background:#dd0202; padding:20px; text-align:center;">
+      <img
+        src="https://meubairroburitis.com.br/logo/logo_mbb_rodape.png"
+        alt="Meu Bairro Buritis"
+        width="140"
+        style="display:inline-block; width:140px; height:auto;"
+      />
+    </div>
+  `;
+}
+
 function emailComprador(pedido: Pedido, whatsappNumero: string) {
   const numeroPedido = pedido.id.slice(0, 8);
   const mensagemWhatsapp = encodeURIComponent(
@@ -35,6 +52,8 @@ function emailComprador(pedido: Pedido, whatsappNumero: string) {
     subject: `Pagamento confirmado — Pedido #${numeroPedido} — Meu Bairro Buritis`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        ${cabecalhoEmail()}
+        <div style="padding: 24px;">
         <h2>Pagamento confirmado!</h2>
         <p>Olá, ${pedido.nome_comprador}. Seu pedido <strong>#${numeroPedido}</strong> foi pago com sucesso.</p>
         <h3>Resumo do pedido</h3>
@@ -43,6 +62,7 @@ function emailComprador(pedido: Pedido, whatsappNumero: string) {
         <h3>Próximo passo</h3>
         <p>Nos envie a imagem, vídeo ou texto que você quer publicar, junto com a data/horário desejados, direto no nosso WhatsApp:</p>
         <p><a href="https://wa.me/${whatsappNumero}?text=${mensagemWhatsapp}" style="display:inline-block;background:#059669;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;">Enviar material no WhatsApp</a></p>
+        </div>
       </div>
     `,
   };
@@ -55,6 +75,8 @@ function emailDono(pedido: Pedido, emailDestino: string, urlAdmin: string) {
     subject: `Nova venda — Pedido #${numeroPedido}`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        ${cabecalhoEmail()}
+        <div style="padding: 24px;">
         <h2>Nova venda confirmada</h2>
         <p><strong>Comprador:</strong> ${pedido.nome_comprador}</p>
         <p><strong>Telefone:</strong> ${pedido.telefone_comprador}</p>
@@ -63,6 +85,7 @@ function emailDono(pedido: Pedido, emailDestino: string, urlAdmin: string) {
         <ul>${linhasItens(pedido.itens)}</ul>
         <p><strong>Total: ${formatarPreco(pedido.valor_total_centavos)}</strong> (${pedido.metodo_pagamento})</p>
         <p><a href="${urlAdmin}">Ver no painel de vendas</a></p>
+        </div>
       </div>
     `,
   };

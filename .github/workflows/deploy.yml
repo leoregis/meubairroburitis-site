@@ -9,6 +9,16 @@ on:
   # de um build novo.
   workflow_dispatch:
 
+# push e workflow_dispatch podem disparar quase juntos (ex: um push logo
+# seguido de um salvamento no admin de produtos) -- sem isso, duas runs
+# simultaneas calculam o MESMO nome de pasta de release (baseado no sha)
+# e uma pode renomear public_html/_current pra baixo do tapete da outra
+# no meio do swap, derrubando o site inteiro (já aconteceu). Fila em vez
+# de cancelar: nunca queremos abortar um swap de FTP no meio do caminho.
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -40,7 +50,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          RELEASE="_release_${GITHUB_SHA::8}"
+          RELEASE="_release_${GITHUB_SHA::8}_${GITHUB_RUN_ID}"
           OLD="_old_$(date +%s)"
 
           # ftps:// (porta 990, TLS implicito) trava a conexao TCP nessa

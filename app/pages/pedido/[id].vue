@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { RealtimeChannel } from '@supabase/supabase-js'
+
 definePageMeta({ ssr: false })
 
 useSeoMeta({ title: 'Pedido — Meu Bairro Buritis' })
@@ -8,6 +10,7 @@ const config = useRuntimeConfig()
 const pedidoId = route.params.id as string
 
 const { consultarStatus } = useCheckout()
+const { $supabase } = useNuxtApp()
 const statusAtual = ref<string | null>(null)
 const verificando = ref(false)
 
@@ -20,16 +23,65 @@ interface PedidoSalvo {
 
 const pedidoSalvo = ref<PedidoSalvo | null>(null)
 
+// termina o polling/realtime assim que o status sai de "pendente" (pago,
+// recusado ou cancelado -- qualquer estado final)
+const statusFinal = computed(() => statusAtual.value !== null && statusAtual.value !== 'pendente')
+
+let canalRealtime: RealtimeChannel | null = null
+let intervaloPolling: ReturnType<typeof setInterval> | null = null
+
+function pararAtualizacaoAutomatica() {
+  if (canalRealtime) {
+    $supabase?.removeChannel(canalRealtime)
+    canalRealtime = null
+  }
+  if (intervaloPolling) {
+    clearInterval(intervaloPolling)
+    intervaloPolling = null
+  }
+}
+
 onMounted(() => {
   const bruto = sessionStorage.getItem(`mbb-pedido-${pedidoId}`)
   if (bruto) pedidoSalvo.value = JSON.parse(bruto)
   statusAtual.value = pedidoSalvo.value?.status ?? null
+
+  if (statusFinal.value || !$supabase) return
+
+  // 🔄 atualização automática, sem precisar de nenhum clique -- duas
+  // camadas, a mesma ideia do padrão já usado nas mensagens do app do
+  // bairro (channel + postgres_changes), adaptada pra broadcast porque
+  // `pedidos` não tem policy de SELECT pra anon (checkout é anônimo por
+  // design) -- uma inscrição via postgres_changes com a anon key nunca
+  // receberia nada. O mp_webhook manda um broadcast nesse mesmo canal
+  // assim que confirma o pagamento (ver supabase/functions/mp_webhook).
+  canalRealtime = $supabase
+    .channel(`pedido:${pedidoId}`)
+    .on('broadcast', { event: 'status_atualizado' }, ({ payload }) => {
+      if (payload?.status) statusAtual.value = payload.status
+      if (statusFinal.value) pararAtualizacaoAutomatica()
+    })
+    .subscribe()
+
+  // 🛟 polling de reserva (a cada 5s) -- cobre o caso do realtime não
+  // conectar (rede/proxy bloqueando websocket) ou a pagina ter sido
+  // aberta/reconectada num momento em que perdeu o broadcast.
+  intervaloPolling = setInterval(async () => {
+    const status = await consultarStatus(pedidoId)
+    if (status) statusAtual.value = status
+    if (statusFinal.value) pararAtualizacaoAutomatica()
+  }, 5000)
+})
+
+onBeforeUnmount(() => {
+  pararAtualizacaoAutomatica()
 })
 
 async function verificarPagamento() {
   verificando.value = true
   const status = await consultarStatus(pedidoId)
   if (status) statusAtual.value = status
+  if (statusFinal.value) pararAtualizacaoAutomatica()
   verificando.value = false
 }
 

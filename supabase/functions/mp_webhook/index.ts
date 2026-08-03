@@ -94,6 +94,22 @@ Deno.serve(async (req) => {
       return new Response("ok");
     }
 
+    // 📡 avisa a tela /pedido/[id] em tempo real (se estiver aberta) --
+    // broadcast num canal escopado pelo id do pedido, não a tabela
+    // `pedidos` inteira: RLS só permite SELECT pra admin autenticado, então
+    // uma inscrição via postgres_changes com a anon key nunca receberia
+    // nada. Broadcast não depende de RLS de tabela, só de quem já conhece
+    // o id do pedido (o próprio comprador, pela URL que ele já tem aberta).
+    try {
+      await supabase.channel(`pedido:${pedidoId}`).send({
+        type: "broadcast",
+        event: "status_atualizado",
+        payload: { status: novoStatus },
+      });
+    } catch (erroBroadcast) {
+      console.error(`mp_webhook: falha ao avisar via realtime o pedido ${pedidoId}:`, erroBroadcast);
+    }
+
     // e-mails de confirmação são best-effort: nunca podem impedir o
     // pagamento de já ter sido gravado acima. Falha aqui só é logada +
     // registrada num timestamp nulo em `pedidos`, não propaga erro.

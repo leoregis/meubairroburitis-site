@@ -11,6 +11,8 @@ export interface DadosComprador {
   nome: string
   telefone: string
   email?: string
+  // honeypot anti-spam -- sempre vazio pra gente de verdade, ver FormularioComprador.vue
+  empresa?: string
 }
 
 export interface DadosCartao {

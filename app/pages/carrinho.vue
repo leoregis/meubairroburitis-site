@@ -14,14 +14,14 @@ const router = useRouter()
 const CHAVE_COMPRADOR_SALVO = 'mbb-comprador-dados'
 
 function carregarCompradorSalvo() {
-  if (!import.meta.client) return { nome: '', telefone: '', email: '' }
+  if (!import.meta.client) return { nome: '', telefone: '', email: '', empresa: '' }
   try {
     const salvo = localStorage.getItem(CHAVE_COMPRADOR_SALVO)
-    if (!salvo) return { nome: '', telefone: '', email: '' }
+    if (!salvo) return { nome: '', telefone: '', email: '', empresa: '' }
     const dados = JSON.parse(salvo)
-    return { nome: dados.nome ?? '', telefone: dados.telefone ?? '', email: dados.email ?? '' }
+    return { nome: dados.nome ?? '', telefone: dados.telefone ?? '', email: dados.email ?? '', empresa: '' }
   } catch {
-    return { nome: '', telefone: '', email: '' }
+    return { nome: '', telefone: '', email: '', empresa: '' }
   }
 }
 

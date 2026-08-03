@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
+import { ehHoneypotPreenchido, nomeValido, telefoneValido } from "../_shared/validar-comprador.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +27,7 @@ interface DadosCartao {
 
 interface Payload {
   itens: ItemCarrinho[];
-  comprador: { nome: string; telefone: string; email?: string };
+  comprador: { nome: string; telefone: string; email?: string; empresa?: string };
   metodo: "pix" | "cartao";
   idempotency_key: string;
   cartao?: DadosCartao;
@@ -60,6 +61,21 @@ Deno.serve(async (req) => {
     if (bloqueadoAte) {
       const minutos = Math.ceil((new Date(bloqueadoAte).getTime() - Date.now()) / 60000);
       return json({ erro: `Muitas tentativas. Tente novamente em ${minutos} minuto(s).` }, 429);
+    }
+
+    // --- anti-spam: honeypot + formato plausível de nome/telefone. Não é
+    // validação de negócio (não bloqueia nome incomum de verdade), é filtro
+    // de bot -- achado real em produção: pedido com nome "dgfysgdjf sdfege"
+    // e telefone "02625480444" (DDD começando em 0 não existe no Brasil).
+    // Conta como tentativa falha no rate limit, igual um pagamento recusado,
+    // pra bot insistindo repetidas vezes do mesmo IP acabar bloqueado.
+    if (
+      ehHoneypotPreenchido(comprador.empresa) ||
+      !nomeValido(comprador.nome) ||
+      !telefoneValido(comprador.telefone)
+    ) {
+      await supabase.rpc("registrar_tentativa_pagamento", { p_chave: chave, p_sucesso: false });
+      return json({ erro: "Não foi possível processar o pedido. Confira os dados e tente novamente." }, 400);
     }
 
     // --- idempotência: se já existe um pedido com essa chave E o MESMO

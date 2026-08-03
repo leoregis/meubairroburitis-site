@@ -1,9 +1,20 @@
 <script setup lang="ts">
-const modelo = defineModel<{ nome: string; telefone: string; email: string }>({ required: true })
+const modelo = defineModel<{ nome: string; telefone: string; email: string; empresa: string }>({ required: true })
 </script>
 
 <template>
   <div class="space-y-4">
+    <!-- honeypot anti-spam: campo real pra bot nenhum humano preenche (fora
+    da tela, sem label visível, tabindex -1). Se vier preenchido, o servidor
+    (criar_pagamento) rejeita silenciosamente -- não é validação real de
+    negócio, então fica escondido em vez de disabled/hidden (alguns bots
+    pulam campos hidden/display:none, mas ainda preenchem tudo que existe
+    no DOM). -->
+    <div class="absolute -left-[9999px]" aria-hidden="true">
+      <label for="empresa">Empresa</label>
+      <input id="empresa" v-model="modelo.empresa" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
     <div>
       <label class="mb-1 block text-sm font-medium text-stone-700" for="nome">Nome completo</label>
       <input

@@ -40,6 +40,25 @@ jobs:
           # por cartão quebra silenciosamente.
           NUXT_PUBLIC_MP_PUBLIC_KEY: ${{ secrets.NUXT_PUBLIC_MP_PUBLIC_KEY }}
 
+      - name: Corrige escape duplo (&amp;amp;) nas imagens do sitemap.xml
+        # o hook em nuxt.config.ts (prerender:generate) não é confiável --
+        # o crawler de prerender do Nitro roda a partir de um bundle
+        # próprio (.nuxt/prerender/), então o hook registrado no config
+        # nem sempre chega até ele. Corrige aqui, direto no arquivo final
+        # já escrito em disco, onde não tem ambiguidade nenhuma sobre se
+        # rodou ou não.
+        run: |
+          if [ -f .output/public/sitemap.xml ]; then
+            node -e "
+              const fs = require('fs');
+              const p = '.output/public/sitemap.xml';
+              const antes = fs.readFileSync(p, 'utf8');
+              const depois = antes.replaceAll('&amp;amp;', '&amp;');
+              fs.writeFileSync(p, depois);
+              console.log('sitemap.xml: substituicoes de &amp;amp; ->', (antes.match(/&amp;amp;/g) || []).length);
+            "
+          fi
+
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 

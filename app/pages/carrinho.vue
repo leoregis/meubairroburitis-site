@@ -11,8 +11,31 @@ const { itens, total, atualizarQuantidade, remover, limpar } = useCarrinho()
 const { carregando, erro, pagar } = useCheckout()
 const router = useRouter()
 
+const CHAVE_COMPRADOR_SALVO = 'mbb-comprador-dados'
+
+function carregarCompradorSalvo() {
+  if (!import.meta.client) return { nome: '', telefone: '', email: '' }
+  try {
+    const salvo = localStorage.getItem(CHAVE_COMPRADOR_SALVO)
+    if (!salvo) return { nome: '', telefone: '', email: '' }
+    const dados = JSON.parse(salvo)
+    return { nome: dados.nome ?? '', telefone: dados.telefone ?? '', email: dados.email ?? '' }
+  } catch {
+    return { nome: '', telefone: '', email: '' }
+  }
+}
+
+// 💾 pré-preenche com os dados da última compra bem-sucedida neste
+// aparelho/navegador (não sincroniza entre dispositivos, não exige
+// login) -- só conveniência de preenchimento, o campo continua 100%
+// editável normalmente.
+function salvarCompradorParaProximaVez() {
+  if (!import.meta.client) return
+  localStorage.setItem(CHAVE_COMPRADOR_SALVO, JSON.stringify(comprador.value))
+}
+
 const metodo = ref<'pix' | 'cartao'>('pix')
-const comprador = ref({ nome: '', telefone: '', email: '' })
+const comprador = ref(carregarCompradorSalvo())
 const mostrarFormulario = ref(false)
 const resultadoPix = ref<{ qr_code: string; qr_code_base64: string; pedido_id: string } | null>(null)
 
@@ -39,6 +62,7 @@ async function pagarComPix() {
       qr_code_base64: resposta.qr_code_base64,
       pedido_id: resposta.pedido_id,
     }
+    salvarCompradorParaProximaVez()
     limpar()
   }
 }
@@ -62,6 +86,7 @@ async function pagarComCartao(dadosCartao: {
     return
   }
 
+  salvarCompradorParaProximaVez()
   limpar()
   router.push(`/pedido/${resposta.pedido_id}`)
 }

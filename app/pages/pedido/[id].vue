@@ -23,9 +23,21 @@ interface PedidoSalvo {
 
 const pedidoSalvo = ref<PedidoSalvo | null>(null)
 
-// termina o polling/realtime assim que o status sai de "pendente" (pago,
-// recusado ou cancelado -- qualquer estado final)
-const statusFinal = computed(() => statusAtual.value !== null && statusAtual.value !== 'pendente')
+// 🐛 causa raiz real do "só atualiza com clique manual": isso comparava
+// com `!== 'pendente'` (nosso enum, em português) -- mas o status inicial
+// vem do sessionStorage logo após gerar o PIX, e ali é o valor cru que o
+// Mercado Pago devolve na criação ("pending", em inglês). Como "pending"
+// nunca bate com "pendente", a conta dava "já é estado final" e o
+// realtime/polling nem chegava a ser configurado na montagem da página --
+// só funcionava se a página fosse aberta direto na URL (sem esse valor em
+// cache), nunca no fluxo real (gerar PIX -> "Já paguei, continuar"). Lista
+// explícita dos estados finais de verdade, em vez de uma negação frágil.
+const statusFinal = computed(() =>
+  statusAtual.value === 'pago' ||
+  statusAtual.value === 'recusado' ||
+  statusAtual.value === 'rejected' ||
+  statusAtual.value === 'cancelado',
+)
 
 let canalRealtime: RealtimeChannel | null = null
 let intervaloPolling: ReturnType<typeof setInterval> | null = null

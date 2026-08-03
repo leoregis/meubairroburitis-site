@@ -177,7 +177,32 @@ function onErroCartao(e: unknown) {
             </button>
           </div>
 
-          <p v-if="erro" class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ erro }}</p>
+          <!-- 🐛 antes era um <p> normal no fluxo do documento -- se a
+          pessoa não estivesse com a página rolada até esse ponto (comum
+          logo após enviar o cartão, quando o Brick ocupa mais espaço),
+          a mensagem de erro simplesmente não aparecia na tela. Fixo no
+          topo da viewport, mesmo padrão visual do toast de "adicionado
+          ao carrinho" (ToastCarrinho.vue), pra ficar visível sempre,
+          independente da rolagem. -->
+          <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="-translate-y-4 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="-translate-y-4 opacity-0"
+          >
+            <div
+              v-if="erro"
+              class="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-sm items-start gap-3 rounded-xl bg-red-600 px-4 py-3 text-white shadow-lg sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
+            >
+              <Icon name="lucide:alert-circle" class="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <p class="flex-1 text-sm">{{ erro }}</p>
+              <button type="button" class="flex-shrink-0 text-red-200 hover:text-white" aria-label="Fechar" @click="erro = ''">
+                <Icon name="lucide:x" class="h-4 w-4" />
+              </button>
+            </div>
+          </Transition>
 
           <div v-if="metodo === 'pix'">
             <button

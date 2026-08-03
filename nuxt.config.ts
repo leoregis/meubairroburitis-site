@@ -75,6 +75,22 @@ export default defineNuxtConfig({
   },
 
   hooks: {
+    // @nuxtjs/sitemap descobre <img> nas páginas já renderizadas usando a
+    // lib ultrahtml, que NÃO decodifica entidades HTML dos atributos —
+    // pega o "&amp;" literal (já escapado corretamente uma vez pelo HTML)
+    // como texto puro, e o serializador de XML escapa esse "&" de novo por
+    // cima, virando "&amp;amp;" (corrompe toda <image:loc> que usa o proxy
+    // de imagem do Nuxt Image, que separa parâmetros com "&" no path, ex:
+    // /_ipx/f_jpeg&s_3072x2048/...). Bug é da dependência, não dá pra
+    // corrigir na origem sem forkar ela -- intercepta aqui, na única rota
+    // afetada, bem antes do arquivo final ser escrito em disco.
+    'nitro:init'(nitro) {
+      nitro.hooks.hook('prerender:generate', (route) => {
+        if (route.route === '/sitemap.xml' && typeof route.contents === 'string') {
+          route.contents = route.contents.replaceAll('&amp;amp;', '&amp;')
+        }
+      })
+    },
     async 'nitro:config'(nitroConfig) {
       // Garante que cada página de produto seja pré-renderizada mesmo que o
       // crawler não a alcance a partir de / — busca os slugs direto no

@@ -8,6 +8,7 @@ export interface DadosNoticiaForm {
   imagem_destaque_alt: string
   categoria: string
   autor: string
+  tipo: 'noticia' | 'conteudo'
   status: 'rascunho' | 'publicado'
   seo_meta_titulo: string
   seo_meta_descricao: string
@@ -102,7 +103,20 @@ const limiteMetaDescricao = 160
     </div>
 
     <div>
-      <label class="mb-1 block text-sm font-medium text-stone-700">Slug (URL: /noticias/{{ modelo.slug || '...' }})</label>
+      <label class="mb-1 block text-sm font-medium text-stone-700">Tipo</label>
+      <select
+        v-model="modelo.tipo"
+        class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+      >
+        <option value="noticia">Notícia (aparece em /noticias)</option>
+        <option value="conteudo">Conteúdo / guia (aparece em /conteudo)</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="mb-1 block text-sm font-medium text-stone-700">
+        Slug (URL: {{ modelo.tipo === 'conteudo' ? '/conteudo/' : '/noticias/' }}{{ modelo.slug || '...' }})
+      </label>
       <input
         v-model="modelo.slug"
         type="text"

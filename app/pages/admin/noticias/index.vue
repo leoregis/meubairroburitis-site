@@ -6,6 +6,7 @@ interface NoticiaAdmin {
   id: string
   slug: string
   titulo: string
+  tipo: 'noticia' | 'conteudo'
   status: 'rascunho' | 'publicado'
   data_publicacao: string | null
   criado_em: string
@@ -23,7 +24,7 @@ async function carregar() {
   carregando.value = true
   const { data } = await $supabase
     .from('noticias')
-    .select('id, slug, titulo, status, data_publicacao, criado_em')
+    .select('id, slug, titulo, tipo, status, data_publicacao, criado_em')
     .order('criado_em', { ascending: false })
   noticias.value = (data as NoticiaAdmin[]) ?? []
   carregando.value = false
@@ -111,7 +112,9 @@ function formatarData(data: string | null) {
           <tr v-for="noticia in noticias" :key="noticia.id" class="border-t border-stone-100">
             <td class="px-4 py-3">
               <p class="font-medium text-stone-900">{{ noticia.titulo }}</p>
-              <p class="text-xs text-stone-400">/noticias/{{ noticia.slug }}</p>
+              <p class="text-xs text-stone-400">
+                {{ noticia.tipo === 'conteudo' ? '/conteudo/' : '/noticias/' }}{{ noticia.slug }}
+              </p>
             </td>
             <td class="px-4 py-3">
               <span
@@ -119,6 +122,12 @@ function formatarData(data: string | null) {
                 :class="noticia.status === 'publicado' ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500'"
               >
                 {{ noticia.status === 'publicado' ? 'Publicado' : 'Rascunho' }}
+              </span>
+              <span
+                class="ml-1 rounded-full px-2 py-1 text-xs font-semibold"
+                :class="noticia.tipo === 'conteudo' ? 'bg-orange-100 text-orange-800' : 'bg-sky-100 text-sky-800'"
+              >
+                {{ noticia.tipo === 'conteudo' ? 'Conteúdo' : 'Notícia' }}
               </span>
             </td>
             <td class="px-4 py-3 text-stone-500">{{ formatarData(noticia.data_publicacao) }}</td>

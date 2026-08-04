@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     preset: 'static',
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/sitemap.xml'],
+      routes: ['/', '/sitemap.xml', '/conteudo'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.
@@ -102,6 +102,7 @@ export default defineNuxtConfig({
           .from('noticias')
           .select('slug', { count: 'exact' })
           .eq('status', 'publicado')
+          .eq('tipo', 'noticia')
 
         const rotasNoticias = (noticiasData || []).map((n: { slug: string }) => `/noticias/${n.slug}`)
 
@@ -110,12 +111,25 @@ export default defineNuxtConfig({
         const totalPaginas = Math.max(1, Math.ceil(totalNoticias / NOTICIAS_POR_PAGINA))
         const rotasPaginacao = Array.from({ length: totalPaginas - 1 }, (_, i) => `/noticias/pagina/${i + 2}`)
 
+        // conteúdo (blog/guia -- rota /conteudo, mesma tabela de notícias
+        // filtrada por tipo): cada artigo publicado vira uma rota explícita,
+        // pelo mesmo motivo das notícias -- não depender só do crawler achar
+        // o link a partir de /.
+        const { data: conteudoData } = await supabase
+          .from('noticias')
+          .select('slug')
+          .eq('status', 'publicado')
+          .eq('tipo', 'conteudo')
+
+        const rotasConteudo = (conteudoData || []).map((c: { slug: string }) => `/conteudo/${c.slug}`)
+
         nitroConfig.prerender ||= {}
         nitroConfig.prerender.routes = [
           ...(nitroConfig.prerender.routes || []),
           ...rotasProdutos,
           ...rotasNoticias,
           ...rotasPaginacao,
+          ...rotasConteudo,
         ]
       } catch {
         // build-time best-effort — se o Supabase não estiver acessível no

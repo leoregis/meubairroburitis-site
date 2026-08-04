@@ -10,6 +10,7 @@ export interface Noticia {
   imagem_destaque_alt: string | null
   categoria: string | null
   autor: string | null
+  tipo: 'noticia' | 'conteudo'
   status: 'rascunho' | 'publicado'
   data_publicacao: string | null
   seo_meta_titulo: string | null
@@ -31,6 +32,7 @@ export function useNoticiasPagina(pagina: number) {
       .from('noticias')
       .select('*', { count: 'exact' })
       .eq('status', 'publicado')
+      .eq('tipo', 'noticia')
       .order('data_publicacao', { ascending: false })
       .range(de, ate)
 
@@ -53,6 +55,7 @@ export function useNoticia(slug: string) {
       .select('*')
       .eq('slug', slug)
       .eq('status', 'publicado')
+      .eq('tipo', 'noticia')
       .maybeSingle()
 
     if (error) throw error

@@ -10,7 +10,16 @@ if (!noticia.value) {
 
 const tituloSeo = noticia.value.seo_meta_titulo || noticia.value.titulo
 const descricaoSeo = noticia.value.seo_meta_descricao || noticia.value.subtitulo || undefined
-const imagemSeo = noticia.value.seo_imagem_og || noticia.value.imagem_destaque_url || undefined
+
+// imagem_destaque_url tanto pode ser uma URL absoluta do Storage (upload
+// via admin) quanto um caminho local relativo (arquivo estático em
+// public/, caso das matérias com capa otimizada via NuxtPicture noutras
+// seções) -- og:image precisa ser sempre absoluto pra funcionar em
+// crawlers de rede social.
+const imagemBruta = noticia.value.seo_imagem_og || noticia.value.imagem_destaque_url || undefined
+const imagemSeo = imagemBruta?.startsWith('/')
+  ? `https://meubairroburitis.com.br${imagemBruta}`
+  : imagemBruta
 
 useSeoMeta({
   title: () => `${tituloSeo} — Meu Bairro Buritis`,

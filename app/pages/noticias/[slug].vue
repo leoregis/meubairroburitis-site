@@ -17,7 +17,8 @@ const descricaoSeo = noticia.value.seo_meta_descricao || noticia.value.subtitulo
 // seções) -- og:image precisa ser sempre absoluto pra funcionar em
 // crawlers de rede social.
 const imagemBruta = noticia.value.seo_imagem_og || noticia.value.imagem_destaque_url || undefined
-const imagemSeo = imagemBruta?.startsWith('/')
+const imagemEhLocal = imagemBruta?.startsWith('/') ?? false
+const imagemSeo = imagemEhLocal
   ? `https://meubairroburitis.com.br${imagemBruta}`
   : imagemBruta
 
@@ -65,8 +66,18 @@ useJsonLd({
       <span v-if="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</span>
     </div>
 
+    <NuxtPicture
+      v-if="noticia.imagem_destaque_url && imagemEhLocal"
+      :src="noticia.imagem_destaque_url"
+      :alt="noticia.imagem_destaque_alt || noticia.titulo"
+      format="avif,webp"
+      :width="700"
+      :height="367"
+      loading="eager"
+      :img-attrs="{ class: 'mt-6 w-full rounded-2xl object-cover' }"
+    />
     <img
-      v-if="noticia.imagem_destaque_url"
+      v-else-if="noticia.imagem_destaque_url"
       :src="noticia.imagem_destaque_url"
       :alt="noticia.imagem_destaque_alt || noticia.titulo"
       class="mt-6 w-full rounded-2xl object-cover"

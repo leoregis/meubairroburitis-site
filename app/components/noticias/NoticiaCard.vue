@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { Noticia } from '~/composables/useNoticias'
 
-defineProps<{ noticia: Noticia }>()
+const props = defineProps<{ noticia: Noticia }>()
+
+// capas locais (arquivo estático em public/) ganham otimização real via
+// NuxtPicture; imagens de Storage (upload pelo admin) continuam via <img>
+// simples, como sempre foram.
+const imagemEhLocal = computed(() => props.noticia.imagem_destaque_url?.startsWith('/') ?? false)
 </script>
 
 <template>
@@ -9,8 +14,18 @@ defineProps<{ noticia: Noticia }>()
     :to="`/noticias/${noticia.slug}`"
     class="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm sm:rounded-2xl"
   >
+    <NuxtPicture
+      v-if="noticia.imagem_destaque_url && imagemEhLocal"
+      :src="noticia.imagem_destaque_url"
+      :alt="noticia.imagem_destaque_alt || noticia.titulo"
+      format="avif,webp"
+      :width="400"
+      :height="210"
+      loading="lazy"
+      :img-attrs="{ class: 'h-32 w-full object-cover sm:h-44' }"
+    />
     <img
-      v-if="noticia.imagem_destaque_url"
+      v-else-if="noticia.imagem_destaque_url"
       :src="noticia.imagem_destaque_url"
       :alt="noticia.imagem_destaque_alt || noticia.titulo"
       loading="lazy"

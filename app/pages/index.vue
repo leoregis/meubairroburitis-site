@@ -25,6 +25,7 @@ useJsonLd({
     <HomeAppDestaque />
     <HomePacotesComparativo />
     <HomeInstagramEmbed />
+    <HomeUltimasNoticias />
     <HomeDepoimentos />
     <HomeTimeSection />
     <HomeMidiakitResumo />

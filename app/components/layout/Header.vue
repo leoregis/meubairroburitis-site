@@ -3,6 +3,7 @@ const links = [
   { label: 'Início', to: '/' },
   { label: 'Quem Somos', to: '/quem-somos' },
   { label: 'O Bairro Buritis', to: '/o-bairro-buritis' },
+  { label: 'Notícias', to: '/noticias' },
   { label: 'Anuncie', to: '/loja' },
   { label: 'Midiakit', to: '/midiakit' },
   { label: 'Canais', to: '/canais' },

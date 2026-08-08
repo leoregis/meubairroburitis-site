@@ -72,6 +72,7 @@ async function pagarComCartao(dadosCartao: {
   payment_method_id: string
   installments: number
   issuer_id?: string
+  device_id?: string
 }) {
   const resposta = await pagar(comprador.value, 'cartao', dadosCartao)
   if (!resposta) return

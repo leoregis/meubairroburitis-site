@@ -13,6 +13,23 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// 🔍 Qualidade da Integração MP -- payer.first_name/last_name/phone nunca
+// eram enviados, apesar de nome/telefone já serem coletados no form.
+function dividirNome(nomeCompleto?: string | null) {
+  const partes = (nomeCompleto || "").trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return {};
+  return {
+    first_name: partes[0],
+    last_name: partes.length > 1 ? partes.slice(1).join(" ") : undefined,
+  };
+}
+function dividirTelefone(telefone?: string | null) {
+  const digitos = (telefone || "").replace(/\D/g, "");
+  const semDDI = digitos.length > 11 && digitos.startsWith("55") ? digitos.slice(2) : digitos;
+  if (semDDI.length < 10) return undefined;
+  return { area_code: semDDI.slice(0, 2), number: semDDI.slice(2) };
+}
+
 interface ItemCarrinho {
   produto_id: string;
   quantidade: number;
@@ -23,6 +40,7 @@ interface DadosCartao {
   payment_method_id: string;
   installments: number;
   issuer_id?: string;
+  device_id?: string;
 }
 
 interface Payload {
@@ -157,7 +175,11 @@ Deno.serve(async (req) => {
       description: `Pedido ${pedido.id} — Meu Bairro Buritis`,
       external_reference: pedido.id,
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mp_webhook`,
-      payer: { email: comprador.email || "checkout@meubairroburitis.com.br" },
+      payer: {
+        email: comprador.email || "checkout@meubairroburitis.com.br",
+        ...dividirNome(comprador.nome),
+        ...(dividirTelefone(comprador.telefone) ? { phone: dividirTelefone(comprador.telefone) } : {}),
+      },
       // 🔍 Qualidade da Integração MP -- additional_info.items nunca era
       // enviado, apesar do dado já estar pronto em itensComPreco (só
       // faltava o .map() pro formato que o MP espera).
@@ -191,6 +213,11 @@ Deno.serve(async (req) => {
         // chave estável por pedido — não um random novo a cada tentativa,
         // pra retries do client não gerarem cobranças duplicadas no MP.
         "X-Idempotency-Key": idempotency_key,
+        // 🔍 Qualidade da Integração MP -- device fingerprint do
+        // security.js, sinal mais destacado pela documentação oficial
+        // pra reduzir cc_rejected_high_risk (só existe pra cartão --
+        // gerado pelo Brick; PIX não passa por device fingerprint).
+        ...(cartao?.device_id ? { "X-meli-session-id": cartao.device_id } : {}),
       },
       body: JSON.stringify(corpoMp),
     });

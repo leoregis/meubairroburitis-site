@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{ valorCentavos: number }>()
 const emit = defineEmits<{
-  submit: [dados: { token: string; payment_method_id: string; installments: number; issuer_id?: string }]
+  submit: [dados: { token: string; payment_method_id: string; installments: number; issuer_id?: string; device_id?: string }]
   pronto: []
   erro: [erro: unknown]
 }>()
@@ -11,7 +11,7 @@ const containerId = 'card-payment-brick-container'
 let controlador: any = null
 
 onMounted(async () => {
-  const { $mercadopago } = useNuxtApp()
+  const { $mercadopago, $mpDeviceId } = useNuxtApp()
   try {
     const mp = await ($mercadopago as () => Promise<{ bricks: () => { create: (...args: unknown[]) => Promise<unknown> } }>)()
     const bricksBuilder = mp.bricks()
@@ -32,6 +32,7 @@ onMounted(async () => {
               payment_method_id: formData.payment_method_id,
               installments: formData.installments,
               issuer_id: formData.issuer_id,
+              device_id: ($mpDeviceId as () => string | undefined)(),
             })
             resolve()
           })

@@ -20,6 +20,7 @@ export interface DadosCartao {
   payment_method_id: string
   installments: number
   issuer_id?: string
+  device_id?: string
 }
 
 function chaveIdempotencia() {

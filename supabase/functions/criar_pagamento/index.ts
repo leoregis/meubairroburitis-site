@@ -203,6 +203,11 @@ Deno.serve(async (req) => {
         payment_method_id: cartao!.payment_method_id,
         installments: cartao!.installments,
         issuer_id: cartao!.issuer_id,
+        // 🔍 Qualidade da Integração MP -- aparece na fatura do cliente,
+        // reduz contestação por "não reconheço essa cobrança". Só
+        // cartão (PIX não aparece em fatura de cartão). Fixo,
+        // institucional, dentro do limite de 22 caracteres (16).
+        statement_descriptor: "MEUBAIRROBURITIS",
       };
 
     const respostaMp = await fetch("https://api.mercadopago.com/v1/payments", {

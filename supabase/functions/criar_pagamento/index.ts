@@ -158,6 +158,19 @@ Deno.serve(async (req) => {
       external_reference: pedido.id,
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mp_webhook`,
       payer: { email: comprador.email || "checkout@meubairroburitis.com.br" },
+      // 🔍 Qualidade da Integração MP -- additional_info.items nunca era
+      // enviado, apesar do dado já estar pronto em itensComPreco (só
+      // faltava o .map() pro formato que o MP espera).
+      additional_info: {
+        items: itensComPreco.map((item) => ({
+          id: item.produto_id,
+          title: item.nome,
+          description: item.nome,
+          category_id: "services",
+          quantity: item.quantidade,
+          unit_price: item.preco_centavos / 100,
+        })),
+      },
     };
 
     const corpoMp = metodo === "pix"

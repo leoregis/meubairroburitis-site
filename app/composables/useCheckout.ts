@@ -21,6 +21,7 @@ export interface DadosCartao {
   installments: number
   issuer_id?: string
   device_id?: string
+  identification?: { type: string; number: string }
 }
 
 function chaveIdempotencia() {

@@ -41,6 +41,20 @@ interface DadosCartao {
   installments: number;
   issuer_id?: string;
   device_id?: string;
+  identification?: { type?: string; number?: string };
+}
+
+// 🔍 Qualidade da Integração MP -- CPF do titular do cartão, apontado pelo
+// suporte do MP como um dos fatores técnicos que mais ajudam a reduzir
+// cc_rejected_high_risk. O Card Payment Brick já coleta isso por padrão
+// (campo "Documento do titular"), só faltava o backend reaproveitar.
+// Válido só se vier exatamente 11 dígitos numéricos (CPF); qualquer outra
+// coisa é ignorada em vez de travar o pagamento por causa de um campo
+// opcional.
+function validarIdentificacao(identification?: { type?: string; number?: string }) {
+  const numero = (identification?.number || "").replace(/\D/g, "");
+  if (numero.length !== 11) return undefined;
+  return { type: "CPF", number: numero };
 }
 
 interface Payload {
@@ -179,6 +193,12 @@ Deno.serve(async (req) => {
         email: comprador.email || "checkout@meubairroburitis.com.br",
         ...dividirNome(comprador.nome),
         ...(dividirTelefone(comprador.telefone) ? { phone: dividirTelefone(comprador.telefone) } : {}),
+        // 🔍 Qualidade da Integração MP -- CPF do titular do cartão. Só
+        // existe pra método cartão (PIX não passa pelo formulário do
+        // Brick, não tem "titular" nesse sentido).
+        ...(metodo === "cartao" && validarIdentificacao(cartao?.identification)
+          ? { identification: validarIdentificacao(cartao?.identification) }
+          : {}),
       },
       // 🔍 Qualidade da Integração MP -- additional_info.items nunca era
       // enviado, apesar do dado já estar pronto em itensComPreco (só

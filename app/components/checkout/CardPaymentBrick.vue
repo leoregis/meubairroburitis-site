@@ -1,7 +1,16 @@
 <script setup lang="ts">
 const props = defineProps<{ valorCentavos: number }>()
 const emit = defineEmits<{
-  submit: [dados: { token: string; payment_method_id: string; installments: number; issuer_id?: string; device_id?: string }]
+  submit: [
+    dados: {
+      token: string
+      payment_method_id: string
+      installments: number
+      issuer_id?: string
+      device_id?: string
+      identification?: { type: string; number: string }
+    },
+  ]
   pronto: []
   erro: [erro: unknown]
 }>()
@@ -25,6 +34,7 @@ onMounted(async () => {
           payment_method_id: string
           installments: number
           issuer_id?: string
+          payer?: { identification?: { type: string; number: string } }
         }) => {
           return new Promise<void>((resolve) => {
             emit('submit', {
@@ -33,6 +43,10 @@ onMounted(async () => {
               installments: formData.installments,
               issuer_id: formData.issuer_id,
               device_id: ($mpDeviceId as () => string | undefined)(),
+              // 🔍 Qualidade da Integração MP -- o Brick já pede o CPF do
+              // titular no próprio formulário ("Documento do titular"),
+              // sem config extra; só faltava repassar pro backend.
+              identification: formData.payer?.identification,
             })
             resolve()
           })

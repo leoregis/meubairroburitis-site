@@ -9,6 +9,12 @@ const links = [
   { label: 'Canais', to: '/canais' },
 ]
 
+// 🔥 app é uma aplicação separada (meubairro-app, hospedado em /guia) --
+// abre em nova aba, por isso fica fora do array `links` acima (que
+// alimenta o mesmo NuxtLink pros dois, interno e externo). Mesmo
+// texto/URL relativa já usados em AppDestaque.vue (seção da home).
+const linkApp = { label: 'Guia Buritis', href: '/guia/' }
+
 const menuAberto = ref(false)
 const { quantidadeTotal } = useCarrinho()
 </script>
@@ -30,7 +36,7 @@ const { quantidadeTotal } = useCarrinho()
         />
       </NuxtLink>
 
-      <nav class="hidden gap-6 md:flex">
+      <nav class="hidden items-center gap-6 md:flex">
         <NuxtLink
           v-for="link in links"
           :key="link.to"
@@ -40,6 +46,16 @@ const { quantidadeTotal } = useCarrinho()
         >
           {{ link.label }}
         </NuxtLink>
+
+        <a
+          :href="linkApp.href"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/25"
+        >
+          <Icon name="lucide:smartphone" class="h-4 w-4" />
+          {{ linkApp.label }}
+        </a>
       </nav>
 
       <div class="flex items-center gap-4">
@@ -76,6 +92,17 @@ const { quantidadeTotal } = useCarrinho()
       >
         {{ link.label }}
       </NuxtLink>
+
+      <a
+        :href="linkApp.href"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-1 flex items-center gap-2 rounded-md bg-white/15 px-2 py-2 text-sm font-semibold text-white hover:bg-white/25"
+        @click="menuAberto = false"
+      >
+        <Icon name="lucide:smartphone" class="h-4 w-4" />
+        {{ linkApp.label }}
+      </a>
     </nav>
   </header>
 </template>

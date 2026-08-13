@@ -34,6 +34,12 @@ const canais = [
           <li><NuxtLink to="/o-bairro-buritis" class="hover:text-orange-400">O Bairro Buritis</NuxtLink></li>
           <li><NuxtLink to="/loja" class="hover:text-orange-400">Anuncie com a gente</NuxtLink></li>
           <li><NuxtLink to="/midiakit" class="hover:text-orange-400">Midiakit</NuxtLink></li>
+          <li>
+            <a href="/guia/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-orange-400">
+              <Icon name="lucide:smartphone" class="h-4 w-4" />
+              Guia Buritis (app)
+            </a>
+          </li>
         </ul>
       </div>
 

@@ -101,6 +101,42 @@ jobs:
 
           echo "Release $RELEASE agora é public_html/_current. Versão anterior guardada em public_html/$OLD para rollback."
 
+      - name: Purga cache do Cloudflare
+        # sem isso, depois do swap atomico na origem (passo anterior), o
+        # Cloudflare pode continuar servindo, POP por POP, HTML/JS de builds
+        # anteriores por um tempo -- foi exatamente isso que quebrou a
+        # primeira página nova adicionada depois desse deploy existir
+        # (/links): o roteador do lado cliente carregava com JS de um build
+        # de dias atrás, que não conhecia a rota nova, mesmo o HTML servido
+        # pelo Nitro estando correto -- resultado era um "Page not found"
+        # renderizado pelo próprio Nuxt no navegador, só em alguns POPs.
+        # Guard em runtime (não no "if:" do step) pra secret ausente só
+        # pular com aviso, nunca falhar a expressão do YAML. continue-on-error
+        # pra nunca travar o deploy todo (site já está no ar de qualquer
+        # forma) só porque a purga deu erro.
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ZONE_ID" ]; then
+            echo "CLOUDFLARE_API_TOKEN e/ou CLOUDFLARE_ZONE_ID não configurados como secret -- pulando purga. Cache do Cloudflare pode ficar inconsistente por um tempo após este deploy."
+            exit 0
+          fi
+
+          status=$(curl -s -o /tmp/purge-resposta.json -w "%{http_code}" -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}')
+
+          echo "status HTTP da purga: $status"
+          cat /tmp/purge-resposta.json
+
+          if [ "$status" != "200" ]; then
+            echo "Purga do Cloudflare falhou (ver resposta acima) -- deploy continua ok mesmo assim."
+          fi
+
       # Nota: a regra de rewrite em public_html/.htaccess que faz
       # "/" -> "/_current/" (exceto /guia/ e /.well-known/) é configurada
       # manualmente UMA VEZ, só no dia da virada de fato (desligamento do

@@ -39,7 +39,7 @@ const redes = [
       <div class="flex flex-col items-center">
         <div class="flex h-28 w-28 items-center justify-center rounded-full bg-white p-3 shadow-[0_0_0_3px_#d4af37]">
           <NuxtPicture
-            src="/logo/logo_mbb_rodape.png"
+            src="/logo/logo_mbb_completa.png"
             alt="Meu Bairro Buritis"
             format="webp"
             :width="112"

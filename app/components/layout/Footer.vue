@@ -19,9 +19,9 @@ const canais = [
           src="/logo/logo_mbb_rodape.png"
           alt="Meu Bairro Buritis"
           format="webp"
-          :width="140"
+          :width="132"
           :height="68"
-          sizes="140px"
+          sizes="132px"
           :img-attrs="{ class: 'mb-3 h-9 w-auto' }"
         />
         <p class="text-sm text-stone-300">A maior comunidade online do Buritis e Estoril, desde 2012.</p>

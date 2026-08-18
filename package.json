@@ -28,6 +28,7 @@
     "ws": "^8.21.1"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.120"
+    "@iconify-json/lucide": "^1.2.120",
+    "@iconify-json/simple-icons": "^1.2.93"
   }
 }

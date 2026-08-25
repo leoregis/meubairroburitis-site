@@ -232,10 +232,8 @@ const marcos = [
         <div class="prose prose-stone mt-6 max-w-none">
           <p>
             Ao longo de sua trajetória, o Meu Bairro Buritis também abriu espaço para o debate
-            público. Foram realizadas entrevistas e transmissões ao vivo com políticos e
-            lideranças locais, entre eles <strong>Braulio Lara, Fidelis Alcântara e Gabriel
-            Azevedo</strong>, discutindo eleições, política e temas de interesse do Buritis e de
-            Belo Horizonte.
+            público, promovendo entrevistas e transmissões ao vivo com políticos e lideranças
+            locais sobre eleições, política e temas de interesse do Buritis e de Belo Horizonte.
           </p>
           <p>
             Essa atuação sempre foi pautada pela <strong>independência e pela neutralidade

@@ -89,12 +89,6 @@ const marcos = [
     link: 'https://www.daquibh.com.br/diferencas-sociais-ao-longo-da-avenida-raja-gabaglia/',
   },
   {
-    ano: '2020–2021',
-    titulo: 'Buri Dogs amplia sua atuação',
-    texto: 'Resgates, tratamentos, campanhas, adoções, casinhas para cães de rua.',
-    link: 'https://associacaobairroburitis.com.br/noticias-buritis/buri-dogs-instalam-casinhas-para-cachorros-no-bairro/',
-  },
-  {
     ano: '2021',
     titulo: 'Entrevistas políticas e transmissões ao vivo',
     texto: 'Entrevistas e debates, incluindo com o vereador Braulio Lara.',
@@ -105,24 +99,6 @@ const marcos = [
     titulo: 'Debate sobre mobilidade e circulação de veículos',
     texto: 'Transmissão ao vivo sobre trânsito e veículos pesados no Buritis.',
     link: 'https://www.brauliolara.com.br/2021/07/?m=0',
-  },
-  {
-    ano: '2021',
-    titulo: 'O Buri Dogs chega a centenas de animais atendidos',
-    texto: '',
-    link: null,
-  },
-  {
-    ano: '2022',
-    titulo: 'Buri Dogs recebe homenagem da Câmara Municipal',
-    texto: 'Diploma de Honra ao Mérito concedido pela Câmara Municipal de BH.',
-    link: 'https://www.cmbh.mg.gov.br/comunica%C3%A7%C3%A3o/v%C3%ADdeos/solenidades/titulo-de-cidadania-honor%C3%A1ria-advogada-e-professora-juliana-frederico-fontes-11-08-2017?page=24&qt-pesquisa_de_leis_mobile=1',
-  },
-  {
-    ano: '2022 em diante',
-    titulo: 'O Buri Dogs continua independente',
-    texto: '',
-    link: null,
   },
   {
     ano: '2023',
@@ -147,14 +123,16 @@ const marcos = [
   {
     ano: '2026',
     titulo: 'Uma comunidade com mais de 150 mil membros',
-    texto: 'Mais de 150 mil pessoas no Facebook.',
+    texto:
+      'Mais de uma década depois de sua criação, o Meu Bairro Buritis reúne uma comunidade que ultrapassa 150 mil pessoas no Facebook e mais de 56 mil seguidores no Instagram, além de presença ativa no WhatsApp, Telegram, YouTube e TikTok — consolidando-se como um dos principais canais digitais de informação e interação comunitária do Buritis e do Estoril.',
     link: null,
   },
   {
     ano: '2026',
-    titulo: 'Mais de mil cães ajudados pelo Buri Dogs',
-    texto: 'Mais de mil cães retirados das ruas e encaminhados para adoção desde 2019.',
-    link: 'https://buridogs.com.br/',
+    titulo: 'Nasce o aplicativo Meu Bairro Buritis',
+    texto:
+      'O Meu Bairro Buritis lança seu próprio aplicativo, o Guia Buritis, reunindo em um só lugar o diretório de empresas e prestadores de serviços do bairro, sistema de avaliações da comunidade, ofertas exclusivas e muito mais — consolidando mais de uma década de atuação em um novo ecossistema digital.',
+    link: 'https://meubairroburitis.com.br/guia/',
   },
 ].map((marco, i, todos) => ({
   ...marco,
@@ -228,28 +206,6 @@ const marcos = [
         <h2 class="mt-2 text-balance font-serif text-2xl font-bold text-stone-900 sm:text-3xl">
           Uma trajetória de mais de uma década
         </h2>
-
-        <div class="prose prose-stone mt-6 max-w-none">
-          <p>
-            Ao longo de sua trajetória, o Meu Bairro Buritis também abriu espaço para o debate
-            público, promovendo entrevistas e transmissões ao vivo com políticos e lideranças
-            locais sobre eleições, política e temas de interesse do Buritis e de Belo Horizonte.
-          </p>
-          <p>
-            Essa atuação sempre foi pautada pela <strong>independência e pela neutralidade
-            política</strong>. O Meu Bairro Buritis nunca esteve vinculado a partido político ou
-            grupo político e procura oferecer espaço para diferentes posições e correntes de
-            pensamento, mantendo como prioridade os interesses da comunidade e dos moradores.
-          </p>
-          <p>
-            Da mesma forma, o Meu Bairro Buritis é um projeto <strong>independente de empresas,
-            grupos econômicos ou estabelecimentos específicos do bairro</strong>. Embora mantenha
-            relacionamento comercial com empresas e profissionais por meio de publicidade e
-            divulgação, isso não significa vínculo, sociedade ou subordinação editorial. A
-            independência do projeto permite que ele divulgue, questione ou critique assuntos de
-            interesse da comunidade de acordo com os fatos e as demandas dos moradores.
-          </p>
-        </div>
 
         <ol class="mt-10">
           <li

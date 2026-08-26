@@ -46,6 +46,12 @@ function gerarSlug(texto: string) {
     .replace(/^-+|-+$/g, '')
 }
 
+function aoTrocarCategoria() {
+  if (modelo.value.categoria_id !== 'guias') {
+    modelo.value.subcategoria_guia_id = ''
+  }
+}
+
 watch(
   () => modelo.value.titulo,
   (novoTitulo) => {
@@ -136,7 +142,7 @@ const limiteMetaDescricao = 160
         <select
           v-model="modelo.categoria_id"
           class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-orange-500 focus:outline-none"
-          @change="if (modelo.categoria_id !== 'guias') modelo.subcategoria_guia_id = ''"
+          @change="aoTrocarCategoria"
         >
           <option value="">Não classificado</option>
           <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.rotulo }}</option>

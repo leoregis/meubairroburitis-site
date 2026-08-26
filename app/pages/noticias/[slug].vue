@@ -52,7 +52,14 @@ useJsonLd({
   <div v-if="noticia" class="mx-auto max-w-2xl px-4 py-16">
     <NuxtLink to="/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Voltar pras notícias</NuxtLink>
 
-    <p v-if="noticia.categoria" class="mt-6 text-xs font-semibold uppercase tracking-wide text-orange-700">
+    <NuxtLink
+      v-if="noticia.categoria_info"
+      :to="noticia.categoria_info.id === 'guias' ? '/conteudo' : `/noticias/categoria/${noticia.categoria_info.id}`"
+      class="mt-6 block text-xs font-semibold uppercase tracking-wide text-orange-700 hover:underline"
+    >
+      {{ noticia.categoria_info.rotulo }}<template v-if="noticia.subcategoria_info"> · {{ noticia.subcategoria_info.rotulo }}</template>
+    </NuxtLink>
+    <p v-else-if="noticia.categoria" class="mt-6 text-xs font-semibold uppercase tracking-wide text-orange-700">
       {{ noticia.categoria }}
     </p>
 

@@ -7,6 +7,9 @@ export interface DadosNoticiaForm {
   imagem_destaque_url: string
   imagem_destaque_alt: string
   categoria: string
+  categoria_id: string
+  subcategoria_guia_id: string
+  tipo_conteudo: 'reportagem' | 'guia' | 'opiniao' | 'patrocinado' | 'nao_classificado'
   autor: string
   status: 'rascunho' | 'publicado'
   seo_meta_titulo: string
@@ -28,6 +31,9 @@ const emit = defineEmits<{ salvar: [] }>()
 const modelo = defineModel<DadosNoticiaForm>({ required: true })
 
 const { $supabase } = useNuxtApp()
+
+const { data: categorias } = await useCategorias()
+const { data: subcategoriasGuia } = await useSubcategoriasGuia()
 
 const slugTocado = ref(props.modoEdicao)
 
@@ -127,12 +133,14 @@ const limiteMetaDescricao = 160
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="mb-1 block text-sm font-medium text-stone-700">Categoria</label>
-        <input
-          v-model="modelo.categoria"
-          type="text"
-          placeholder="ex: Bairro, Eventos, Segurança"
-          class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
-        />
+        <select
+          v-model="modelo.categoria_id"
+          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-orange-500 focus:outline-none"
+          @change="if (modelo.categoria_id !== 'guias') modelo.subcategoria_guia_id = ''"
+        >
+          <option value="">Não classificado</option>
+          <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.rotulo }}</option>
+        </select>
       </div>
       <div>
         <label class="mb-1 block text-sm font-medium text-stone-700">Autor</label>
@@ -142,6 +150,31 @@ const limiteMetaDescricao = 160
           class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
         />
       </div>
+    </div>
+
+    <div v-if="modelo.categoria_id === 'guias'">
+      <label class="mb-1 block text-sm font-medium text-stone-700">Subcategoria do guia</label>
+      <select
+        v-model="modelo.subcategoria_guia_id"
+        class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-orange-500 focus:outline-none"
+      >
+        <option value="">Selecione...</option>
+        <option v-for="sub in subcategoriasGuia" :key="sub.id" :value="sub.id">{{ sub.rotulo }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="mb-1 block text-sm font-medium text-stone-700">Tipo de conteúdo</label>
+      <select
+        v-model="modelo.tipo_conteudo"
+        class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 focus:border-orange-500 focus:outline-none"
+      >
+        <option value="nao_classificado">Não classificado</option>
+        <option value="reportagem">Reportagem/Notícia</option>
+        <option value="guia">Guia</option>
+        <option value="opiniao">Opinião/Coluna</option>
+        <option value="patrocinado">Conteúdo Patrocinado</option>
+      </select>
     </div>
 
     <div>

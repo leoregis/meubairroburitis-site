@@ -173,6 +173,25 @@ export function useSubcategoriasGuia() {
   })
 }
 
+// Fase 3 -- bloco "Leia também", curado manualmente (não calculado por
+// categoria) a partir da matriz de linkagem aprovada.
+export function useNoticiasRelacionadas(noticiaId: string) {
+  const { $supabase } = useNuxtApp()
+
+  return useAsyncData(`noticias-relacionadas-${noticiaId}`, async () => {
+    if (!$supabase) return [] as Noticia[]
+
+    const { data, error } = await $supabase
+      .from('noticias_relacionadas')
+      .select(`ordem, relacionada:noticias!relacionada_id(${SELECT_NOTICIA})`)
+      .eq('noticia_id', noticiaId)
+      .order('ordem')
+
+    if (error) throw error
+    return ((data ?? []) as any[]).map((r) => r.relacionada) as Noticia[]
+  })
+}
+
 export function formatarDataNoticia(data: string | null) {
   if (!data) return ''
   return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })

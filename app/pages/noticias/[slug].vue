@@ -92,6 +92,9 @@ useJsonLd({
 
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div class="noticia-conteudo mt-8" v-html="noticia.conteudo" />
+
+    <NoticiasSobreEsteConteudo :noticia="noticia" />
+    <NoticiasLeiaTambem :noticia-id="noticia.id" />
   </div>
 </template>
 

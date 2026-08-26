@@ -36,6 +36,13 @@ const fontes = computed(() => {
       </template>
     </div>
 
+    <p v-if="noticia.tipo_conteudo === 'guia'" class="mt-2">
+      Este guia reúne estabelecimentos e prestadores de serviço do Buritis e do Estoril com base em
+      pesquisa própria e informações públicas. A inclusão não representa recomendação editorial nem
+      indica parceria comercial, e a ordem de apresentação não é um ranking. Preços, horários e
+      endereços podem mudar — confirme diretamente com o estabelecimento antes de ir.
+    </p>
+
     <p class="mt-2">
       Encontrou uma informação desatualizada ou incorreta?
       <a

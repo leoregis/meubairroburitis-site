@@ -36,6 +36,8 @@ export interface Noticia {
   seo_meta_descricao: string | null
   seo_imagem_og: string | null
   seo_palavras_chave: string | null
+  cta_texto: string | null
+  cta_href: string | null
   categoria_info?: NoticiaCategoria | null
   subcategoria_info?: NoticiaCategoria | null
 }

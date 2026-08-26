@@ -34,6 +34,8 @@ const subcategoriasComConteudo = computed(() => {
       </p>
     </div>
 
+    <NoticiasAbasSecao ativa="guias" />
+
     <div v-if="subcategoriasComConteudo.length" class="mb-8 flex flex-wrap justify-center gap-2">
       <button
         class="rounded-full border px-4 py-1.5 text-sm font-semibold"

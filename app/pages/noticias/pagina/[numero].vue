@@ -27,6 +27,7 @@ useSeoMeta({
       <h1 class="mt-2 text-balance font-serif text-3xl font-bold text-stone-900">Notícias</h1>
     </div>
 
+    <NoticiasAbasSecao ativa="noticias" />
     <NoticiasListagem :pagina="pagina" />
   </div>
 </template>

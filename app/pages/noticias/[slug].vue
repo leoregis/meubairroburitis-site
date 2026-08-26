@@ -36,8 +36,20 @@ useSeoMeta({
   keywords: () => noticia.value?.seo_palavras_chave || undefined,
 })
 
+// Schema.org correto por tipo de conteúdo -- Guia é referência evergreen,
+// não notícia (NewsArticle era usado pra tudo antes, errado pra guias e
+// opinião). "não_classificado" mantém NewsArticle até ter uma classificação
+// definida -- não presumo qual seria.
+const tipoJsonLd: Record<string, string> = {
+  guia: 'Article',
+  opiniao: 'OpinionNewsArticle',
+  reportagem: 'NewsArticle',
+  patrocinado: 'Article',
+  nao_classificado: 'NewsArticle',
+}
+
 useJsonLd({
-  '@type': 'NewsArticle',
+  '@type': tipoJsonLd[noticia.value.tipo_conteudo] ?? 'NewsArticle',
   headline: noticia.value.titulo,
   description: descricaoSeo,
   image: imagemSeo ? [imagemSeo] : undefined,
@@ -93,6 +105,7 @@ useJsonLd({
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div class="noticia-conteudo mt-8" v-html="noticia.conteudo" />
 
+    <NoticiasCtaGuiaBuritis :noticia="noticia" />
     <NoticiasSobreEsteConteudo :noticia="noticia" />
     <NoticiasLeiaTambem :noticia-id="noticia.id" />
   </div>

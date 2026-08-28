@@ -16,11 +16,13 @@ export interface DadosNoticiaForm {
   seo_meta_descricao: string
   seo_imagem_og: string
   seo_palavras_chave: string
+  relacionados: string[]
 }
 
 const props = defineProps<{
   salvando: boolean
   modoEdicao: boolean
+  noticiaIdAtual?: string
 }>()
 
 const emit = defineEmits<{ salvar: [] }>()
@@ -34,6 +36,33 @@ const { $supabase } = useNuxtApp()
 
 const { data: categorias } = await useCategorias()
 const { data: subcategoriasGuia } = await useSubcategoriasGuia()
+const { data: todasNoticias } = await useTodasNoticiasPublicadas()
+
+const buscaRelacionados = ref('')
+
+const opcoesRelacionados = computed(() =>
+  (todasNoticias.value ?? []).filter((n) => n.id !== props.noticiaIdAtual),
+)
+
+const relacionadosFiltrados = computed(() => {
+  const termo = buscaRelacionados.value.trim().toLowerCase()
+  if (!termo) return opcoesRelacionados.value
+  return opcoesRelacionados.value.filter((n) => n.titulo.toLowerCase().includes(termo))
+})
+
+const relacionadosSelecionados = computed(() =>
+  opcoesRelacionados.value.filter((n) => modelo.value.relacionados.includes(n.id)),
+)
+
+function alternarRelacionado(id: string) {
+  modelo.value.relacionados = modelo.value.relacionados.includes(id)
+    ? modelo.value.relacionados.filter((x) => x !== id)
+    : [...modelo.value.relacionados, id]
+}
+
+function removerRelacionado(id: string) {
+  modelo.value.relacionados = modelo.value.relacionados.filter((x) => x !== id)
+}
 
 const slugTocado = ref(props.modoEdicao)
 
@@ -204,6 +233,51 @@ const limiteMetaDescricao = 160
     <div>
       <label class="mb-1 block text-sm font-medium text-stone-700">Conteúdo</label>
       <AdminTiptapEditor v-model="modelo.conteudo" />
+    </div>
+
+    <div>
+      <label class="mb-1 block text-sm font-medium text-stone-700">Leia também (relacionados)</label>
+      <p class="mb-2 text-xs text-stone-500">
+        Escolha manualmente os artigos que devem aparecer no bloco "Leia também" desta notícia
+        -- a recíproca é gravada automaticamente nos artigos escolhidos. Deixe vazio pra usar o
+        cálculo automático (artigos mais recentes da mesma categoria).
+      </p>
+
+      <div v-if="relacionadosSelecionados.length" class="mb-2 flex flex-wrap gap-2">
+        <span
+          v-for="rel in relacionadosSelecionados"
+          :key="rel.id"
+          class="flex items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-xs text-orange-700"
+        >
+          {{ rel.titulo }}
+          <button type="button" class="font-bold" @click="removerRelacionado(rel.id)">×</button>
+        </span>
+      </div>
+
+      <input
+        v-model="buscaRelacionados"
+        type="text"
+        placeholder="Buscar notícia por título..."
+        class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+      />
+
+      <div class="mt-2 max-h-48 overflow-y-auto rounded-lg border border-stone-200">
+        <label
+          v-for="n in relacionadosFiltrados"
+          :key="n.id"
+          class="flex items-center gap-2 border-b border-stone-100 px-3 py-2 text-sm last:border-b-0 hover:bg-stone-50"
+        >
+          <input
+            type="checkbox"
+            :checked="modelo.relacionados.includes(n.id)"
+            @change="alternarRelacionado(n.id)"
+          />
+          {{ n.titulo }}
+        </label>
+        <p v-if="!relacionadosFiltrados.length" class="px-3 py-2 text-sm text-stone-400">
+          Nenhuma notícia encontrada.
+        </p>
+      </div>
     </div>
 
     <div class="rounded-lg border border-stone-200 bg-stone-50 p-4">

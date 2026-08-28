@@ -107,7 +107,7 @@ useJsonLd({
 
     <NoticiasCtaGuiaBuritis :noticia="noticia" />
     <NoticiasSobreEsteConteudo :noticia="noticia" />
-    <NoticiasLeiaTambem :noticia-id="noticia.id" />
+    <NoticiasLeiaTambem :noticia="noticia" />
   </div>
 </template>
 

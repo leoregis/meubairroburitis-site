@@ -28,6 +28,7 @@ const dados = ref<DadosNoticiaForm>({
   seo_meta_descricao: '',
   seo_imagem_og: '',
   seo_palavras_chave: '',
+  relacionados: [],
 })
 
 // guarda a data_publicacao original -- só é definida na primeira vez que
@@ -58,6 +59,12 @@ onMounted(async () => {
 
   dataPublicacaoOriginal.value = data.data_publicacao
 
+  const { data: relacoesExistentes } = await $supabase
+    .from('noticias_relacionadas')
+    .select('relacionada_id')
+    .eq('noticia_id', noticiaId)
+    .order('ordem')
+
   dados.value = {
     titulo: data.titulo,
     subtitulo: data.subtitulo ?? '',
@@ -75,6 +82,7 @@ onMounted(async () => {
     seo_meta_descricao: data.seo_meta_descricao ?? '',
     seo_imagem_og: data.seo_imagem_og ?? '',
     seo_palavras_chave: data.seo_palavras_chave ?? '',
+    relacionados: (relacoesExistentes ?? []).map((r) => r.relacionada_id),
   }
 })
 
@@ -109,13 +117,15 @@ async function salvar() {
     })
     .eq('id', noticiaId)
 
-  salvando.value = false
-
   if (erroSalvar) {
+    salvando.value = false
     erro.value = erroSalvar.message.includes('duplicate') ? 'Já existe uma notícia com esse slug.' : erroSalvar.message
     return
   }
 
+  await salvarRelacionadosNoticia($supabase, noticiaId, dados.value.relacionados)
+
+  salvando.value = false
   statusPublicacao.value = 'publicando'
   const ok = await dispararDeploy()
   statusPublicacao.value = ok ? 'ok' : 'erro'
@@ -137,7 +147,13 @@ async function salvar() {
       <p v-if="erro" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ erro }}</p>
 
       <div class="mt-6">
-        <AdminNoticiaForm v-model="dados" :salvando="salvando" :modo-edicao="true" @salvar="salvar" />
+        <AdminNoticiaForm
+          v-model="dados"
+          :salvando="salvando"
+          :modo-edicao="true"
+          :noticia-id-atual="noticiaId"
+          @salvar="salvar"
+        />
       </div>
     </template>
   </div>

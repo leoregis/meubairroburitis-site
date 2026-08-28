@@ -1,7 +1,13 @@
 <script setup lang="ts">
-const props = defineProps<{ noticiaId: string }>()
+import type { Noticia } from '~/composables/useNoticias'
 
-const { data: relacionadas } = await useNoticiasRelacionadas(props.noticiaId)
+const props = defineProps<{ noticia: Noticia }>()
+
+const { data: relacionadas } = await useNoticiasRelacionadas(
+  props.noticia.id,
+  props.noticia.categoria_id,
+  props.noticia.subcategoria_guia_id,
+)
 </script>
 
 <template>

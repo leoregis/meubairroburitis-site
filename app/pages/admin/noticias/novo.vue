@@ -25,6 +25,7 @@ const dados = ref<DadosNoticiaForm>({
   seo_meta_descricao: '',
   seo_imagem_og: '',
   seo_palavras_chave: '',
+  relacionados: [],
 })
 
 const salvando = ref(false)
@@ -50,33 +51,39 @@ async function salvar() {
   salvando.value = true
   erro.value = ''
 
-  const { error } = await $supabase.from('noticias').insert({
-    titulo: dados.value.titulo,
-    subtitulo: dados.value.subtitulo || null,
-    slug: dados.value.slug,
-    conteudo: dados.value.conteudo,
-    imagem_destaque_url: dados.value.imagem_destaque_url || null,
-    imagem_destaque_alt: dados.value.imagem_destaque_alt || null,
-    categoria: dados.value.categoria || null,
-    categoria_id: dados.value.categoria_id || null,
-    subcategoria_guia_id: dados.value.categoria_id === 'guias' ? (dados.value.subcategoria_guia_id || null) : null,
-    tipo_conteudo: dados.value.tipo_conteudo,
-    autor: dados.value.autor || null,
-    status: dados.value.status,
-    data_publicacao: dados.value.status === 'publicado' ? new Date().toISOString() : null,
-    seo_meta_titulo: dados.value.seo_meta_titulo || null,
-    seo_meta_descricao: dados.value.seo_meta_descricao || null,
-    seo_imagem_og: dados.value.seo_imagem_og || null,
-    seo_palavras_chave: dados.value.seo_palavras_chave || null,
-  })
+  const { data: criada, error } = await $supabase
+    .from('noticias')
+    .insert({
+      titulo: dados.value.titulo,
+      subtitulo: dados.value.subtitulo || null,
+      slug: dados.value.slug,
+      conteudo: dados.value.conteudo,
+      imagem_destaque_url: dados.value.imagem_destaque_url || null,
+      imagem_destaque_alt: dados.value.imagem_destaque_alt || null,
+      categoria: dados.value.categoria || null,
+      categoria_id: dados.value.categoria_id || null,
+      subcategoria_guia_id: dados.value.categoria_id === 'guias' ? (dados.value.subcategoria_guia_id || null) : null,
+      tipo_conteudo: dados.value.tipo_conteudo,
+      autor: dados.value.autor || null,
+      status: dados.value.status,
+      data_publicacao: dados.value.status === 'publicado' ? new Date().toISOString() : null,
+      seo_meta_titulo: dados.value.seo_meta_titulo || null,
+      seo_meta_descricao: dados.value.seo_meta_descricao || null,
+      seo_imagem_og: dados.value.seo_imagem_og || null,
+      seo_palavras_chave: dados.value.seo_palavras_chave || null,
+    })
+    .select('id')
+    .single()
 
-  salvando.value = false
-
-  if (error) {
-    erro.value = error.message.includes('duplicate') ? 'Já existe uma notícia com esse slug.' : error.message
+  if (error || !criada) {
+    salvando.value = false
+    erro.value = error?.message.includes('duplicate') ? 'Já existe uma notícia com esse slug.' : (error?.message || 'Erro ao salvar.')
     return
   }
 
+  await salvarRelacionadosNoticia($supabase, criada.id, dados.value.relacionados)
+
+  salvando.value = false
   statusPublicacao.value = 'publicando'
   const ok = await dispararDeploy()
   statusPublicacao.value = ok ? 'ok' : 'erro'

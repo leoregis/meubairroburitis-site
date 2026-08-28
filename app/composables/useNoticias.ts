@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 export const NOTICIAS_POR_PAGINA = 12
 
 // select usado em toda consulta de noticias -- embute o rótulo da
@@ -175,9 +177,17 @@ export function useSubcategoriasGuia() {
   })
 }
 
-// Fase 3 -- bloco "Leia também", curado manualmente (não calculado por
-// categoria) a partir da matriz de linkagem aprovada.
-export function useNoticiasRelacionadas(noticiaId: string) {
+// Fase 3 -- bloco "Leia também", curado manualmente a partir da matriz de
+// linkagem aprovada. Quando o artigo não tem nenhuma linha curada (ex:
+// artigo novo publicado depois da Fase 3, que ninguém lembrou de linkar
+// manualmente), cai num fallback automático: outros artigos publicados da
+// mesma categoria/subcategoria, mais recentes primeiro. O fallback nunca
+// sobrepõe curadoria existente -- só cobre o buraco de esquecimento.
+export function useNoticiasRelacionadas(
+  noticiaId: string,
+  categoriaId: string | null,
+  subcategoriaGuiaId: string | null,
+) {
   const { $supabase } = useNuxtApp()
 
   return useAsyncData(`noticias-relacionadas-${noticiaId}`, async () => {
@@ -190,8 +200,87 @@ export function useNoticiasRelacionadas(noticiaId: string) {
       .order('ordem')
 
     if (error) throw error
-    return ((data ?? []) as any[]).map((r) => r.relacionada) as Noticia[]
+
+    const curadas = ((data ?? []) as any[]).map((r) => r.relacionada) as Noticia[]
+    if (curadas.length || !categoriaId) return curadas
+
+    let queryFallback = $supabase
+      .from('noticias')
+      .select(SELECT_NOTICIA)
+      .eq('status', 'publicado')
+      .eq('categoria_id', categoriaId)
+      .neq('id', noticiaId)
+      .order('data_publicacao', { ascending: false })
+      .limit(3)
+
+    if (categoriaId === 'guias' && subcategoriaGuiaId) {
+      queryFallback = queryFallback.eq('subcategoria_guia_id', subcategoriaGuiaId)
+    }
+
+    const { data: fallback, error: erroFallback } = await queryFallback
+    if (erroFallback) throw erroFallback
+    return (fallback ?? []) as Noticia[]
   })
+}
+
+// usado no admin (seletor de "Leia também") -- lista enxuta, sem categoria
+// alguma, pra permitir escolher qualquer notícia publicada como relacionada.
+export function useTodasNoticiasPublicadas() {
+  const { $supabase } = useNuxtApp()
+
+  return useAsyncData('noticias-todas-publicadas-selecao', async () => {
+    if (!$supabase) return [] as Pick<Noticia, 'id' | 'titulo'>[]
+
+    const { data, error } = await $supabase
+      .from('noticias')
+      .select('id, titulo')
+      .eq('status', 'publicado')
+      .order('titulo')
+
+    if (error) throw error
+    return (data ?? []) as Pick<Noticia, 'id' | 'titulo'>[]
+  })
+}
+
+// Substitui por completo a curadoria de "noticia_id" pelos ids escolhidos, e
+// grava a recíproca em cada um deles (mesmo padrão simétrico já usado
+// manualmente entre os guias de Alimentação) -- se o alvo já tiver essa
+// recíproca, não duplica. Não remove recíprocas de relações que foram
+// desmarcadas nesta edição (fica a cargo de quem editar o outro artigo).
+export async function salvarRelacionadosNoticia(
+  supabase: SupabaseClient | null,
+  noticiaId: string,
+  relacionadosIds: string[],
+) {
+  if (!supabase) return
+
+  await supabase.from('noticias_relacionadas').delete().eq('noticia_id', noticiaId)
+
+  if (!relacionadosIds.length) return
+
+  await supabase.from('noticias_relacionadas').insert(
+    relacionadosIds.map((relacionadaId, i) => ({
+      noticia_id: noticiaId,
+      relacionada_id: relacionadaId,
+      ordem: i,
+    })),
+  )
+
+  for (const relacionadaId of relacionadosIds) {
+    const { data: existentes } = await supabase
+      .from('noticias_relacionadas')
+      .select('relacionada_id')
+      .eq('noticia_id', relacionadaId)
+
+    const jaTemReciproca = (existentes ?? []).some((r) => r.relacionada_id === noticiaId)
+    if (jaTemReciproca) continue
+
+    await supabase.from('noticias_relacionadas').insert({
+      noticia_id: relacionadaId,
+      relacionada_id: noticiaId,
+      ordem: (existentes ?? []).length,
+    })
+  }
 }
 
 export function formatarDataNoticia(data: string | null) {

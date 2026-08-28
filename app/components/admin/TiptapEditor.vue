@@ -51,6 +51,29 @@ function inserirLink() {
   if (!url) return
   editor.value?.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
 }
+
+// "Colar HTML" -- paste nativo do Tiptap so interpreta HTML de verdade
+// quando o clipboard tem um payload text/html real (ex: copiar de uma
+// pagina renderizada). Colar a STRING bruta de markup (ex: de um editor
+// de texto/codigo) cai como texto literal, com as tags visiveis -- por
+// isso esse botao abre um textarea a parte: o que for colado ali sempre
+// chega como string (sem MIME html), entao a gente mesmo manda o Tiptap
+// tratar como HTML (insertContent faz parse de string como HTML por
+// padrao), depois de sanitizar.
+const mostrarModalHtml = ref(false)
+const htmlColado = ref('')
+
+function abrirModalHtml() {
+  htmlColado.value = ''
+  mostrarModalHtml.value = true
+}
+
+function confirmarHtmlColado() {
+  const sanitizado = sanitizeHtml(htmlColado.value)
+  editor.value?.chain().focus().insertContent(sanitizado).run()
+  mostrarModalHtml.value = false
+  htmlColado.value = ''
+}
 </script>
 
 <template>
@@ -120,9 +143,49 @@ function inserirLink() {
       >
         🔗 Link
       </button>
+      <button
+        type="button"
+        class="rounded px-2 py-1 text-sm hover:bg-stone-100"
+        @click="abrirModalHtml"
+      >
+        &lt;/&gt; Colar HTML
+      </button>
     </div>
 
     <EditorContent :editor="editor" class="noticia-editor-conteudo min-h-[240px] px-3 py-2" />
+
+    <div v-if="mostrarModalHtml" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div class="w-full max-w-2xl rounded-lg bg-white p-5 shadow-xl">
+        <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-stone-500">Colar HTML bruto</h3>
+        <p class="mb-3 text-xs text-stone-500">
+          Cole aqui o HTML pronto (ex: com &lt;h3&gt;, &lt;strong&gt;, &lt;a&gt;...). Ao inserir, o
+          conteúdo é sanitizado e vira formatação real no editor, não texto com as tags visíveis.
+        </p>
+        <textarea
+          v-model="htmlColado"
+          rows="12"
+          class="w-full rounded-lg border border-stone-300 p-3 font-mono text-xs focus:border-orange-500 focus:outline-none"
+          placeholder="<h3>Título</h3><p><strong>Negrito</strong> e um <a href=&quot;https://...&quot;>link</a></p>"
+        />
+        <div class="mt-3 flex justify-end gap-2">
+          <button
+            type="button"
+            class="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+            @click="mostrarModalHtml = false"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+            :disabled="!htmlColado.trim()"
+            @click="confirmarHtmlColado"
+          >
+            Inserir
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

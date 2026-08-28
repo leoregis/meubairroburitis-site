@@ -89,6 +89,17 @@ jobs:
           set cmd:fail-exit no
           mkdir -p public_html/$RELEASE
           mirror -R --parallel=6 .output/public/ public_html/$RELEASE/
+
+          # public_html/.htaccess exclui /.well-known/ de TODA regra de
+          # rewrite pra _current/ (de propósito -- é onde ficam arquivos de
+          # verificação tipo assetlinks.json, Google Search Console etc.,
+          # que precisam sobreviver independente de qualquer release/swap
+          # do site). Por isso esse diretório é sincronizado direto na raiz
+          # do public_html, fora do $RELEASE/_current -- senão o arquivo
+          # existiria no build mas nunca seria servido de verdade.
+          mkdir -p public_html/.well-known
+          mirror -R --parallel=2 .output/public/.well-known/ public_html/.well-known/
+
           # no 1o deploy de sempre, public_html/_current ainda nao existe --
           # esse mv falha (550 doesn't exist) e é normal; por isso continua
           # tolerando erro aqui. O rename final (release -> _current), esse

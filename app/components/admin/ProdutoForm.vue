@@ -5,6 +5,7 @@ export interface DadosProdutoForm {
   descricao_curta: string
   descricao: string
   preco_reais: number | null
+  preco_original_reais: number | null
   imagem_url: string
   ordem: number
   ativo: boolean
@@ -106,13 +107,25 @@ function aoDigitarSlug() {
         />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium text-stone-700">Ordem de exibição</label>
+        <label class="mb-1 block text-sm font-medium text-stone-700">Preço original (R$) -- opcional</label>
         <input
-          v-model.number="modelo.ordem"
+          v-model.number="modelo.preco_original_reais"
           type="number"
+          step="0.01"
+          min="0"
           class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
         />
+        <p class="mt-1 text-xs text-stone-500">Preenchido = mostra riscado ao lado do preço atual (promoção). Vazio = sem promoção.</p>
       </div>
+    </div>
+
+    <div>
+      <label class="mb-1 block text-sm font-medium text-stone-700">Ordem de exibição</label>
+      <input
+        v-model.number="modelo.ordem"
+        type="number"
+        class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+      />
     </div>
 
     <div>

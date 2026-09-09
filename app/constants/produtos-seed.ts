@@ -63,4 +63,16 @@ export const PRODUTOS_SEED: Produto[] = [
     imagem_url: '/produtos/stories-no-instagram.png',
     ordem: 5,
   },
+  {
+    id: 'seed-conteudo-publicitario-especial',
+    slug: 'conteudo-publicitario-especial',
+    nome: 'Conteúdo Publicitário Especial',
+    descricao_curta: 'Matéria personalizada da sua empresa no nosso site e no feed do Instagram, identificada como conteúdo publicitário.',
+    descricao:
+      'Sua empresa tem uma história, novidade, serviço ou informação que merece ser conhecida pelos moradores do Buritis e Estoril?\n\nNeste formato, o Meu Bairro Buritis produz um conteúdo personalizado a partir das informações fornecidas pela sua empresa e publica o material em formato de matéria no nosso site e no feed do Instagram.\n\nO conteúdo é desenvolvido pela nossa equipe, com linguagem informativa e apresentação editorial, mas é identificado claramente como CONTEÚDO PUBLICITÁRIO.\n\nInclui:\n- Produção do texto pelo Meu Bairro Buritis\n- Publicação da matéria no site\n- Publicação no feed do Instagram\n- Identificação como conteúdo publicitário\n- Link para o site, empresa ou canal indicado pelo anunciante\n- Permanência da matéria no site\n\nO anunciante fornece as informações, imagens e materiais necessários para a produção. A publicação final é editada e aprovada pelo Meu Bairro Buritis.',
+    preco_centavos: 39900,
+    preco_original_centavos: 54900,
+    imagem_url: '/produtos/conteudo-publicitario-especial.jpeg',
+    ordem: 6,
+  },
 ]

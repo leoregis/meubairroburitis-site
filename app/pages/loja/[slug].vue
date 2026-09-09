@@ -65,7 +65,15 @@ useJsonLd({
     <p class="mt-6 whitespace-pre-line text-stone-600">{{ produto.descricao }}</p>
 
     <div class="mt-8 flex items-center gap-4 rounded-2xl border border-stone-200 bg-white p-6">
-      <p class="text-2xl font-bold tabular-nums text-orange-700">{{ formatarPreco(produto.preco_centavos) }}</p>
+      <div>
+        <p
+          v-if="produto.preco_original_centavos && produto.preco_original_centavos > produto.preco_centavos"
+          class="tabular-nums text-stone-400 line-through"
+        >
+          {{ formatarPreco(produto.preco_original_centavos) }}
+        </p>
+        <p class="text-2xl font-bold tabular-nums text-orange-700">{{ formatarPreco(produto.preco_centavos) }}</p>
+      </div>
 
       <div class="ml-auto flex items-center gap-2">
         <input

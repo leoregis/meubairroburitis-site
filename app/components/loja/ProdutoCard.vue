@@ -36,7 +36,15 @@ function adicionarAoCarrinho() {
       </div>
     </NuxtLink>
     <div class="flex items-center justify-between gap-2 px-3 pb-3 sm:px-6 sm:pb-6">
-      <p class="text-base font-bold tabular-nums text-orange-700 sm:text-xl">{{ formatarPreco(produto.preco_centavos) }}</p>
+      <div>
+        <p
+          v-if="produto.preco_original_centavos && produto.preco_original_centavos > produto.preco_centavos"
+          class="text-xs tabular-nums text-stone-400 line-through sm:text-sm"
+        >
+          {{ formatarPreco(produto.preco_original_centavos) }}
+        </p>
+        <p class="text-base font-bold tabular-nums text-orange-700 sm:text-xl">{{ formatarPreco(produto.preco_centavos) }}</p>
+      </div>
       <button
         type="button"
         class="rounded-full bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-700 sm:px-4 sm:py-2 sm:text-sm"

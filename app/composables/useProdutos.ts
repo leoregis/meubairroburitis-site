@@ -7,6 +7,10 @@ export interface Produto {
   descricao_curta: string | null
   descricao: string | null
   preco_centavos: number
+  // preço "de" opcional, exibido riscado quando maior que preco_centavos
+  // (produto em promoção) -- null/ausente = sem promoção, mostra só o
+  // preço normal (comportamento de todo produto criado antes disso).
+  preco_original_centavos?: number | null
   imagem_url: string | null
   ordem: number
 }

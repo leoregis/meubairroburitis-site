@@ -13,15 +13,8 @@ if (!prestador.value) {
 const canonicalUrl = computed(() => `https://meubairroburitis.com.br/prestadores/${prestador.value?.slug}`)
 const linkGuia = computed(() => `https://meubairroburitis.com.br/guia/prestador/${prestador.value?.slug}`)
 
-const categoriaTexto = computed(() => {
-  const p = prestador.value
-  if (!p) return null
-  if (p.categoria_nome && p.subcategoria_nome) return `${p.categoria_nome} · ${p.subcategoria_nome}`
-  return p.categoria_nome || p.subcategoria_nome || null
-})
-
 useSeoMeta({
-  title: () => `${prestador.value?.nome} — ${categoriaTexto.value || 'Prestador de serviço'} — Meu Bairro Buritis`,
+  title: () => `${prestador.value?.nome} — ${prestador.value?.categoria_nome || 'Prestador de serviço'} — Meu Bairro Buritis`,
   description: () => prestador.value?.descricao_curta || undefined,
   ogTitle: () => prestador.value?.nome,
   ogDescription: () => prestador.value?.descricao_curta || undefined,
@@ -43,7 +36,7 @@ useJsonLd({
   description: prestador.value.descricao_curta || undefined,
   image: prestador.value.foto_url || undefined,
   url: canonicalUrl.value,
-  jobTitle: categoriaTexto.value || undefined,
+  jobTitle: prestador.value.categoria_nome || undefined,
   telephone: prestador.value.telefone || undefined,
   address: prestador.value.bairro_nome
     ? { '@type': 'PostalAddress', addressLocality: prestador.value.bairro_nome, addressRegion: 'MG', addressCountry: 'BR' }
@@ -54,7 +47,7 @@ useJsonLd({
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://meubairroburitis.com.br/' },
-    { '@type': 'ListItem', position: 2, name: 'Prestadores', item: 'https://meubairroburitis.com.br/guia/profissionais' },
+    { '@type': 'ListItem', position: 2, name: 'Prestadores', item: 'https://meubairroburitis.com.br/prestadores' },
     { '@type': 'ListItem', position: 3, name: prestador.value.nome, item: canonicalUrl.value },
   ],
 })
@@ -65,52 +58,64 @@ useJsonLd({
     <nav class="flex flex-wrap items-center gap-1 text-sm text-stone-500" aria-label="Breadcrumb">
       <NuxtLink to="/" class="hover:text-orange-700">Início</NuxtLink>
       <span aria-hidden="true">/</span>
-      <a href="https://meubairroburitis.com.br/guia/profissionais" target="_blank" rel="noopener noreferrer" class="hover:text-orange-700">Prestadores</a>
+      <NuxtLink to="/prestadores" class="hover:text-orange-700">Prestadores</NuxtLink>
       <span aria-hidden="true">/</span>
       <span class="text-stone-700">{{ prestador.nome }}</span>
     </nav>
 
-    <h1 class="mt-4 font-serif text-3xl font-bold text-stone-900">
-      {{ prestador.nome }}
-      <span v-if="prestador.verificado" title="Verificado" class="ml-1 text-base text-emerald-600">✔</span>
-    </h1>
+    <div class="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm sm:flex-row sm:items-start sm:text-left">
+      <NuxtPicture
+        v-if="prestador.foto_url"
+        :src="prestador.foto_url"
+        :alt="prestador.nome"
+        format="avif,webp"
+        :width="200"
+        :height="200"
+        loading="eager"
+        :img-attrs="{ class: 'h-28 w-28 shrink-0 rounded-full object-cover shadow-sm' }"
+      />
+      <div v-else class="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-stone-100 text-4xl">🙋</div>
 
-    <p v-if="categoriaTexto" class="mt-2 text-xs font-semibold uppercase tracking-wide text-orange-700">
-      {{ categoriaTexto }}
-    </p>
+      <div>
+        <h1 class="text-balance font-serif text-3xl font-bold text-stone-900">
+          {{ prestador.nome }}
+          <span v-if="prestador.verificado" title="Verificado" class="ml-1 align-middle text-lg text-emerald-600">✔</span>
+          <span v-if="prestador.destaque" class="ml-2 inline-block rounded-full bg-orange-100 px-2.5 py-0.5 align-middle text-xs font-semibold text-orange-700">Destaque</span>
+        </h1>
 
-    <NuxtPicture
-      v-if="prestador.foto_url"
-      :src="prestador.foto_url"
-      :alt="prestador.nome"
-      format="avif,webp"
-      :width="200"
-      :height="200"
-      loading="eager"
-      :img-attrs="{ class: 'mt-6 h-32 w-32 rounded-full object-cover' }"
-    />
+        <NuxtLink
+          v-if="prestador.categoria_slug"
+          :to="`/prestadores/categoria/${prestador.categoria_slug}`"
+          class="mt-2 inline-block text-sm font-semibold uppercase tracking-wide text-orange-700 hover:underline"
+        >
+          {{ prestador.categoria_nome }}<template v-if="prestador.subcategoria_nome"> · {{ prestador.subcategoria_nome }}</template>
+        </NuxtLink>
+        <p v-else-if="prestador.categoria_nome" class="mt-2 text-sm font-semibold uppercase tracking-wide text-orange-700">
+          {{ prestador.categoria_nome }}<template v-if="prestador.subcategoria_nome"> · {{ prestador.subcategoria_nome }}</template>
+        </p>
 
-    <p v-if="prestador.descricao_curta" class="mt-6 text-stone-600">{{ prestador.descricao_curta }}</p>
+        <p v-if="prestador.bairro_nome" class="mt-1 text-sm text-stone-500">📍 {{ prestador.bairro_nome }}</p>
+      </div>
+    </div>
 
-    <p v-if="prestador.bairro_nome" class="mt-3 text-sm text-stone-500">
-      <strong class="text-stone-900">Bairro:</strong> {{ prestador.bairro_nome }}
-    </p>
+    <p v-if="prestador.descricao_curta" class="mt-8 text-stone-600">{{ prestador.descricao_curta }}</p>
 
-    <div class="mt-6 rounded-2xl border border-stone-200 bg-white p-6">
+    <section class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+      <h2 class="mb-4 font-serif text-lg font-bold text-stone-900">Contato</h2>
       <div v-if="prestador.telefone" class="flex flex-wrap gap-3">
         <a
           v-if="prestador.exibir_whatsapp"
           :href="linkWhatsappPrestador(prestador.telefone)"
           target="_blank"
           rel="noopener noreferrer"
-          class="rounded-full bg-[#25D366] px-5 py-2 text-sm font-semibold text-white hover:bg-[#20bd5a]"
+          class="rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#20bd5a]"
         >
           WhatsApp
         </a>
         <a
           v-if="prestador.exibir_telefone"
           :href="linkTelefonePrestador(prestador.telefone)"
-          class="rounded-full border border-stone-300 px-5 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50"
+          class="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
         >
           Ligar
         </a>
@@ -118,18 +123,16 @@ useJsonLd({
       <p v-else class="text-sm text-stone-500">
         Contato disponível pelo Guia Buritis.
       </p>
-    </div>
+    </section>
 
-    <p class="mt-6 text-sm text-stone-500">
+    <p class="mt-8 text-sm text-stone-500">
       <template v-if="prestador.total_avaliacoes > 0">
-        ⭐ {{ prestador.nota_media.toFixed(1) }} · {{ prestador.total_avaliacoes }} avaliaç{{ prestador.total_avaliacoes === 1 ? 'ão' : 'ões' }}
+        ⭐ <span class="font-semibold text-stone-700">{{ prestador.nota_media.toFixed(1) }}</span> · {{ prestador.total_avaliacoes }} avaliaç{{ prestador.total_avaliacoes === 1 ? 'ão' : 'ões' }}
       </template>
-      <template v-else>
-        Ainda sem avaliações
-      </template>
+      <template v-else>Ainda sem avaliações</template>
     </p>
 
-    <p class="mt-8 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
+    <p class="my-10 rounded-2xl bg-stone-50 p-5 text-sm text-stone-600">
       Veja avaliações completas e fale direto com {{ prestador.nome }} pelo
       <!-- /guia/ é o app separado (meubairro-app), fora do router deste
       site -- <a> comum, não NuxtLink (mesmo padrão de CtaGuiaBuritis.vue). -->

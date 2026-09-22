@@ -19,6 +19,8 @@ export interface EmpresaPublica {
   descricao: string | null
   categoria_nome: string | null
   subcategoria_nome: string | null
+  categoria_slug: string | null
+  subcategoria_slug: string | null
   logo_url: string | null
   imagem_hero: string | null
   endereco: string | null
@@ -46,6 +48,8 @@ export interface PrestadorPublico {
   descricao_curta: string | null
   categoria_nome: string | null
   subcategoria_nome: string | null
+  categoria_slug: string | null
+  subcategoria_slug: string | null
   foto_url: string | null
   verificado: boolean
   destaque: boolean

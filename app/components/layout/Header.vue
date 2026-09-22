@@ -4,6 +4,8 @@ const links = [
   { label: 'Quem Somos', to: '/quem-somos' },
   { label: 'O Bairro Buritis', to: '/o-bairro-buritis' },
   { label: 'Notícias', to: '/noticias' },
+  { label: 'Empresas', to: '/empresas' },
+  { label: 'Prestadores', to: '/prestadores' },
   { label: 'Anuncie', to: '/loja' },
   { label: 'Midiakit', to: '/midiakit' },
   { label: 'Canais', to: '/canais' },

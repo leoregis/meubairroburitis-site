@@ -161,6 +161,43 @@ export default defineNuxtConfig({
             .not('slug', 'is', null)
 
           rotasPrestadores = (prestadoresData || []).map((p: { slug: string }) => `/prestadores/${p.slug}`)
+
+          // Fase 5 -- listagens paginadas + por categoria. Depende de
+          // vw_empresas_publico_listagem/vw_prestadores_publico_listagem e
+          // da coluna slug_seo (migration própria, aplicada separadamente
+          // da Fase 4) -- isolado em try/catch próprio pra que, se essa
+          // migration ainda não tiver rodado no banco, o build continue
+          // gerando normalmente as páginas de detalhe da Fase 3/4 (só as
+          // rotas de listagem novas ficam de fora, em vez de derrubar a
+          // enumeração inteira -- mesma lição do bug do `ws` da Fase 4).
+          try {
+            const ITENS_POR_PAGINA = 24
+
+            async function enumerarPaginas(tabela: string, baseRota: string, categoriaSlug?: string) {
+              let query = supabaseMba.from(tabela).select('*', { count: 'exact', head: true })
+              if (categoriaSlug) query = query.eq('categoria_slug', categoriaSlug)
+              const { count } = await query
+              const totalPaginas = Math.max(1, Math.ceil((count || 0) / ITENS_POR_PAGINA))
+              return Array.from({ length: totalPaginas - 1 }, (_, i) => `${baseRota}/pagina/${i + 2}`)
+            }
+
+            rotasEmpresas.push('/empresas', ...(await enumerarPaginas('vw_empresas_publico_listagem', '/empresas')))
+            rotasPrestadores.push('/prestadores', ...(await enumerarPaginas('vw_prestadores_publico_listagem', '/prestadores')))
+
+            const { data: categoriasEmpresa } = await supabaseMba.from('empresas_categorias').select('slug_seo')
+            for (const c of categoriasEmpresa || []) {
+              const base = `/empresas/categoria/${c.slug_seo}`
+              rotasEmpresas.push(base, ...(await enumerarPaginas('vw_empresas_publico_listagem', base, c.slug_seo)))
+            }
+
+            const { data: categoriasPrestador } = await supabaseMba.from('categorias').select('slug_seo').eq('ativo', true)
+            for (const c of categoriasPrestador || []) {
+              const base = `/prestadores/categoria/${c.slug_seo}`
+              rotasPrestadores.push(base, ...(await enumerarPaginas('vw_prestadores_publico_listagem', base, c.slug_seo)))
+            }
+          } catch (erroFase5) {
+            console.warn('[nitro:config] Fase 5 (listagens/categorias) pulada -- provável migration slug_seo ainda não aplicada:', erroFase5)
+          }
         }
 
         nitroConfig.prerender ||= {}

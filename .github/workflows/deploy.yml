@@ -39,6 +39,13 @@ jobs:
           # de produção, o Brick sobe com a public key vazia e o checkout
           # por cartão quebra silenciosamente.
           NUXT_PUBLIC_MP_PUBLIC_KEY: ${{ secrets.NUXT_PUBLIC_MP_PUBLIC_KEY }}
+          # Fase 4 -- projeto Supabase do meubairro-app, só pra enumerar
+          # slugs de empresas/prestadores ativos em build-time (nitro:config
+          # em nuxt.config.ts). Sem isso aqui, o hook pula essa enumeração
+          # silenciosamente (if (urlMba && keyMba)) e o build "funciona" mas
+          # nunca gera /empresas/[slug] nem /prestadores/[slug].
+          NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL }}
+          NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY }}
 
       - name: Corrige escape duplo (&amp;amp;) nas imagens do sitemap.xml
         # o hook em nuxt.config.ts (prerender:generate) não é confiável --

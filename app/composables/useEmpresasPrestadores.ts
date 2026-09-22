@@ -1,0 +1,99 @@
+// Fase 4 -- leitura pública de SEO (empresas/prestadores), via as duas RPCs
+// buscar_empresa_publica_seo/buscar_prestador_publico_seo do projeto
+// Supabase do meubairro-app (client $meubairroApp, ver
+// app/plugins/supabase-meubairro-app.ts). Somente leitura -- nenhuma
+// escrita acontece por aqui.
+
+export interface HorarioEmpresa {
+  dia_semana: number
+  hora_abertura: string | null
+  hora_fechamento: string | null
+  fechado: boolean
+}
+
+export interface EmpresaPublica {
+  empresa_id: number
+  unidade_id: number
+  slug: string
+  nome: string
+  descricao: string | null
+  categoria_nome: string | null
+  subcategoria_nome: string | null
+  logo_url: string | null
+  imagem_hero: string | null
+  endereco: string | null
+  latitude: number | null
+  longitude: number | null
+  whatsapp: string | null
+  telefone: string | null
+  website: string | null
+  instagram: string | null
+  ifood_url: string | null
+  horarios: HorarioEmpresa[]
+  imagens: string[]
+  nota_media: number
+  total_avaliacoes: number
+  aberto_agora: boolean
+  funciona_24h: boolean
+  entrega_produtos: boolean
+  entrega_no_bairro: boolean
+}
+
+export interface PrestadorPublico {
+  id: number
+  slug: string
+  nome: string
+  descricao_curta: string | null
+  categoria_nome: string | null
+  subcategoria_nome: string | null
+  foto_url: string | null
+  verificado: boolean
+  destaque: boolean
+  bairro_nome: string | null
+  telefone: string | null
+  exibir_telefone: boolean
+  exibir_whatsapp: boolean
+  nota_media: number
+  total_avaliacoes: number
+}
+
+export function useEmpresaPublica(slug: string) {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData(`empresa-publica-${slug}`, async () => {
+    if (!$meubairroApp) return null
+
+    const { data, error } = await $meubairroApp
+      .rpc('buscar_empresa_publica_seo', { p_slug: slug })
+      .maybeSingle()
+
+    if (error) throw error
+    return data as EmpresaPublica | null
+  })
+}
+
+export function usePrestadorPublico(slug: string) {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData(`prestador-publico-${slug}`, async () => {
+    if (!$meubairroApp) return null
+
+    const { data, error } = await $meubairroApp
+      .rpc('buscar_prestador_publico_seo', { p_slug: slug })
+      .maybeSingle()
+
+    if (error) throw error
+    return data as PrestadorPublico | null
+  })
+}
+
+const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+
+export function nomeDiaSemana(dia: number) {
+  return DIAS_SEMANA[dia] ?? ''
+}
+
+export function formatarHora(hora: string | null) {
+  if (!hora) return ''
+  return hora.slice(0, 5)
+}

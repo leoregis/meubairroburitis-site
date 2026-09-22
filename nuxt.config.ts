@@ -78,6 +78,12 @@ export default defineNuxtConfig({
       // tokenizar cartão no navegador via Card Payment Brick). O access
       // token real fica só nos secrets das edge functions, nunca aqui.
       mpPublicKey: process.env.NUXT_PUBLIC_MP_PUBLIC_KEY || '',
+      // Fase 4 -- projeto Supabase do meubairro-app, só pra leitura pública
+      // (anon) das RPCs de SEO buscar_empresa_publica_seo/
+      // buscar_prestador_publico_seo. Projeto SEPARADO do
+      // NUXT_PUBLIC_SUPABASE_URL acima (que é o do site).
+      meubairroAppSupabaseUrl: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL || '',
+      meubairroAppSupabaseAnonKey: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY || '',
     },
   },
 
@@ -92,7 +98,18 @@ export default defineNuxtConfig({
 
       try {
         const { createClient } = await import('@supabase/supabase-js')
-        const supabase = createClient(url, key)
+        // Node 20 não tem WebSocket nativo, e o supabase-js sempre instancia
+        // um RealtimeClient no construtor mesmo sem uso de realtime -- sem
+        // isso, createClient lança "Node.js 20 detected without native
+        // WebSocket support" e o try inteiro abaixo falha silenciosamente
+        // (catch), inclusive pras rotas de produtos/notícias que já
+        // existiam (mascarado até agora porque crawlLinks acaba
+        // descobrindo essas rotas de outro jeito -- mas empresas/
+        // prestadores não têm nenhuma página de listagem linkando ainda,
+        // então dependem 100% desta injeção funcionar). Mesmo workaround
+        // já usado em app/plugins/supabase.ts.
+        const { default: ws } = await import('ws')
+        const supabase = createClient(url, key, { realtime: { transport: ws as never } })
         const { data } = await supabase.from('produtos').select('slug').eq('ativo', true)
         const rotasProdutos = (data || []).map((p: { slug: string }) => `/loja/${p.slug}`)
 
@@ -113,12 +130,47 @@ export default defineNuxtConfig({
         const totalPaginas = Math.max(1, Math.ceil(totalNoticias / NOTICIAS_POR_PAGINA))
         const rotasPaginacao = Array.from({ length: totalPaginas - 1 }, (_, i) => `/noticias/pagina/${i + 2}`)
 
+        // Fase 4 -- empresas/prestadores (SEO) vivem no projeto Supabase do
+        // meubairro-app, SEPARADO do projeto acima (site). Reaproveita
+        // tabelas/views que já têm GRANT SELECT pra anon -- nenhuma view/RPC
+        // nova foi criada só pra esta enumeração:
+        //   - empresas_unidades: já tem GRANT direto pra anon.
+        //   - prestadores (tabela base) NÃO tem GRANT pra anon -- por isso
+        //     usa vw_prestadores_publico, que já expõe slug/ativo e já é
+        //     pública, em vez de tentar ler a tabela base.
+        const urlMba = process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL
+        const keyMba = process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY
+        let rotasEmpresas: string[] = []
+        let rotasPrestadores: string[] = []
+
+        if (urlMba && keyMba) {
+          const supabaseMba = createClient(urlMba, keyMba, { realtime: { transport: ws as never } })
+
+          const { data: empresasData } = await supabaseMba
+            .from('empresas_unidades')
+            .select('slug')
+            .eq('ativo', true)
+            .not('slug', 'is', null)
+
+          rotasEmpresas = (empresasData || []).map((e: { slug: string }) => `/empresas/${e.slug}`)
+
+          const { data: prestadoresData } = await supabaseMba
+            .from('vw_prestadores_publico')
+            .select('slug')
+            .eq('ativo', true)
+            .not('slug', 'is', null)
+
+          rotasPrestadores = (prestadoresData || []).map((p: { slug: string }) => `/prestadores/${p.slug}`)
+        }
+
         nitroConfig.prerender ||= {}
         nitroConfig.prerender.routes = [
           ...(nitroConfig.prerender.routes || []),
           ...rotasProdutos,
           ...rotasNoticias,
           ...rotasPaginacao,
+          ...rotasEmpresas,
+          ...rotasPrestadores,
         ]
       } catch {
         // build-time best-effort — se o Supabase não estiver acessível no

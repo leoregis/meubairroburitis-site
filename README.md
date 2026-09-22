@@ -36,3 +36,21 @@ Ver o plano de arquitetura em
 `public_html/_current/` — zero downtime, testado e confirmado no provedor atual.
 Requer os secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`,
 `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+## Pendências técnicas conhecidas
+
+**Soft-404 em rotas dinâmicas.** O site é 100% SSG com fallback via
+`.htaccess` (`_current/200.html` para qualquer caminho sem arquivo estático
+correspondente), sempre retornando HTTP 200. Isso afeta igualmente
+`/noticias/[slug]`, `/loja/[slug]`, `/empresas/[slug]` e
+`/prestadores/[slug]`: um slug inexistente serve o shell client-only vazio
+com status 200 em vez de 404 real, o que é ruim para SEO (risco de soft-404
+no Google Search Console).
+
+Corrigir isso exige alterar o `.htaccess` compartilhado por todo o site
+(ex.: mapear rotas dinâmicas conhecidas para checagem antes do fallback, ou
+mover para alguma forma de renderização sob demanda), o que é uma mudança
+de arquitetura maior, fora do escopo de qualquer uma das fases da camada
+pública de SEO (Fases 1-4, empresas/prestadores). Não corrigir apenas para
+`/empresas/`/`/prestadores/` sem tratar `/noticias/`/`/loja/` da mesma
+forma, para não criar inconsistência de comportamento entre seções do site.

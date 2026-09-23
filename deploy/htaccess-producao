@@ -277,6 +277,48 @@ RewriteRule ^produto/live/?$ - [G]
 RewriteRule ^produto/repost-insta/?$ - [G]
 RewriteRule ^produto/capa-grupo-facebook/?$ - [G]
 
+# Fase 7d Passo 2 -- blog/artigos antigos do WordPress. /noticias/ é uma
+# seção nova (todos os artigos atuais publicados a partir de ago/2026),
+# não uma migração do blog antigo -- por isso a maioria dos posts
+# antigos não tem sucessor direto. Só os 2 casos abaixo bateram por
+# assunto de verdade (mesmo tema + "Buritis" mencionado explicitamente
+# nos dois lados, não só coincidência de palavra) -- redirect 301 direto
+# pro artigo atual equivalente.
+RewriteRule ^onde-apreciar-um-bom-cafe-no-buritis/?$ /noticias/cafeterias-no-buritis-e-estoril-6-enderecos-para-tomar-um-bom-cafe-no-bairro [R=301,L]
+RewriteRule ^doces-no-buritis-conheca-as-melhores-confeitarias/?$ /noticias/buritis-mais-doce-6-confeitarias-para-colocar-no-radar [R=301,L]
+
+# páginas isoladas com equivalente direto no site atual
+RewriteRule ^about-us/?$ /quem-somos [R=301,L]
+RewriteRule ^linktree/?$ /links [R=301,L]
+
+# sem artigo atual correspondente (tema não coberto, ou bairro fora do
+# escopo atual do site -- hoje é só Buritis/Estoril) -- 410
+RewriteRule ^blog/grupo-de-moradores-faz-mutirao-de-limpeza-da-pista-de-cooper/?$ - [G]
+RewriteRule ^blog/excesso-de-placas-pode-dificultar-venda-e-locacao/?$ - [G]
+RewriteRule ^blog/eventos/campeonato-de-handebol-feminino/?$ - [G]
+RewriteRule ^conheca-o-conjunto-estrela-dalva/?$ - [G]
+RewriteRule ^conheca-o-bairro-jardim-america/?$ - [G]
+RewriteRule ^conheca-o-bairro-palmeiras/?$ - [G]
+
+# taxonomia antiga do blog (categoria/tag do WordPress), sem
+# correspondência 1:1 possível -- genérico pro índice de notícias
+RewriteRule ^category/ /noticias? [R=301,L]
+RewriteRule ^tag/ /noticias? [R=301,L]
+RewriteRule ^blog/post-category/ /noticias? [R=301,L]
+RewriteRule ^blog/post-tag/ /noticias? [R=301,L]
+RewriteRule ^blog/catalogo/author-profile/ /noticias? [R=301,L]
+RewriteCond %{QUERY_STRING} ^cat=
+RewriteRule ^blog/?$ /noticias? [R=301,L]
+
+# taxonomia antiga da loja de anúncios (mesmo grupo do /produto/ do
+# Passo 1) -- índice de /loja, não /noticias, porque é catálogo de
+# produto, não conteúdo editorial
+RewriteRule ^produto-tag/ /loja? [R=301,L]
+RewriteRule ^categoria-produto/ /loja? [R=301,L]
+
+# decisão do Leo sem evidência forte no Wayback -- tratamento genérico
+RewriteRule ^lugar/?$ /noticias [R=301,L]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

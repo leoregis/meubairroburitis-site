@@ -1,0 +1,103 @@
+name: Limpeza segura de releases antigas (uma vez)
+
+# Depois do incidente do deploy #194 (disco cheio derrubou o site),
+# limpa o acumulo de dezenas de pastas _old_*/_release_* nunca
+# apagadas. Feito em 3 fases dentro do mesmo job, de proposito, pra
+# nunca apagar as cegas:
+#   1. lista o public_html de verdade (nlist, um nome por linha)
+#   2. um script calcula EXPLICITAMENTE quem fica (as 3 pastas _old_*
+#      de timestamp mais recente) e quem sai (o resto + os 3 itens
+#      confirmados manualmente) -- imprime a lista completa no log
+#      ANTES de apagar qualquer coisa, e aborta o job inteiro se
+#      "_current" aparecer nessa lista por qualquer motivo
+#   3. só então conecta nas FTP de novo e apaga exatamente os nomes
+#      da lista, um por um (nunca um wildcard solto)
+on:
+  workflow_dispatch:
+
+jobs:
+  limpar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Fase 1 -- lista public_html
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+          echo "===== listagem bruta ====="
+          cat listagem.txt
+
+      - name: Fase 2 -- calcula o que apagar (so imprime, nao apaga nada ainda)
+        run: |
+          # nomes _old_<epoch> ordenados do mais recente pro mais antigo;
+          # mantem os 3 primeiros (mais recentes), o resto vai pra apagar
+          grep -E '^_old_[0-9]+$' listagem.txt | sed -E 's/^_old_//' | sort -rn > old_epochs.txt
+          echo "===== pastas _old_* encontradas (mais recente primeiro) ====="
+          cat old_epochs.txt
+
+          MANTER=$(head -n 3 old_epochs.txt)
+          echo "===== mantendo (rollback de curto prazo) ====="
+          echo "$MANTER" | sed 's/^/_old_/'
+
+          tail -n +4 old_epochs.txt | sed 's/^/_old_/' > apagar.txt
+
+          # itens confirmados manualmente, nome exato
+          echo "_release_36e01ea7" >> apagar.txt
+          echo "_staging_test" >> apagar.txt
+          echo "wordpress_backup_2026" >> apagar.txt
+
+          echo "===== PLANO FINAL DE EXCLUSAO ====="
+          cat apagar.txt
+
+          if grep -qx "_current" apagar.txt; then
+            echo "ABORTANDO: _current apareceu na lista de exclusao. Isso nunca deveria acontecer -- parando antes de apagar qualquer coisa."
+            exit 1
+          fi
+
+          if ! grep -qx "_current" listagem.txt; then
+            echo "ABORTANDO: _current nao aparece na listagem atual do public_html -- algo esta diferente do esperado, nao vou apagar nada as cegas."
+            exit 1
+          fi
+
+      - name: Fase 3 -- apaga exatamente os nomes do plano
+        timeout-minutes: 15
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          {
+            echo "set ftp:ssl-force true"
+            echo "set ftp:ssl-protect-data true"
+            echo "set ssl:verify-certificate no"
+            echo "set net:timeout 15"
+            echo "set net:max-retries 3"
+            echo "set cmd:fail-exit no"
+            echo "cd public_html"
+            while IFS= read -r nome; do
+              [ -z "$nome" ] && continue
+              printf 'rm -rf %q\n' "$nome"
+            done < apagar.txt
+            echo "echo ===== DEPOIS DA LIMPEZA ====="
+            echo "ls -la"
+            echo "bye"
+          } > comandos.lftp
+          echo "===== comandos que vao rodar ====="
+          cat comandos.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" -f comandos.lftp

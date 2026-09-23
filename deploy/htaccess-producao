@@ -182,6 +182,50 @@ RewriteRule ^places/vino/?$ - [G]
 # redireciona pra esse em vez de 410
 RewriteRule ^places/juliane-raposo-estetica/?$ /prestadores/juliane-raposo-estetica-162 [R=301,L]
 
+# "incertas" da 1a rodada, confirmadas por Leo -- redirect
+RewriteRule ^places/steak-bh/?$ /empresas/steaking-132 [R=301,L]
+RewriteRule ^places/carol-coxinhas/?$ /prestadores/carol- [R=301,L]
+RewriteRule ^places/jeronimo-burger/?$ /empresas/jeronimo-398 [R=301,L]
+
+# "incerta"/"sem correspondência" confirmadas por Leo -- sem negócio
+# atual correspondente (candidato mais próximo é ruído semântico, ex.
+# só compartilha palavra genérica tipo "pizza"/"burger"/"buritis", ou
+# aponta pro mesmo cadastro inativo do caso "vino" acima) -- 410
+RewriteRule ^places/la-vinicola/?$ - [G]
+RewriteRule ^places/pastelaria-buritis/?$ - [G]
+RewriteRule ^places/the-best-acai/?$ - [G]
+RewriteRule ^places/nitrous-detail-shop-ppf/?$ - [G]
+RewriteRule ^places/johnnie-grill/?$ - [G]
+RewriteRule ^places/feijoada-nuu-balde/?$ - [G]
+RewriteRule ^places/pizza-hut/?$ - [G]
+RewriteRule ^places/pizzaria-mangabeiras/?$ - [G]
+RewriteRule ^places/pandepi/?$ - [G]
+RewriteRule ^places/satira-gastrobar/?$ - [G]
+RewriteRule ^places/vinho-ponto/?$ - [G]
+RewriteRule ^places/varanda-1389/?$ - [G]
+RewriteRule ^places/oggi/?$ - [G]
+RewriteRule ^places/druds-burger/?$ - [G]
+RewriteRule ^places/imobiliaria-buritis/?$ - [G]
+RewriteRule ^places/pizza-para-voce/?$ - [G]
+RewriteRule ^places/autoescola-sistema/?$ - [G]
+RewriteRule ^places/mishki-mikuy/?$ - [G]
+RewriteRule ^places/cookie-stories/?$ - [G]
+RewriteRule ^places/sabor-pizza/?$ - [G]
+RewriteRule ^places/dominos/?$ - [G]
+RewriteRule ^places/formula-pizzaria/?$ - [G]
+RewriteRule ^places/oakbeery/?$ - [G]
+RewriteRule ^places/familia-maia/?$ - [G]
+RewriteRule ^places/convidaria-afetiva/?$ - [G]
+RewriteRule ^places/sr-silva/?$ - [G]
+RewriteRule ^places/wine-not/?$ - [G]
+RewriteRule ^places/pizza-pezzi/?$ - [G]
+RewriteRule ^places/oneburger/?$ - [G]
+RewriteRule ^places/tati-rosa-confeitaria/?$ - [G]
+RewriteRule ^places/josi-cakes/?$ - [G]
+RewriteRule ^places/bolo-nosso/?$ - [G]
+RewriteRule ^places/cacau-show/?$ - [G]
+RewriteRule ^places/phaellas/?$ - [G]
+
 # categorias antigas (page/N e ?sort_by= incluídos automaticamente pelo
 # padrão -- o "?" final descarta a query string original)
 RewriteRule ^places/category/hamburguerias(/.*)?$ /empresas/categoria/alimentacao? [R=301,L]

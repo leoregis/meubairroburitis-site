@@ -265,6 +265,18 @@ RewriteRule ^places/category/lojas-de-utilidades(/.*)?$ /empresas? [R=301,L]
 RewriteRule ^places/tags/ /empresas? [R=301,L]
 RewriteRule ^places/page/ /empresas? [R=301,L]
 
+# Fase 7d -- /produto/ antigo (loja de anúncios do WordPress) hoje vive
+# em /loja/ com o MESMO slug. Só mbb-basic existe de verdade na loja
+# atual (identidade exata de slug, maior confiança); os outros 4 não
+# têm produto correspondente hoje nem dado adicional (preço/descrição
+# do lado antigo) pra confirmar um match por nome -- 410, mesmo
+# critério de "sem correspondência" das fases anteriores.
+RewriteRule ^produto/mbb-basic/?$ /loja/mbb-basic [R=301,L]
+RewriteRule ^produto/seja-um-parceiro-empresas/?$ - [G]
+RewriteRule ^produto/live/?$ - [G]
+RewriteRule ^produto/repost-insta/?$ - [G]
+RewriteRule ^produto/capa-grupo-facebook/?$ - [G]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

@@ -1,17 +1,29 @@
 name: Limpeza segura de releases antigas (uma vez)
 
-# Depois do incidente do deploy #194 (disco cheio derrubou o site),
-# limpa o acumulo de dezenas de pastas _old_*/_release_* nunca
-# apagadas. Feito em 3 fases dentro do mesmo job, de proposito, pra
-# nunca apagar as cegas:
+# Depois do incidente do deploy #194 (disco cheio derrubou o site, ver
+# restaurar-emergencial.yml), limpa o acumulo de 148 pastas _old_* +
+# _release_36e01ea7 + _staging_test + wordpress_backup_2026 nunca
+# apagadas. _current ja foi restaurado manualmente e e a fonte de
+# verdade boa -- por isso, diferente de uma limpeza de rotina, esta
+# passada NAO mantem nenhuma _old_* como rollback extra.
+#
+# 4 fases dentro do mesmo job, de proposito, pra nunca apagar as cegas
+# e pra nunca so "confiar" que um rm funcionou:
 #   1. lista o public_html de verdade (nlist, um nome por linha)
-#   2. um script calcula EXPLICITAMENTE quem fica (as 3 pastas _old_*
-#      de timestamp mais recente) e quem sai (o resto + os 3 itens
-#      confirmados manualmente) -- imprime a lista completa no log
-#      ANTES de apagar qualquer coisa, e aborta o job inteiro se
-#      "_current" aparecer nessa lista por qualquer motivo
-#   3. só então conecta nas FTP de novo e apaga exatamente os nomes
-#      da lista, um por um (nunca um wildcard solto)
+#   2. calcula EXPLICITAMENTE o plano de exclusao e imprime ANTES de
+#      apagar qualquer coisa. "_current" nunca pode entrar nesse plano
+#      por construcao (não bate com o regex _old_<numero> nem é um dos
+#      3 nomes literais) -- e além disso tem uma checagem em runtime
+#      que aborta o job se "_current" aparecer na lista por qualquer
+#      motivo, e outra que aborta se "_current" não existir na
+#      listagem atual (não repete o rm às cegas se o servidor não
+#      estiver no estado esperado)
+#   3. apaga cada nome da lista e, logo em seguida, roda um ls do
+#      mesmo nome -- se o ls ainda achar o arquivo/pasta, o rm falhou
+#      de verdade (nao so confia no codigo de saida do lftp)
+#   4. lista o public_html de novo e aponta qualquer coisa que sobrou
+#      fora da lista esperada (_current + arquivos/pastas fixos do
+#      hosting)
 on:
   workflow_dispatch:
 
@@ -29,7 +41,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem.txt
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem_antes.txt
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate no
@@ -40,43 +52,39 @@ jobs:
           nlist
           bye
           EOF
-          echo "===== listagem bruta ====="
-          cat listagem.txt
+          echo "===== listagem ANTES (bruta) ====="
+          cat listagem_antes.txt
 
-      - name: Fase 2 -- calcula o que apagar (so imprime, nao apaga nada ainda)
+      - name: Fase 2 -- calcula o plano de exclusao (so imprime, nao apaga nada ainda)
         run: |
-          # nomes _old_<epoch> ordenados do mais recente pro mais antigo;
-          # mantem os 3 primeiros (mais recentes), o resto vai pra apagar
-          grep -E '^_old_[0-9]+$' listagem.txt | sed -E 's/^_old_//' | sort -rn > old_epochs.txt
-          echo "===== pastas _old_* encontradas (mais recente primeiro) ====="
-          cat old_epochs.txt
+          # TODAS as _old_* desta vez -- _current ja é a fonte de
+          # verdade restaurada, nao precisa manter nenhuma como
+          # rollback extra (diferente de uma limpeza de rotina).
+          grep -E '^_old_[0-9]+$' listagem_antes.txt > apagar.txt || true
 
-          MANTER=$(head -n 3 old_epochs.txt)
-          echo "===== mantendo (rollback de curto prazo) ====="
-          echo "$MANTER" | sed 's/^/_old_/'
-
-          tail -n +4 old_epochs.txt | sed 's/^/_old_/' > apagar.txt
-
-          # itens confirmados manualmente, nome exato
+          # nomes confirmados manualmente, literais
           echo "_release_36e01ea7" >> apagar.txt
           echo "_staging_test" >> apagar.txt
           echo "wordpress_backup_2026" >> apagar.txt
 
-          echo "===== PLANO FINAL DE EXCLUSAO ====="
+          echo "===== PLANO DE EXCLUSAO (total: $(wc -l < apagar.txt) itens) ====="
           cat apagar.txt
 
+          # "_current" nunca deveria aparecer aqui -- nao bate no regex
+          # ^_old_[0-9]+$ acima nem e um dos 3 nomes literais. Checagem
+          # explicita mesmo assim, em vez de confiar so na construcao:
           if grep -qx "_current" apagar.txt; then
-            echo "ABORTANDO: _current apareceu na lista de exclusao. Isso nunca deveria acontecer -- parando antes de apagar qualquer coisa."
+            echo "ABORTANDO: _current apareceu no plano de exclusao. Isso nunca deveria acontecer -- parando antes de apagar qualquer coisa."
             exit 1
           fi
 
-          if ! grep -qx "_current" listagem.txt; then
-            echo "ABORTANDO: _current nao aparece na listagem atual do public_html -- algo esta diferente do esperado, nao vou apagar nada as cegas."
+          if ! grep -qx "_current" listagem_antes.txt; then
+            echo "ABORTANDO: _current nao aparece na listagem atual do public_html -- servidor nao esta no estado esperado, nao vou apagar nada as cegas."
             exit 1
           fi
 
-      - name: Fase 3 -- apaga exatamente os nomes do plano
-        timeout-minutes: 15
+      - name: Fase 3 -- apaga cada item e confirma com um ls logo depois
+        timeout-minutes: 20
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -92,19 +100,54 @@ jobs:
             echo "cd public_html"
             while IFS= read -r nome; do
               [ -z "$nome" ] && continue
+              printf 'echo ----- apagando: %s -----\n' "$nome"
               printf 'rm -rf %s\n' "$nome"
+              printf 'echo ----- confirmando que sumiu: %s -----\n' "$nome"
+              printf 'ls %s\n' "$nome"
             done < apagar.txt
-            echo "echo ===== DEPOIS DA LIMPEZA ====="
-            echo "ls -la"
             echo "bye"
           } > comandos.lftp
-          echo "===== comandos que vao rodar ====="
+          echo "===== comandos que vao rodar ($(wc -l < apagar.txt) itens) ====="
           cat comandos.lftp
-          # -f nao compoe com -u/URL posicional na mesma chamada (foi o bug
-          # real do "open: invalid option -- 'f'" da tentativa anterior --
-          # os argumentos depois da URL eram interpretados como um comando
-          # "open -f ..." dentro do lftp, que falha antes de conectar).
-          # Mesmo padrao dos outros workflows: conecta via -u/URL e le os
-          # comandos do stdin, so que redirecionando de um arquivo em vez
-          # de heredoc.
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp
+          # -f nao compoe com -u/URL posicional na mesma chamada (bug ja
+          # corrigido antes) -- conecta via -u/URL e le os comandos do
+          # stdin, redirecionando de arquivo em vez de heredoc.
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp > resultado_fase3.txt 2>&1 || true
+
+          echo "===== saida completa da fase 3 (auditoria) ====="
+          cat resultado_fase3.txt
+
+          echo
+          echo "===== itens que AINDA aparecem depois do rm (ls nao deu erro -- rm pode ter falhado) ====="
+          # se o ls confirmou "No such file" o lftp imprime isso na mesma
+          # linha do erro; qualquer bloco "confirmando que sumiu" seguido
+          # de uma linha que NAO comeca com "ls:" ou contem "No such file"
+          # é sinal de que o item ainda existe.
+          awk '
+            /^----- confirmando que sumiu: /{ nome=$0; getline prox; if (prox !~ /No such file|ls: /) print nome" -> "prox }
+          ' resultado_fase3.txt || true
+
+      - name: Fase 4 -- listagem final e conferencia contra o esperado
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem_depois.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+          echo "===== listagem DEPOIS (bruta) ====="
+          cat listagem_depois.txt
+
+          echo
+          echo "===== o que sobrou fora do esperado (deveria estar vazio) ====="
+          grep -vE '^(_current|\.htaccess|\.well-known|assets|cgi-bin|error_log|favicon\.svg|google[a-z0-9]*\.html|guia|icons\.svg|index\.html|robots\.txt|\.ftp-deploy-sync-state\.json|\.quarantine|\.tmb)$' listagem_depois.txt || echo "(nada sobrou fora do esperado)"

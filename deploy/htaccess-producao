@@ -1,5 +1,21 @@
 RewriteEngine On
 
+# Fase 7b -- 404 real para slugs inválidos sob /empresas/, /prestadores/,
+# /noticias/ e /loja/ (ver regra de fallback modificada mais abaixo).
+# Aponta pra uma página de verdade, pré-renderizada com conteúdo real no
+# HTML (app/pages/pagina-nao-encontrada.vue) -- NÃO pro 404.html
+# genérico que o Nitro gera sozinho, que é só uma casca client-only
+# vazia (mesmo mecanismo do 200.html, de propósito, pra servir de
+# fallback genérico sem conteúdo específico "vazando" antes da
+# hidratação -- não serve pra isso aqui).
+# Escopo global do arquivo -- cascateia por padrão pra /guia/ também
+# (Apache herda ErrorDocument do .htaccess pai salvo se o filho definir
+# o próprio), mas /guia/.htaccess sempre resolve pra /guia/index.html
+# antes de qualquer 404 acontecer (ver RewriteRule . /guia/index.html
+# [L] lá) -- só afetaria um asset estático que realmente não existe
+# dentro de /guia/assets/, cenário que já seria um erro hoje.
+ErrorDocument 404 /_current/pagina-nao-encontrada/index.html
+
 # 🔒 bloqueio explicito do backup do WordPress -- NUNCA deve ser acessivel
 # pela web. Precisa vir ANTES de qualquer outra regra: a regra abaixo que
 # serve "arquivo que existe direto na raiz" (pensada só pra coisas tipo
@@ -7,6 +23,30 @@ RewriteEngine On
 # dessa pasta -- inclusive os .php, que chegavam a EXECUTAR (WordPress
 # real rodando, achado num teste de seguranca real).
 RewriteRule ^wordpress_backup_2026/ - [F,L]
+
+# Fase 7b -- URLs antigas do site em WordPress (plugin de diretório de
+# negócios; prefixo real era /listing/ e /listing-cat/, não /places/
+# como o briefing original presumia -- confirmado via Wayback Machine,
+# único jeito disponível de recuperar histórico de um site que já não
+# existe mais). Mapeamento e critério de match documentados na
+# investigação da Fase 7a. Só 1 correspondência confirmada (Bolixe);
+# as outras 9 páginas de detalhe arquivadas não têm negócio
+# correspondente ativo hoje -- 410 (Gone), não 404, porque sabemos que
+# existiram e foram removidas, não que nunca existiram. Categorias
+# antigas (/listing-cat/) não têm correspondência 1:1 confiável com as
+# categorias atuais (mais granulares) -- redirect genérico pro índice
+# de empresas em vez de forçar mapeamento fraco ou mandar pra home.
+RewriteRule ^listing/bolixe-unidade-paragem/?$ /empresas/bolixe-342 [R=301,L]
+RewriteRule ^listing/ag-sindico-profissional/?$ - [G]
+RewriteRule ^listing/inovar-mudancas-e-transportes/?$ - [G]
+RewriteRule ^listing/minas-corretora/?$ - [G]
+RewriteRule ^listing/mundare-limpezas-bh/?$ - [G]
+RewriteRule ^listing/outlet-cortinas-e-persianas/?$ - [G]
+RewriteRule ^listing/paulethe/?$ - [G]
+RewriteRule ^listing/sono-bom-colchoes-exclusive-2/?$ - [G]
+RewriteRule ^listing/anna-pegova/?$ - [G]
+RewriteRule ^listing/mais-fibra/?$ - [G]
+RewriteRule ^listing-cat/ /empresas [R=301,L]
 
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
@@ -42,10 +82,20 @@ RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI}/index.html -f
 RewriteRule ^(.*)$ /_current/$1/index.html [L]
 
 # senao (rota dinamica sem HTML pre-gerado, ex: /carrinho, /pedido/[id],
-# /admin/*), cai no shell client-only (200.html) e o Vue Router assume dali
+# /admin/*), cai no shell client-only (200.html) e o Vue Router assume
+# dali. Fase 7b -- /empresas/, /prestadores/, /noticias/ e /loja/
+# excluídos daqui de propósito: se chegou até aqui pra um desses 4
+# prefixos, o slug não existe (as 3 regras acima já teriam achado o
+# arquivo se existisse) -- deixa cair no 404 nativo do Apache em vez do
+# shell 200, virando erro HTTP de verdade (ver ErrorDocument 404 no
+# topo do arquivo).
 RewriteCond %{REQUEST_URI} !^/guia/
 RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{REQUEST_URI} !^/_current/
 RewriteCond %{REQUEST_URI} !^/_old_
 RewriteCond %{REQUEST_URI} !^/_release_
+RewriteCond %{REQUEST_URI} !^/empresas/
+RewriteCond %{REQUEST_URI} !^/prestadores/
+RewriteCond %{REQUEST_URI} !^/noticias/
+RewriteCond %{REQUEST_URI} !^/loja/
 RewriteRule ^(.*)$ /_current/200.html [L]

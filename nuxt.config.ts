@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       // /links não é linkada em nenhuma página crawleada (é uma página
       // "link na bio", só acessada direto via QR code/bio de rede social)
       // -- precisa entrar na lista explícita ou o crawler nunca a gera.
-      routes: ['/', '/sitemap.xml', '/links'],
+      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.
@@ -34,6 +34,10 @@ export default defineNuxtConfig({
     // página do artigo em si, não precisa disputar posição no Google nem
     // aparecer no sitemap (página 1, /noticias, continua indexável normal)
     '/noticias/pagina/**': { robots: false },
+    // Fase 7b -- página de erro 404 real (ver ErrorDocument no
+    // .htaccess) -- existe só pra ser servida como erro, nunca deve
+    // aparecer no sitemap nem ser indexada como se fosse conteúdo.
+    '/pagina-nao-encontrada': { robots: false },
   },
 
   // combinado com routeRules acima, o manifesto client-side de route-rules

@@ -184,8 +184,13 @@ RewriteRule ^places/juliane-raposo-estetica/?$ /prestadores/juliane-raposo-estet
 
 # "incertas" da 1a rodada, confirmadas por Leo -- redirect
 RewriteRule ^places/steak-bh/?$ /empresas/steaking-132 [R=301,L]
-RewriteRule ^places/carol-coxinhas/?$ /prestadores/carol- [R=301,L]
 RewriteRule ^places/jeronimo-burger/?$ /empresas/jeronimo-398 [R=301,L]
+
+# carol-coxinhas: o único "Carol" do banco (id 467, slug "carol-") é na
+# verdade "Carol Salomão Promoções & Eventos" (festas/eventos) -- telefone,
+# ramo e endereço não batem com o negócio de comida "Carol Coxinhas".
+# Nome em comum era coincidência, não é o mesmo estabelecimento -- 410.
+RewriteRule ^places/carol-coxinhas/?$ - [G]
 
 # "incerta"/"sem correspondência" confirmadas por Leo -- sem negócio
 # atual correspondente (candidato mais próximo é ruído semântico, ex.

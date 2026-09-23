@@ -12,7 +12,10 @@ export default defineNuxtConfig({
       // /links não é linkada em nenhuma página crawleada (é uma página
       // "link na bio", só acessada direto via QR code/bio de rede social)
       // -- precisa entrar na lista explícita ou o crawler nunca a gera.
-      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada'],
+      // /termos-e-condicoes (Fase 7d) tem o mesmo problema -- só existe
+      // pra receber o redirect da URL antiga do WordPress, sem link em
+      // nenhuma página navegável ainda.
+      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.

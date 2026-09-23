@@ -34,9 +34,6 @@ jobs:
           ls -la
           echo
           echo "===== du -sh de cada pasta _release_*, _old_* e _current ====="
-          du -sh _release_* _old_* _current 2>&1
-          echo
-          echo "===== du -sh do public_html inteiro (pode demorar) ====="
-          du -sh .
+          du -sh _release_* _old_* _current
           bye
           EOF

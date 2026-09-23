@@ -84,7 +84,13 @@ jobs:
           fi
 
       - name: Fase 3 -- apaga cada item e confirma com um ls logo depois
-        timeout-minutes: 20
+        # 172 pastas, cada uma com um build inteiro do site (centenas/
+        # milhares de arquivos) -- rm -rf via FTP apaga arquivo por
+        # arquivo, sem atalho. 20min estourou na 1a tentativa sem dar
+        # pra saber quanto avancou. Sem pressa nenhuma (_current ja esta
+        # restaurado e servindo o site) -- prefere terminar direito a
+        # terminar rapido.
+        timeout-minutes: 300
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}

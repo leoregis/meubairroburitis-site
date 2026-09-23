@@ -92,7 +92,7 @@ jobs:
             echo "cd public_html"
             while IFS= read -r nome; do
               [ -z "$nome" ] && continue
-              printf 'rm -rf %q\n' "$nome"
+              printf 'rm -rf %s\n' "$nome"
             done < apagar.txt
             echo "echo ===== DEPOIS DA LIMPEZA ====="
             echo "ls -la"
@@ -100,4 +100,11 @@ jobs:
           } > comandos.lftp
           echo "===== comandos que vao rodar ====="
           cat comandos.lftp
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" -f comandos.lftp
+          # -f nao compoe com -u/URL posicional na mesma chamada (foi o bug
+          # real do "open: invalid option -- 'f'" da tentativa anterior --
+          # os argumentos depois da URL eram interpretados como um comando
+          # "open -f ..." dentro do lftp, que falha antes de conectar).
+          # Mesmo padrao dos outros workflows: conecta via -u/URL e le os
+          # comandos do stdin, so que redirecionando de um arquivo em vez
+          # de heredoc.
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp

@@ -1,17 +1,27 @@
 name: EMERGENCIA - Restaurar _current
 
-# O deploy #194 falhou por disco cheio no meio do mirror -- com
-# cmd:fail-exit no ativo naquele ponto do script, o lftp seguiu em
-# frente e renomeou o _current de producao pra _old_1790181451 mesmo
-# assim, sem nunca conseguir colocar uma release nova no lugar. Site
-# inteiro caiu pra 404 (nao existe mais pasta _current nenhuma).
+# O deploy.yml falha por disco cheio ("Disk quota exceeded") no meio
+# do mirror -- com cmd:fail-exit no ativo naquele ponto do script, o
+# lftp segue em frente e renomeia o _current de producao pra
+# _old_<timestamp> mesmo assim, sem nunca conseguir colocar uma
+# release nova no lugar. Site inteiro cai pra 404 (nao existe mais
+# pasta _current nenhuma). Ja aconteceu duas vezes (23/set).
 #
-# Este workflow faz UMA coisa: renomeia _old_1790181451 de volta pra
-# _current. Nao apaga nada, nao mexe em mais nenhuma pasta. Uso
-# unico, pra essa emergencia especifica -- apagar depois que o site
-# confirmar no ar.
+# Parametrizado (input de texto) em vez de nome fixo, porque o
+# incidente se repetiu com uma pasta _old_* diferente na segunda
+# vez -- sem isso, cada ocorrencia exigiria editar e pushar o
+# workflow de novo, o que por si so dispara outro deploy.yml via
+# on:push (justamente o problema que estamos tentando conter).
+#
+# So renomeia a pasta indicada pra _current. Nao apaga nada, nao mexe
+# em mais nenhuma outra pasta.
 on:
   workflow_dispatch:
+    inputs:
+      pasta_origem:
+        description: 'Nome exato da pasta _old_<timestamp> a restaurar como _current (confirme antes pelo diagnostico-disco.yml)'
+        required: true
+        type: string
 
 jobs:
   restaurar:
@@ -20,13 +30,15 @@ jobs:
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Renomeia _old_1790181451 -> _current
+      - name: Renomeia a pasta indicada -> _current
         timeout-minutes: 5
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          PASTA_ORIGEM: ${{ inputs.pasta_origem }}
         run: |
+          echo "Restaurando '$PASTA_ORIGEM' como _current"
           lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
@@ -37,7 +49,7 @@ jobs:
           cd public_html
           echo "===== ANTES ====="
           ls -la
-          mv _old_1790181451 _current
+          mv "$PASTA_ORIGEM" _current
           echo "===== DEPOIS ====="
           ls -la
           bye

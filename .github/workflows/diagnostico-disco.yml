@@ -1,10 +1,14 @@
 name: Diagnostico - Uso de disco no hosting
 
 # Disco cheio ("Disk quota exceeded") bloqueou o deploy #194 -- este
-# workflow so LE o estado do servidor (du + ls), nao apaga nada. Existe
-# separado do deploy.yml/fix-htaccess-seguranca.yml de proposito: cada
-# workflow desses so faz uma coisa (mesmo principio ja usado no
-# fix-htaccess-seguranca.yml).
+# workflow so LE o estado do servidor (ls -la), nao apaga nada. So usa
+# ls porque o "du -sh nome*" nao funciona neste lftp -- ele nao
+# expande wildcard nesse comando (tenta abrir um diretorio chamado
+# literalmente "_old_*" e falha), so trava ate estourar timeout sem
+# agregar informacao nenhuma que o ls -la (nomes + mtimes) ja nao desse.
+# Existe separado do deploy.yml/fix-htaccess-seguranca.yml de
+# proposito: cada workflow desses so faz uma coisa (mesmo principio ja
+# usado no fix-htaccess-seguranca.yml).
 on:
   workflow_dispatch:
 
@@ -32,8 +36,5 @@ jobs:
           cd public_html
           echo "===== ls -la public_html (nivel raiz) ====="
           ls -la
-          echo
-          echo "===== du -sh de cada pasta _release_*, _old_* e _current ====="
-          du -sh _release_* _old_* _current
           bye
           EOF

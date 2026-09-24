@@ -1,14 +1,18 @@
 name: Limpeza segura de releases antigas (uma vez)
 
 # Depois do incidente do deploy #194 (disco cheio derrubou o site, ver
-# restaurar-emergencial.yml), limpa o acumulo de 148 pastas _old_* +
+# restaurar-emergencial.yml), limpa o acumulo de pastas _old_* +
 # _release_36e01ea7 + _staging_test + wordpress_backup_2026 nunca
-# apagadas. _current ja foi restaurado manualmente e e a fonte de
-# verdade boa -- por isso, diferente de uma limpeza de rotina, esta
-# passada NAO mantem nenhuma _old_* como rollback extra.
+# apagadas (dezenas -- o numero exato varia a cada corrida, ver o
+# "PLANO DE EXCLUSAO" impresso na Fase 2). _current ja foi restaurado
+# manualmente e e a fonte de verdade boa -- por isso, diferente de uma
+# limpeza de rotina, esta passada NAO mantem nenhuma _old_* como
+# rollback extra. Fase 1 relista o servidor do zero a cada execucao,
+# entao rodar este workflow mais de uma vez (ex.: se uma corrida nao
+# terminar dentro do timeout) e seguro e idempotente -- so continua de
+# onde a anterior parou, sem duplicar trabalho.
 #
-# 4 fases dentro do mesmo job, de proposito, pra nunca apagar as cegas
-# e pra nunca so "confiar" que um rm funcionou:
+# 4 fases dentro do mesmo job, de proposito, pra nunca apagar as cegas:
 #   1. lista o public_html de verdade (nlist, um nome por linha)
 #   2. calcula EXPLICITAMENTE o plano de exclusao e imprime ANTES de
 #      apagar qualquer coisa. "_current" nunca pode entrar nesse plano
@@ -18,12 +22,13 @@ name: Limpeza segura de releases antigas (uma vez)
 #      motivo, e outra que aborta se "_current" não existir na
 #      listagem atual (não repete o rm às cegas se o servidor não
 #      estiver no estado esperado)
-#   3. apaga cada nome da lista e, logo em seguida, roda um ls do
-#      mesmo nome -- se o ls ainda achar o arquivo/pasta, o rm falhou
-#      de verdade (nao so confia no codigo de saida do lftp)
+#   3. apaga cada nome da lista, com timestamp antes de cada item (log
+#      em tempo real via "tee", nao buffer que so aparece no final --
+#      se travar em algum item, a run anterior mostrou o custo de nao
+#      ter essa visibilidade)
 #   4. lista o public_html de novo e aponta qualquer coisa que sobrou
 #      fora da lista esperada (_current + arquivos/pastas fixos do
-#      hosting)
+#      hosting) -- essa é a verificação real, não um ls por item
 on:
   workflow_dispatch:
 
@@ -83,13 +88,25 @@ jobs:
             exit 1
           fi
 
-      - name: Fase 3 -- apaga cada item e confirma com um ls logo depois
-        # 172 pastas, cada uma com um build inteiro do site (centenas/
+      - name: Fase 3 -- apaga cada item (log em tempo real, ver Fase 4 pra verificacao)
+        # 171 pastas, cada uma com um build inteiro do site (centenas/
         # milhares de arquivos) -- rm -rf via FTP apaga arquivo por
-        # arquivo, sem atalho. 20min estourou na 1a tentativa sem dar
-        # pra saber quanto avancou. Sem pressa nenhuma (_current ja esta
-        # restaurado e servindo o site) -- prefere terminar direito a
-        # terminar rapido.
+        # arquivo, sem atalho. Sem pressa (_current ja esta restaurado e
+        # servindo o site) -- prefere terminar direito a terminar rapido.
+        #
+        # Tentativa anterior redirecionava a saida do lftp pra um arquivo
+        # e só imprimia (cat) DEPOIS do lftp terminar -- se o lftp travar
+        # ou demorar o timeout inteiro, a run morre sem nenhum log
+        # intermediario, zero visibilidade de onde parou. Corrigido pra
+        # "| tee" (grava no arquivo E imprime ao vivo simultaneamente),
+        # com um timestamp antes de cada item pra medir quanto cada pasta
+        # individual demora.
+        #
+        # Removido o "ls" de confirmacao por item (dobrava o numero de
+        # idas-e-voltas via FTP: 342 comandos em vez de 171) -- a
+        # verificacao real fica pra Fase 4, que relista TUDO no final e
+        # aponta qualquer coisa fora do esperado. Mesma garantia, metade
+        # do trafego.
         timeout-minutes: 300
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -106,11 +123,10 @@ jobs:
             echo "cd public_html"
             while IFS= read -r nome; do
               [ -z "$nome" ] && continue
-              printf 'echo ----- apagando: %s -----\n' "$nome"
+              printf '! date "+----- %%H:%%M:%%S apagando: %s -----"\n' "$nome"
               printf 'rm -rf %s\n' "$nome"
-              printf 'echo ----- confirmando que sumiu: %s -----\n' "$nome"
-              printf 'ls %s\n' "$nome"
             done < apagar.txt
+            echo '! date "+----- %H:%M:%S fim -----"'
             echo "bye"
           } > comandos.lftp
           echo "===== comandos que vao rodar ($(wc -l < apagar.txt) itens) ====="
@@ -118,20 +134,8 @@ jobs:
           # -f nao compoe com -u/URL posicional na mesma chamada (bug ja
           # corrigido antes) -- conecta via -u/URL e le os comandos do
           # stdin, redirecionando de arquivo em vez de heredoc.
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp > resultado_fase3.txt 2>&1 || true
-
-          echo "===== saida completa da fase 3 (auditoria) ====="
-          cat resultado_fase3.txt
-
-          echo
-          echo "===== itens que AINDA aparecem depois do rm (ls nao deu erro -- rm pode ter falhado) ====="
-          # se o ls confirmou "No such file" o lftp imprime isso na mesma
-          # linha do erro; qualquer bloco "confirmando que sumiu" seguido
-          # de uma linha que NAO comeca com "ls:" ou contem "No such file"
-          # é sinal de que o item ainda existe.
-          awk '
-            /^----- confirmando que sumiu: /{ nome=$0; getline prox; if (prox !~ /No such file|ls: /) print nome" -> "prox }
-          ' resultado_fase3.txt || true
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp 2>&1 | tee resultado_fase3.txt
+          exit 0
 
       - name: Fase 4 -- listagem final e conferencia contra o esperado
         timeout-minutes: 5

@@ -159,7 +159,18 @@ jobs:
           # do site). Por isso esse diretório é sincronizado direto na raiz
           # do public_html, fora do $RELEASE/_current -- senão o arquivo
           # existiria no build mas nunca seria servido de verdade.
+          #
+          # .well-known e uma pasta ESTAVEL (nao e renomeada/trocada a
+          # cada deploy como _release_*/_current) -- a partir do 2o deploy
+          # de sempre ela ja existe, e o "mkdir -p" do lftp (diferente do
+          # mkdir -p de shell de verdade) trata "550 File exists" como
+          # erro em vez de sucesso. fail-exit no só pontualmente pra esse
+          # mkdir especifico, voltando pra yes logo em seguida -- o
+          # mirror que segue (o que realmente importa que funcione
+          # direito) continua estrito.
+          set cmd:fail-exit no
           mkdir -p public_html/.well-known
+          set cmd:fail-exit yes
           mirror -R --parallel=2 .output/public/.well-known/ public_html/.well-known/
           bye
           EOF

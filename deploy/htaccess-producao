@@ -319,6 +319,17 @@ RewriteRule ^categoria-produto/ /loja? [R=301,L]
 # decisão do Leo sem evidência forte no Wayback -- tratamento genérico
 RewriteRule ^lugar/?$ /noticias [R=301,L]
 
+# noticias/categoria/guias -- existe um middleware em
+# noticias/categoria/[id].vue que já faz esse redirect (301 pra
+# /conteudo, hub próprio de "Guias", pra evitar duas URLs mostrando o
+# mesmo conteúdo), mas só funciona depois que o usuário já está no
+# site (client-side router) -- "guias" não é categoria real enumerada
+# no build estático, então a página nunca é pré-renderizada e o
+# acesso direto (primeira visita, é o que o Google rastreia) cai em
+# 404 puro em vez do redirect. Regra aqui cobre exatamente esse caso;
+# o middleware do Nuxt continua existindo, não foi removido.
+RewriteRule ^noticias/categoria/guias/?$ /conteudo [R=301,L]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

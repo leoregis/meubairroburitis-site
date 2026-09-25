@@ -69,7 +69,55 @@ jobs:
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Sobe o build pra uma pasta nova e faz o swap atômico
+      # Incidente de 23/set: o deploy #194 falhou por "Disk quota
+      # exceeded" no meio do mirror, mas o script continuava rodando com
+      # cmd:fail-exit no ativo naquele ponto -- seguiu em frente e
+      # renomeou o _current de producao pra _old_<ts> mesmo assim, sem
+      # nunca conseguir colocar a release nova no lugar. Site inteiro
+      # caiu pra 404 (nenhuma pasta _current sobrou). A correção deste
+      # arquivo inteiro gira em torno de nunca mais deixar isso acontecer:
+      # separar "subir e validar a release nova" de "trocar o _current"
+      # em passos distintos, com fail-exit estrito no primeiro, pra que
+      # um erro ali NUNCA chegue perto de tocar em _current.
+
+      - name: Checa acumulo de releases antigas antes de subir (proxy pra espaco em disco)
+        # FTP puro (RFC 959) nao tem comando nativo de cota/espaco livre
+        # -- isso só existe via API HTTP separada do cPanel (UAPI), sem
+        # credencial configurada neste projeto. Proxy pratico: com a
+        # limpeza automatica no final deste workflow funcionando, nunca
+        # deveria sobrar mais que ~3 pastas _old_* por muito tempo. Um
+        # numero bem maior que isso e sinal de que a limpeza parou de
+        # rodar em algum deploy anterior (ou falhou) -- mesmo padrao que
+        # levou ao disco cheio de 23/set (chegou a 148+ pastas
+        # acumuladas). Falha cedo em vez de arriscar repetir o incidente.
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem_pre.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+
+          QUANTIDADE=$(grep -cE '^(_old_[0-9]+|_release_[A-Za-z0-9_]+)$' listagem_pre.txt || true)
+          echo "Pastas _old_*/_release_* encontradas: $QUANTIDADE"
+
+          LIMITE=10
+          if [ "$QUANTIDADE" -gt "$LIMITE" ]; then
+            echo "ERRO: $QUANTIDADE pastas antigas encontradas (limite: $LIMITE) -- acumulo anormal, sinal de que a limpeza automatica parou de funcionar em algum deploy anterior. Abortando ANTES de subir a release nova, pra nao arriscar repetir o incidente de disco cheio de 23/set. Rode o workflow 'Diagnostico - Uso de disco no hosting' e investigue manualmente antes de tentar de novo."
+            exit 1
+          fi
+
+      - name: Sobe a release nova pra uma pasta a parte (fail-exit estrito, nao toca em _current)
         timeout-minutes: 30
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -77,7 +125,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           RELEASE="_release_${GITHUB_SHA::8}_${GITHUB_RUN_ID}"
-          OLD="_old_$(date +%s)"
+          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
 
           # ftps:// (porta 990, TLS implicito) trava a conexao TCP nessa
           # hospedagem -- confirmado com o deploy de staging (3 tentativas
@@ -86,6 +134,13 @@ jobs:
           # com o deploy-staging.yml deste projeto, que funciona via FTPS
           # EXPLICITO (porta 21, upgrade AUTH TLS) -- ftp:ssl-force com o
           # esquema ftp://.
+          #
+          # cmd:fail-exit YES do inicio ao fim deste passo -- diferente de
+          # antes, qualquer erro aqui (mkdir, mirror, disco cheio, o que
+          # for) aborta o lftp inteiro imediatamente com codigo de saida
+          # != 0, o que falha este step do GitHub Actions e interrompe o
+          # job ANTES de chegar no passo de swap. _current nem e mencionado
+          # neste passo -- fisicamente nao tem como esta etapa tocar nele.
           lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
@@ -93,7 +148,7 @@ jobs:
           set net:timeout 15
           set net:max-retries 3
           set net:reconnect-interval-base 5
-          set cmd:fail-exit no
+          set cmd:fail-exit yes
           mkdir -p public_html/$RELEASE
           mirror -R --parallel=6 .output/public/ public_html/$RELEASE/
 
@@ -106,11 +161,62 @@ jobs:
           # existiria no build mas nunca seria servido de verdade.
           mkdir -p public_html/.well-known
           mirror -R --parallel=2 .output/public/.well-known/ public_html/.well-known/
+          bye
+          EOF
 
-          # no 1o deploy de sempre, public_html/_current ainda nao existe --
-          # esse mv falha (550 doesn't exist) e é normal; por isso continua
-          # tolerando erro aqui. O rename final (release -> _current), esse
-          # sim tem que funcionar, daí o fail-exit yes só a partir dele.
+          echo "Release $RELEASE subida com sucesso (mirror sem erros)."
+
+      - name: Confirma que a release nova esta completa antes de tocar em _current
+        # checagem basica de sanidade -- nao prova que o build inteiro
+        # esta perfeito, mas pega o caso principal de "mirror terminou sem
+        # erro reportado mas a pasta ficou vazia/incompleta por outro
+        # motivo". O passo anterior ja e fail-exit estrito, entao chegar
+        # aqui ja significa que o mirror não reportou erro -- isso é uma
+        # segunda camada, não a única.
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set cmd:fail-exit yes
+          cd public_html/$RELEASE
+          ls index.html
+          bye
+          EOF
+          echo "Release $RELEASE confirmada -- index.html presente."
+
+      - name: Faz o swap (current -> old, release -> current), passos consecutivos
+        # os dois renames ficam o mais proximo possivel um do outro (mesma
+        # sessao lftp, sem nada entre eles) -- FTP puro nao suporta um
+        # symlink atomico pra _current (isso exigiria SFTP/SSH, que nao
+        # esta disponivel nesta hospedagem: ftps:// ja trava a conexao
+        # aqui, confirmado antes). Essa janela pequena entre os dois mv é
+        # o maximo de atomicidade que da pra conseguir só com FTP.
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          OLD="_old_$(date +%s)"
+          echo "OLD=$OLD" >> "$GITHUB_ENV"
+
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          # so aqui, e so pro primeiro mv, tolera erro -- no 1o deploy de
+          # sempre public_html/_current ainda nao existe (550 doesn't
+          # exist), e isso e esperado/normal.
+          set cmd:fail-exit no
           mv public_html/_current public_html/$OLD
           set cmd:fail-exit yes
           mv public_html/$RELEASE public_html/_current
@@ -118,6 +224,116 @@ jobs:
           EOF
 
           echo "Release $RELEASE agora é public_html/_current. Versão anterior guardada em public_html/$OLD para rollback."
+
+      - name: Confirma que _current existe e o site responde antes de marcar sucesso
+        # verificacao pos-rename pedida explicitamente depois do incidente
+        # de 23/set -- duas camadas: (1) o arquivo existe mesmo do lado do
+        # servidor logo apos o rename, (2) o site publico responde 200 de
+        # verdade (pega problemas de Apache/.htaccess que a camada 1
+        # sozinha nao pegaria). Se qualquer uma falhar, o job falha aqui
+        # (visivel como X vermelho no Actions) -- não silencioso.
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set cmd:fail-exit yes
+          cd public_html/_current
+          ls index.html
+          bye
+          EOF
+          echo "_current confirmado no servidor -- index.html presente pos-rename."
+
+          for tentativa in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://meubairroburitis.com.br/")
+            if [ "$status" = "200" ]; then
+              echo "Site respondendo 200 na tentativa $tentativa."
+              exit 0
+            fi
+            echo "Tentativa $tentativa: status $status. Aguardando 5s antes de tentar de novo (Cloudflare/Apache podem levar um instante pra refletir o swap)."
+            sleep 5
+          done
+
+          echo "ERRO: site nao respondeu 200 depois do swap (ultimo status: $status). _current existe no servidor mas o site publico nao esta respondendo certo -- investigar manualmente antes de considerar este deploy bem-sucedido."
+          exit 1
+
+      - name: Limpa releases antigas, mantendo as 3 _old_* mais recentes
+        # roda so depois do swap JA confirmado com sucesso (step anterior)
+        # -- o site ja esta no ar e verificado nesse ponto, entao um erro
+        # aqui e so uma falha de limpeza/higiene, nunca uma falha do
+        # deploy em si. continue-on-error pra nunca marcar o deploy como
+        # falho por causa disso.
+        #
+        # Apaga TODAS as _release_* encontradas aqui (sem reter nenhuma).
+        # O concurrency deste workflow (group: deploy-producao) garante
+        # que só um deploy roda por vez, e a release boa deste próprio
+        # deploy já foi renomeada pra _current no step anterior -- então
+        # qualquer _release_* que ainda exista neste ponto é órfã de um
+        # deploy anterior que falhou no meio do upload (mesmo cenário que
+        # o step "Sobe a release nova" agora aborta cedo, mas releases
+        # órfãs de ANTES desta correção existir ainda podem estar por aí).
+        # Sem isso, essas pastas acumulariam do mesmo jeito que as _old_*
+        # acumulavam antes -- só que de um tipo novo de lixo.
+        continue-on-error: true
+        timeout-minutes: 60
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem_pos.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+
+          grep -E '^_old_[0-9]+$' listagem_pos.txt | sed -E 's/^_old_//' | sort -rn > epochs.txt
+          tail -n +4 epochs.txt | sed 's/^/_old_/' > apagar.txt
+
+          # releases orfas (mirror/upload de um deploy anterior que falhou
+          # no meio) -- todas, sem reter nenhuma.
+          grep -E '^_release_[A-Za-z0-9_]+$' listagem_pos.txt >> apagar.txt || true
+
+          if [ ! -s apagar.txt ]; then
+            echo "3 ou menos pastas _old_* existem e nenhuma _release_* orfa -- nada pra apagar."
+            exit 0
+          fi
+
+          echo "===== apagando (mantendo as 3 _old_* mais recentes; releases orfas vao todas) ====="
+          cat apagar.txt
+
+          # "_current" nunca deveria aparecer aqui -- nao bate em nenhum
+          # dos dois regex usados acima. Checagem explicita mesmo assim:
+          if grep -qx "_current" apagar.txt; then
+            echo "ABORTANDO limpeza automatica: _current apareceu no plano de exclusao. Isso nunca deveria acontecer -- não apagando nada."
+            exit 1
+          fi
+
+          {
+            echo "set ftp:ssl-force true"
+            echo "set ftp:ssl-protect-data true"
+            echo "set ssl:verify-certificate no"
+            echo "set net:timeout 15"
+            echo "set cmd:fail-exit no"
+            echo "cd public_html"
+            while IFS= read -r nome; do
+              [ -z "$nome" ] && continue
+              printf 'rm -rf %s\n' "$nome"
+            done < apagar.txt
+            echo "bye"
+          } > comandos.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp
 
       - name: Purga cache do Cloudflare
         # sem isso, depois do swap atomico na origem (passo anterior), o

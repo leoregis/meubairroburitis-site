@@ -261,13 +261,28 @@ jobs:
           EOF
           echo "_current confirmado no servidor -- index.html presente pos-rename."
 
+          # headers e corpo guardados em arquivo (em vez de -o /dev/null) so
+          # pra diagnostico: quando nao vier 200 (ex: os 403 de 26/set, que
+          # nao se reproduzem fora do runner), o log mostra quem respondeu
+          # (server/cf-ray/cf-mitigated = Cloudflare vs Apache) e a pagina
+          # de erro. Nao muda a decisao -- continua falhando se nao for 200.
+          headers="$RUNNER_TEMP/verificacao_headers.txt"
+          corpo="$RUNNER_TEMP/verificacao_corpo.txt"
           for tentativa in 1 2 3 4 5; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://meubairroburitis.com.br/")
+            status=$(curl -s -D "$headers" -o "$corpo" -w "%{http_code}" --max-time 15 "https://meubairroburitis.com.br/")
             if [ "$status" = "200" ]; then
               echo "Site respondendo 200 na tentativa $tentativa."
               exit 0
             fi
             echo "Tentativa $tentativa: status $status. Aguardando 5s antes de tentar de novo (Cloudflare/Apache podem levar um instante pra refletir o swap)."
+            echo "--- headers-chave (server / cf-ray / cf-mitigated / cf-cache-status):"
+            grep -iE '^(server|cf-ray|cf-mitigated|cf-cache-status):' "$headers" 2>/dev/null | tr -d '\r' || echo "(nenhum desses headers presente)"
+            echo "--- headers completos:"
+            tr -d '\r' < "$headers" 2>/dev/null || true
+            echo "--- corpo (primeiros 500 caracteres):"
+            head -c 500 "$corpo" 2>/dev/null || true
+            echo
+            echo "---"
             sleep 5
           done
 

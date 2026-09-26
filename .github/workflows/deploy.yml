@@ -66,6 +66,13 @@ jobs:
             "
           fi
 
+      - name: Grava marcador do build (_build.txt) pra verificacao pos-swap
+        # conferido via FTP depois do swap (step "Confirma que _current...")
+        # pra provar que _current e ESTE build, sem depender de requisicao
+        # HTTP passando pelo Cloudflare. run_attempt entra junto pra um
+        # re-run do mesmo run_id tambem ter marcador proprio.
+        run: echo "${GITHUB_SHA} ${GITHUB_RUN_ID} ${GITHUB_RUN_ATTEMPT}" > .output/public/_build.txt
+
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
@@ -238,11 +245,15 @@ jobs:
 
       - name: Confirma que _current existe e o site responde antes de marcar sucesso
         # verificacao pos-rename pedida explicitamente depois do incidente
-        # de 23/set -- duas camadas: (1) o arquivo existe mesmo do lado do
-        # servidor logo apos o rename, (2) o site publico responde 200 de
-        # verdade (pega problemas de Apache/.htaccess que a camada 1
-        # sozinha nao pegaria). Se qualquer uma falhar, o job falha aqui
-        # (visivel como X vermelho no Actions) -- não silencioso.
+        # de 23/set. Camadas decisivas, ambas via FTP: (1) index.html existe
+        # em _current logo apos o rename, (2) _current/_build.txt bate com o
+        # marcador DESTE run -- prova que o swap colocou o build novo no ar.
+        # (3) curl no site publico e so complementar: o Cloudflare responde
+        # com desafio anti-bot (403 + cf-mitigated: challenge) pra IP de
+        # datacenter como o do runner -- todos os "403" dos deploys de 26/set
+        # eram isso, com o site no ar. Desafio vira aviso, nao falha. Mas se
+        # a ORIGEM responder erro de verdade (404/500/403 sem desafio, ex:
+        # .htaccess quebrado), o job ainda falha aqui -- não silencioso.
         timeout-minutes: 5
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -261,17 +272,36 @@ jobs:
           EOF
           echo "_current confirmado no servidor -- index.html presente pos-rename."
 
-          # headers e corpo guardados em arquivo (em vez de -o /dev/null) so
-          # pra diagnostico: quando nao vier 200 (ex: os 403 de 26/set, que
-          # nao se reproduzem fora do runner), o log mostra quem respondeu
-          # (server/cf-ray/cf-mitigated = Cloudflare vs Apache) e a pagina
-          # de erro. Nao muda a decisao -- continua falhando se nao for 200.
+          esperado="${GITHUB_SHA} ${GITHUB_RUN_ID} ${GITHUB_RUN_ATTEMPT}"
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > build_remoto.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set cmd:fail-exit yes
+          cat public_html/_current/_build.txt
+          bye
+          EOF
+          remoto=$(tr -d '\r\n' < build_remoto.txt)
+          if [ "$remoto" != "$esperado" ]; then
+            echo "ERRO: _current/_build.txt nao e deste build (esperado: '$esperado', encontrado: '$remoto') -- o swap nao colocou a release nova no ar."
+            exit 1
+          fi
+          echo "_current confirmado como ESTE build via FTP (_build.txt: $remoto)."
+
+          # headers e corpo guardados em arquivo pra diagnostico: quando nao
+          # vier 200, o log mostra quem respondeu (server/cf-ray/cf-mitigated
+          # = Cloudflare vs Apache) e a pagina de erro.
           headers="$RUNNER_TEMP/verificacao_headers.txt"
           corpo="$RUNNER_TEMP/verificacao_corpo.txt"
           for tentativa in 1 2 3 4 5; do
-            status=$(curl -s -D "$headers" -o "$corpo" -w "%{http_code}" --max-time 15 "https://meubairroburitis.com.br/")
+            status=$(curl -s -D "$headers" -o "$corpo" -w "%{http_code}" --max-time 15 "https://meubairroburitis.com.br/" || true)
             if [ "$status" = "200" ]; then
               echo "Site respondendo 200 na tentativa $tentativa."
+              exit 0
+            fi
+            if grep -qiE '^cf-mitigated:[[:space:]]*challenge' "$headers" 2>/dev/null; then
+              echo "::warning::Site nao confirmavel via HTTP: Cloudflare respondeu com desafio anti-bot (cf-mitigated: challenge, status $status) pro IP do runner. Deploy considerado OK pelas camadas FTP (index.html + _build.txt deste build em _current)."
               exit 0
             fi
             echo "Tentativa $tentativa: status $status. Aguardando 5s antes de tentar de novo (Cloudflare/Apache podem levar um instante pra refletir o swap)."
@@ -286,7 +316,7 @@ jobs:
             sleep 5
           done
 
-          echo "ERRO: site nao respondeu 200 depois do swap (ultimo status: $status). _current existe no servidor mas o site publico nao esta respondendo certo -- investigar manualmente antes de considerar este deploy bem-sucedido."
+          echo "ERRO: site nao respondeu 200 depois do swap (ultimo status: $status, sem desafio do Cloudflare -- erro veio da origem ou da rede). _current e este build no servidor mas o site publico nao esta respondendo certo -- investigar manualmente antes de considerar este deploy bem-sucedido."
           exit 1
 
       - name: Limpa releases antigas, mantendo as 3 _old_* mais recentes

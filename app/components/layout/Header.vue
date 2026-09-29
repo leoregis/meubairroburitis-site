@@ -1,21 +1,5 @@
 <script setup lang="ts">
-const links = [
-  { label: 'Início', to: '/' },
-  { label: 'Quem Somos', to: '/quem-somos' },
-  { label: 'O Bairro Buritis', to: '/o-bairro-buritis' },
-  { label: 'Notícias', to: '/noticias' },
-  { label: 'Empresas', to: '/empresas' },
-  { label: 'Prestadores', to: '/prestadores' },
-  { label: 'Anuncie', to: '/loja' },
-  { label: 'Midiakit', to: '/midiakit' },
-  { label: 'Canais', to: '/canais' },
-]
-
-// 🔥 app é uma aplicação separada (meubairro-app, hospedado em /guia) --
-// abre em nova aba, por isso fica fora do array `links` acima (que
-// alimenta o mesmo NuxtLink pros dois, interno e externo). Mesmo
-// texto/URL relativa já usados em AppDestaque.vue (seção da home).
-const linkApp = { label: 'Guia Buritis', href: '/guia/' }
+import { LINKS_MENU_PRINCIPAL as links, LINK_APP_GUIA as linkApp } from '~/constants/navegacao'
 
 const menuAberto = ref(false)
 const { quantidadeTotal } = useCarrinho()

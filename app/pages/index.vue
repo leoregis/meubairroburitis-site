@@ -26,6 +26,10 @@ useJsonLd({
     <HomePacotesComparativo />
     <HomeInstagramEmbed />
     <HomeUltimasNoticias />
+    <!-- depois das notícias de propósito: o topo da home é o funil do
+    anunciante (hero -> números -> app -> pacotes) e não deve ser empurrado;
+    notícias + vitrine do comércio formam o bloco de conteúdo pro morador. -->
+    <HomeGuiaLocalDestaque />
     <HomeDepoimentos />
     <HomeTimeSection />
     <HomeMidiakitResumo />

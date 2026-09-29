@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { LINKS_MENU_PRINCIPAL, LINK_APP_GUIA } from '~/constants/navegacao'
+
 const config = useRuntimeConfig()
 
 const canais = [
@@ -29,15 +31,14 @@ const canais = [
 
       <div>
         <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">Navegação</p>
-        <ul class="space-y-2 text-sm text-white">
-          <li><NuxtLink to="/quem-somos" class="hover:text-orange-400">Quem Somos</NuxtLink></li>
-          <li><NuxtLink to="/o-bairro-buritis" class="hover:text-orange-400">O Bairro Buritis</NuxtLink></li>
-          <li><NuxtLink to="/loja" class="hover:text-orange-400">Anuncie com a gente</NuxtLink></li>
-          <li><NuxtLink to="/midiakit" class="hover:text-orange-400">Midiakit</NuxtLink></li>
+        <ul class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-white">
+          <li v-for="link in LINKS_MENU_PRINCIPAL" :key="link.to">
+            <NuxtLink :to="link.to" class="hover:text-orange-400">{{ link.label }}</NuxtLink>
+          </li>
           <li>
-            <a href="/guia/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-orange-400">
+            <a :href="LINK_APP_GUIA.href" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-orange-400">
               <Icon name="lucide:smartphone" class="h-4 w-4" />
-              Guia Buritis (app)
+              {{ LINK_APP_GUIA.label }} (app)
             </a>
           </li>
         </ul>

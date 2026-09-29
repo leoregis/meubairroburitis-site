@@ -94,6 +94,100 @@ export function usePrestadoresPagina(pagina: number, categoriaSlug?: string) {
   })
 }
 
+// Busca nas listagens -- o site é 100% estático, então a busca roda no
+// navegador: na primeira interação com o campo carrega UMA vez a view
+// inteira (mesma da listagem; ~500 empresas / ~300 prestadores, abaixo do
+// limite padrão de 1000 linhas do PostgREST) e filtra localmente, sem
+// acento e sem diferenciar maiúscula, exigindo que toda palavra digitada
+// apareça em algum dos campos pesquisáveis.
+export function normalizarBusca(texto: string | null | undefined) {
+  return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+}
+
+export function useBuscaDiretorio<T>(view: string, camposPesquisaveis: (item: T) => (string | null)[]) {
+  const { $meubairroApp } = useNuxtApp()
+  const termo = ref('')
+  const todos = shallowRef<T[] | null>(null)
+  const carregando = ref(false)
+  const erro = ref(false)
+
+  async function carregar() {
+    if (todos.value || carregando.value || !$meubairroApp) return
+    carregando.value = true
+    erro.value = false
+    const { data, error } = await $meubairroApp.from(view).select('*').order('nome', { ascending: true })
+    carregando.value = false
+    if (error) {
+      erro.value = true
+      return
+    }
+    todos.value = (data ?? []) as T[]
+  }
+
+  watch(termo, (valor) => { if (valor) carregar() })
+
+  const ativo = computed(() => normalizarBusca(termo.value).length >= 2)
+
+  const resultados = computed(() => {
+    if (!ativo.value || !todos.value) return []
+    const palavras = normalizarBusca(termo.value).split(/\s+/)
+    return todos.value.filter((item) => {
+      const alvo = normalizarBusca(camposPesquisaveis(item).filter(Boolean).join(' '))
+      return palavras.every((p) => alvo.includes(p))
+    })
+  })
+
+  return { termo, resultados, ativo, carregando, erro, carregar }
+}
+
+// Home -- destaques de empresas/prestadores. Mesmas views da listagem (sem
+// fonte de dado nova): só quem tem foto, os mais avaliados pelos moradores
+// primeiro (desempate pela nota). Busca em build-time, igual o resto da home.
+export const QUANTIDADE_DESTAQUE_HOME = 6
+
+// o perfil do próprio Meu Bairro Buritis está cadastrado como empresa no
+// app (categoria Tecnologia) -- não faz sentido na vitrine do comércio.
+const UNIDADES_FORA_DO_DESTAQUE = [569]
+
+export function useEmpresasDestaqueHome() {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData('empresas-destaque-home', async () => {
+    if (!$meubairroApp) return [] as EmpresaListagemItem[]
+
+    const { data, error } = await $meubairroApp
+      .from('vw_empresas_publico_listagem')
+      .select('*')
+      .not('logo_url', 'is', null)
+      .not('unidade_id', 'in', `(${UNIDADES_FORA_DO_DESTAQUE.join(',')})`)
+      .order('total_avaliacoes', { ascending: false })
+      .order('nota_media', { ascending: false })
+      .limit(QUANTIDADE_DESTAQUE_HOME)
+
+    if (error) throw error
+    return (data ?? []) as EmpresaListagemItem[]
+  })
+}
+
+export function usePrestadoresDestaqueHome() {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData('prestadores-destaque-home', async () => {
+    if (!$meubairroApp) return [] as PrestadorListagemItem[]
+
+    const { data, error } = await $meubairroApp
+      .from('vw_prestadores_publico_listagem')
+      .select('*')
+      .not('foto_url', 'is', null)
+      .order('total_avaliacoes', { ascending: false })
+      .order('media_nota', { ascending: false })
+      .limit(QUANTIDADE_DESTAQUE_HOME)
+
+    if (error) throw error
+    return (data ?? []) as PrestadorListagemItem[]
+  })
+}
+
 export function useCategoriasEmpresa() {
   const { $meubairroApp } = useNuxtApp()
 

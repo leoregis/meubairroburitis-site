@@ -1,0 +1,74 @@
+name: Diagnostico - Lentidao da limpeza de releases
+
+# Investiga por que o step "Limpa releases antigas" do deploy.yml leva ~50
+# min (29/set: 53 min no #215, >52 no #216) -- so leitura dos dados
+# existentes. Mede: (1) tempo de listagem simples do public_html, (2)
+# quantos arquivos/pastas tem uma pasta _old_* e quanto tempo leva so pra
+# PERCORRE-la, (3) custo real de apagar via FTP, usando arquivos temporarios
+# proprios em _diag_tmp_<run> (nunca apaga nada que ja existia), e (4)
+# estima o tempo de limpeza de uma release inteira a partir disso.
+#
+# Rodar com NENHUM deploy em andamento (senao a limpeza do deploy compete
+# pela mesma conexao FTP e distorce os tempos).
+on:
+  workflow_dispatch:
+    inputs:
+      pasta:
+        description: 'Pasta a medir (vazio = a _old_* mais antiga encontrada)'
+        required: false
+        default: ''
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Mede listagem, tamanho de uma release e custo de exclusao
+        timeout-minutes: 60
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          PASTA: ${{ inputs.pasta }}
+        run: |
+          CFG='set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set net:timeout 15; set net:max-retries 3'
+          lftpc() { lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" -e "$CFG; $1; bye"; }
+          agora() { date +%s.%N; }
+          dur() { awk -v a="$1" -v b="$2" 'BEGIN{printf "%.2f", b-a}'; }
+          calc() { awk "BEGIN{printf \"%.3f\", $1}"; }
+
+          echo "=== 1. listagem simples do public_html (3x) ==="
+          for i in 1 2 3; do
+            t0=$(agora); lftpc "cd public_html; nlist" > raiz.txt; t1=$(agora)
+            echo "  nlist #$i: $(dur $t0 $t1)s ($(wc -l < raiz.txt) entradas)"
+          done
+          echo "  pastas de release no servidor:"; grep -E '^(_old_[0-9]+|_release_.*|_current)$' raiz.txt | sort | sed 's/^/    /'
+
+          ALVO="$PASTA"
+          [ -z "$ALVO" ] && ALVO=$(grep -E '^_old_[0-9]+$' raiz.txt | sort -t_ -k3 -n | head -1)
+          if [ -z "$ALVO" ]; then echo "::warning::nenhuma pasta _old_* encontrada pra medir"; exit 0; fi
+
+          echo "=== 2. percorrer $ALVO recursivamente (so leitura) ==="
+          t0=$(agora); lftpc "cd public_html; find $ALVO" > arvore.txt; t1=$(agora)
+          T_FIND=$(dur $t0 $t1)
+          PASTAS=$(grep -c '/$' arvore.txt || true); ARQS=$(grep -vc '/$' arvore.txt || true)
+          echo "  $ALVO: $ARQS arquivos, $PASTAS pastas -- percorrer levou ${T_FIND}s ($(calc "$T_FIND / ($PASTAS + 1)")s por pasta listada)"
+          echo "  maiores subarvores (arquivos por pasta de 1o nivel):"
+          sed "s#^$ALVO/##" arvore.txt | grep -v '/$' | cut -d/ -f1 | sort | uniq -c | sort -rn | head -8 | sed 's/^/    /'
+
+          echo "=== 3. custo de exclusao (60 arquivos temporarios proprios) ==="
+          TMP="_diag_tmp_${GITHUB_RUN_ID}"
+          mkdir -p lote/sub1 lote/sub2; for i in $(seq 1 20); do echo x > lote/a$i; echo x > lote/sub1/b$i; echo x > lote/sub2/c$i; done
+          lftpc "cd public_html; mkdir $TMP; mirror -R --parallel=1 lote/ $TMP/" > /dev/null
+          t0=$(agora); lftpc "cd public_html; rm -rf $TMP"; t1=$(agora)
+          T_RM=$(dur $t0 $t1)
+          echo "  rm -rf de 60 arquivos + 3 pastas: ${T_RM}s ($(calc "$T_RM / 63")s por item)"
+          lftpc "cd public_html; nlist" | grep -q "^$TMP$" && echo "::error::$TMP nao foi removida -- apagar manualmente" || echo "  $TMP removida (nada sobrou)"
+
+          echo "=== 4. estimativa pra limpar UMA release como $ALVO ==="
+          POR_ITEM=$(calc "$T_RM / 63")
+          EST=$(awk -v f="$T_FIND" -v n="$((ARQS + PASTAS))" -v p="$POR_ITEM" 'BEGIN{printf "%.0f", (f + n*p)/60}')
+          echo "  ~${EST} min (percorrer ${T_FIND}s + $((ARQS + PASTAS)) itens x ${POR_ITEM}s)"
+          echo "::notice title=Diagnostico da limpeza::$ALVO tem $ARQS arquivos/$PASTAS pastas; percorrer ${T_FIND}s; excluir ~${POR_ITEM}s/item; estimativa ~${EST} min por release"

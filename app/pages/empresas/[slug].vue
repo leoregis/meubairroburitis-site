@@ -149,6 +149,11 @@ useJsonLd({
         {{ empresa.categoria_nome }}<template v-if="empresa.subcategoria_nome"> · {{ empresa.subcategoria_nome }}</template>
       </p>
 
+      <!-- Descrição -- antes do contato (a Fase 5 original punha contato
+      primeiro; mudou por decisão do Leo: primeiro quem é, depois como falar). -->
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div v-if="empresa.descricao" class="prose prose-stone mt-8 max-w-none text-stone-600" v-html="empresa.descricao" />
+
       <!-- Contato -->
       <section class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
         <h2 class="mb-4 font-serif text-lg font-bold text-stone-900">Contato</h2>
@@ -173,9 +178,31 @@ useJsonLd({
           </a>
         </div>
 
-        <div v-if="temLinksSecundarios" class="mt-4 flex flex-wrap gap-4 border-t border-stone-100 pt-4 text-sm">
-          <a v-if="empresa.website" :href="empresa.website" target="_blank" rel="noopener noreferrer" class="font-medium text-orange-700 hover:underline">Site</a>
-          <a v-if="empresa.instagram" :href="`https://instagram.com/${empresa.instagram}`" target="_blank" rel="noopener noreferrer" class="font-medium text-orange-700 hover:underline">Instagram</a>
+        <div v-if="temLinksSecundarios" class="mt-4 flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4 text-sm">
+          <!-- ícones (mesmo set lucide do rodapé) em vez de texto; o nome vai
+          no aria-label/title pra leitor de tela e tooltip. 44px de área de toque. -->
+          <a
+            v-if="empresa.instagram"
+            :href="`https://instagram.com/${empresa.instagram}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            :aria-label="`Instagram de ${empresa.nome}`"
+            title="Instagram"
+            class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+          >
+            <Icon name="lucide:instagram" class="h-5 w-5" aria-hidden="true" />
+          </a>
+          <a
+            v-if="empresa.website"
+            :href="empresa.website"
+            target="_blank"
+            rel="noopener noreferrer"
+            :aria-label="`Site de ${empresa.nome}`"
+            title="Site"
+            class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+          >
+            <Icon name="lucide:globe" class="h-5 w-5" aria-hidden="true" />
+          </a>
           <a v-if="empresa.ifood_url" :href="empresa.ifood_url" target="_blank" rel="noopener noreferrer" class="font-medium text-orange-700 hover:underline">iFood</a>
         </div>
       </section>
@@ -185,10 +212,6 @@ useJsonLd({
         <h2 class="mb-3 font-serif text-lg font-bold text-stone-900">Fotos</h2>
         <UiLightbox :imagens="empresa.imagens" :alt="empresa.nome" />
       </section>
-
-      <!-- Descrição -->
-      <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-if="empresa.descricao" class="prose prose-stone mt-8 max-w-none text-stone-600" v-html="empresa.descricao" />
 
       <!-- Horário -->
       <section v-if="empresa.horarios.length" class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">

@@ -40,8 +40,11 @@ useSeoMeta({
   ogTitle: () => tituloSeo,
   ogDescription: () => descricaoSeo,
   ogImage: () => imagemOg,
-  ogImageWidth: () => (imagemOg !== imagemSeo ? 1200 : undefined),
-  ogImageHeight: () => (imagemOg !== imagemSeo ? 630 : undefined),
+  // dimensão só pra capa local (sai 1200x630 de fato): o IPX não amplia, e
+  // as capas quadradas de 1080px do Storage saem 1080x567 -- declarar
+  // 1200x630 nelas seria mentir pros crawlers.
+  ogImageWidth: () => (imagemOg !== imagemSeo && imagemEhLocal ? 1200 : undefined),
+  ogImageHeight: () => (imagemOg !== imagemSeo && imagemEhLocal ? 630 : undefined),
   ogImageType: () => (imagemOg !== imagemSeo ? 'image/jpeg' : undefined),
   ogType: 'article',
   twitterCard: 'summary_large_image',

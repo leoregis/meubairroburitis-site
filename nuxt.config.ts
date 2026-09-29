@@ -62,6 +62,14 @@ export default defineNuxtConfig({
     serverBundle: false,
   },
 
+  // Storage do Supabase do site (upload de capas pelo admin) liberado no
+  // IPX -- o og:image das notícias passa a ser gerado no build como JPEG
+  // 1200x630 (ver noticias/[slug].vue), em vez de apontar pro PNG original
+  // de 1.6-2.3MB que o WhatsApp não usa como thumbnail.
+  image: {
+    domains: ['peusailkyxqbhgdgmqyk.supabase.co'],
+  },
+
   // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxt/ui v2 já
   // instala o @nuxtjs/tailwindcss, que injeta o próprio tailwind.css (com
   // @tailwind base/components/utilities). O main.css repetia as mesmas 3

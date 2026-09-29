@@ -22,17 +22,32 @@ const imagemSeo = imagemEhLocal
   ? `https://meubairroburitis.com.br${imagemBruta}`
   : imagemBruta
 
+// og:image/twitter:image leve: JPEG 1200x630 q75 gerado pelo IPX no build
+// (useImage() já registra a URL pro prerender) -- as capas de Storage são
+// PNG de 1.6-2.3MB, e o WhatsApp não mostra thumbnail de imagem pesada.
+// Só pra imagem local ou do Storage liberado em image.domains; qualquer
+// outra origem continua com a URL original (o IPX recusaria e o link
+// ficaria quebrado).
+const img = useImage()
+const imagemOgProcessavel = imagemEhLocal || imagemBruta?.startsWith('https://peusailkyxqbhgdgmqyk.supabase.co/')
+const imagemOg = imagemBruta && imagemOgProcessavel
+  ? `https://meubairroburitis.com.br${img(imagemBruta, { width: 1200, height: 630, fit: 'cover', format: 'jpeg', quality: 75 })}`
+  : imagemSeo
+
 useSeoMeta({
   title: () => `${tituloSeo} — Meu Bairro Buritis`,
   description: () => descricaoSeo,
   ogTitle: () => tituloSeo,
   ogDescription: () => descricaoSeo,
-  ogImage: () => imagemSeo,
+  ogImage: () => imagemOg,
+  ogImageWidth: () => (imagemOg !== imagemSeo ? 1200 : undefined),
+  ogImageHeight: () => (imagemOg !== imagemSeo ? 630 : undefined),
+  ogImageType: () => (imagemOg !== imagemSeo ? 'image/jpeg' : undefined),
   ogType: 'article',
   twitterCard: 'summary_large_image',
   twitterTitle: () => tituloSeo,
   twitterDescription: () => descricaoSeo,
-  twitterImage: () => imagemSeo,
+  twitterImage: () => imagemOg,
   keywords: () => noticia.value?.seo_palavras_chave || undefined,
 }, {
   // puxa description/og:*/twitter:* pro topo do <head>, à frente dos ~110KB

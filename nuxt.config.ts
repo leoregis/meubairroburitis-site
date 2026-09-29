@@ -64,9 +64,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  app: {
+    head: {
+      // sem isso o <html> sai sem lang (achado do PageSpeed) -- leitor de
+      // tela lê o conteúdo com pronúncia de outro idioma.
+      htmlAttrs: { lang: 'pt-BR' },
+    },
+  },
+
   site: {
     url: 'https://meubairroburitis.com.br',
     name: 'Meu Bairro Buritis',
+    defaultLocale: 'pt-BR',
   },
 
   // geração automática de OG image via satori está quebrando no build

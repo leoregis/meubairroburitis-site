@@ -1,7 +1,7 @@
 <template>
   <section class="bg-stone-200 py-16 text-stone-900">
     <div class="mx-auto max-w-4xl px-4 text-center">
-      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Pra anunciantes</p>
+      <p class="text-sm font-semibold uppercase tracking-wide text-orange-800">Pra anunciantes</p>
       <h2 class="mt-2 text-balance text-2xl font-bold sm:text-3xl">
         Quer ver todos os números antes de decidir?
       </h2>

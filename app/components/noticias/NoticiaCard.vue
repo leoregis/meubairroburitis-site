@@ -34,7 +34,7 @@ const imagemEhLocal = computed(() => props.noticia.imagem_destaque_url?.startsWi
       <NuxtLink
         v-if="noticia.categoria_info"
         :to="noticia.categoria_info.id === 'guias' ? '/conteudo' : `/noticias/categoria/${noticia.categoria_info.id}`"
-        class="text-xs font-semibold uppercase tracking-wide text-orange-700 hover:underline"
+        class="-mt-3 inline-flex min-h-[44px] items-center self-start text-xs font-semibold uppercase tracking-wide text-orange-700 hover:underline"
       >
         {{ noticia.categoria_info.rotulo }}
       </NuxtLink>
@@ -44,7 +44,7 @@ const imagemEhLocal = computed(() => props.noticia.imagem_destaque_url?.startsWi
       <NuxtLink :to="`/noticias/${noticia.slug}`">
         <h3 class="mt-1 font-serif text-sm font-bold text-stone-900 sm:text-lg">{{ noticia.titulo }}</h3>
         <p class="mt-1 flex-1 text-sm text-stone-500">{{ noticia.subtitulo }}</p>
-        <p class="mt-2 text-xs text-stone-400">{{ formatarDataNoticia(noticia.data_publicacao) }}</p>
+        <p class="mt-2 text-xs text-stone-500">{{ formatarDataNoticia(noticia.data_publicacao) }}</p>
       </NuxtLink>
     </div>
   </div>

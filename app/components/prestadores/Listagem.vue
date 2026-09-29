@@ -14,6 +14,7 @@ function linkPagina(numero: number) {
 
 <template>
   <div>
+    <h2 class="sr-only">Lista de prestadores</h2>
     <p v-if="itens.length === 0" class="text-center text-stone-500">Nenhum prestador encontrado nesta categoria.</p>
 
     <div v-else class="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">

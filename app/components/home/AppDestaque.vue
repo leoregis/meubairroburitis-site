@@ -1,14 +1,14 @@
 <template>
-  <section class="bg-orange-600 text-white">
+  <section class="bg-orange-700 text-white">
     <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:grid-cols-2">
       <div>
-        <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-orange-200">
+        <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-orange-100">
           Guia Buritis
         </p>
         <h2 class="text-balance text-2xl font-bold sm:text-3xl">
           Além do site, temos um app inteiro dedicado ao bairro
         </h2>
-        <p class="mt-4 max-w-lg text-orange-100">
+        <p class="mt-4 max-w-lg text-orange-50">
           Busca de empresas e prestadores de serviço, avaliações de moradores, mensagens direto com
           quem presta o serviço — tudo feito por quem vive o Buritis todos os dias.
         </p>

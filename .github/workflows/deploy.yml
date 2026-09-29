@@ -66,6 +66,17 @@ jobs:
             "
           fi
 
+      - name: Confere se toda noticia publicada virou pagina no build
+        # o prerender roda com failOnError:false -- pagina que quebra com
+        # 500 no build some do site sem erro nenhum (7 materias sumiram
+        # assim em 24/set e so foram notadas dias depois). Falha aqui, ANTES
+        # do upload: o site no ar continua sendo a release anterior (com as
+        # materias) ate a causa ser corrigida. Ver scripts/verificar-noticias-geradas.mjs.
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: node scripts/verificar-noticias-geradas.mjs .output/public
+
       - name: Grava marcador do build (_build.txt) pra verificacao pos-swap
         # conferido via FTP depois do swap (step "Confirma que _current...")
         # pra provar que _current e ESTE build, sem depender de requisicao

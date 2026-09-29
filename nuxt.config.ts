@@ -73,7 +73,28 @@ export default defineNuxtConfig({
       // sem isso o <html> sai sem lang (achado do PageSpeed) -- leitor de
       // tela lê o conteúdo com pronúncia de outro idioma.
       htmlAttrs: { lang: 'pt-BR' },
+      // favicon (monograma "b", app/public). Nomes "icone-mbb*" e não
+      // "favicon.svg" de propósito: existe um favicon.svg órfão (logo do
+      // Vite) solto na raiz do hosting, e arquivo físico na raiz vence
+      // o _current no .htaccess -- com o mesmo nome, ele seria servido no
+      // lugar do nosso. /favicon.ico não tem esse problema (não existe na
+      // raiz) e fica como o caminho convencional que crawlers pedem direto.
+      link: [
+        { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/icone-mbb.svg' },
+        { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/icone-mbb-192.png' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
     },
+  },
+
+  // robots.txt gerado pelo build (nuxt-robots, via @nuxtjs/seo) é o dono da
+  // raiz do domínio: declara o sitemap deste site (automático) e também o
+  // do Guia Buritis (app em /guia/, deploy separado), pra não tirar o app
+  // dos buscadores. O robots.txt solto que o app subia pra raiz saiu do
+  // deploy dele, e o deploy.yml daqui remove a cópia que ficou lá.
+  robots: {
+    sitemap: ['https://meubairroburitis.com.br/guia/sitemap.xml'],
   },
 
   site: {

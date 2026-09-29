@@ -179,6 +179,25 @@ jobs:
           mkdir -p public_html/.well-known
           set cmd:fail-exit yes
           mirror -R --parallel=2 .output/public/.well-known/ public_html/.well-known/
+
+          # robots.txt solto na RAIZ do public_html (subido pelo deploy do
+          # meubairro-app até 26/set, com o Sitemap apontando só pro /guia/):
+          # arquivo físico na raiz vence o _current no .htaccess, então ele
+          # escondia o robots.txt do build deste site. O robots.txt certo
+          # (com os sitemaps do site E do /guia/) vem do build e mora em
+          # _current. Remove a cópia da raiz a cada deploy -- idempotente:
+          # fail-exit no só pro rm, porque "arquivo não existe" (o normal a
+          # partir do 2o deploy) não pode falhar o deploy.
+          #
+          # favicon: a raiz também tem um favicon.svg órfão (logo do Vite,
+          # origem desconhecida). Escolha: NÃO apagar arquivo de dono
+          # desconhecido -- o favicon do site usa outros nomes
+          # (/favicon.ico, /icone-mbb*.svg/png, ver app.head em
+          # nuxt.config.ts), que não colidem com ele. Ninguém referencia
+          # /favicon.svg, então o órfão ficou inofensivo.
+          set cmd:fail-exit no
+          rm public_html/robots.txt
+          set cmd:fail-exit yes
           bye
           EOF
 

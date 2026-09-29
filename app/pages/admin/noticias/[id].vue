@@ -123,7 +123,7 @@ async function salvar() {
     return
   }
 
-  await salvarRelacionadosNoticia($supabase, noticiaId, dados.value.relacionados)
+  await salvarRelacionadosNoticia($supabase, noticiaId, dados.value.relacionados, dados.value.status === 'publicado')
 
   salvando.value = false
   statusPublicacao.value = 'publicando'

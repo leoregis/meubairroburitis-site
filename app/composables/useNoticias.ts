@@ -255,10 +255,18 @@ export function useTodasNoticiasPublicadas() {
 // manualmente entre os guias de Alimentação) -- se o alvo já tiver essa
 // recíproca, não duplica. Não remove recíprocas de relações que foram
 // desmarcadas nesta edição (fica a cargo de quem editar o outro artigo).
+//
+// Recíproca só com a notícia PUBLICADA: gravar a recíproca a partir de um
+// rascunho punha, no "Leia também" de artigos já no ar, um link pra algo
+// que o público (e o build, que lê como anon) não enxerga -- foi assim que
+// 7 matérias saíram do site em 24/set. A curadoria do próprio rascunho é
+// salva normalmente; a recíproca é gravada quando ele for salvo publicado
+// (salvar roda esta função de novo).
 export async function salvarRelacionadosNoticia(
   supabase: SupabaseClient | null,
   noticiaId: string,
   relacionadosIds: string[],
+  noticiaPublicada: boolean,
 ) {
   if (!supabase) return
 
@@ -273,6 +281,8 @@ export async function salvarRelacionadosNoticia(
       ordem: i,
     })),
   )
+
+  if (!noticiaPublicada) return
 
   for (const relacionadaId of relacionadosIds) {
     const { data: existentes } = await supabase

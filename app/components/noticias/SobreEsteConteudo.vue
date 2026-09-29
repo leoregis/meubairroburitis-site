@@ -49,7 +49,7 @@ const fontes = computed(() => {
         :href="`https://wa.me/${config.public.whatsappNumero}`"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-orange-700 hover:underline"
+        class="text-orange-700 underline hover:no-underline"
       >Avise a gente</a>.
     </p>
   </div>

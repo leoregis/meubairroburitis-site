@@ -133,7 +133,7 @@ useJsonLd({
         >
           {{ empresa.funciona_24h ? 'Aberto 24 horas' : 'Aberto agora' }}
         </span>
-        <span v-else class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-500">
+        <span v-else class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600">
           Fechado no momento
         </span>
       </div>

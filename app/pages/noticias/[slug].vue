@@ -79,7 +79,7 @@ useJsonLd({
 
     <p v-if="noticia.subtitulo" class="mt-3 text-lg text-stone-600">{{ noticia.subtitulo }}</p>
 
-    <div class="mt-4 flex items-center gap-2 text-sm text-stone-400">
+    <div class="mt-4 flex items-center gap-2 text-sm text-stone-500">
       <span v-if="noticia.autor">{{ noticia.autor }}</span>
       <span v-if="noticia.autor && noticia.data_publicacao">·</span>
       <span v-if="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</span>

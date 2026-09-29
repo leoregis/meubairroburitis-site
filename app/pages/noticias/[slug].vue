@@ -34,6 +34,14 @@ useSeoMeta({
   twitterDescription: () => descricaoSeo,
   twitterImage: () => imagemSeo,
   keywords: () => noticia.value?.seo_palavras_chave || undefined,
+}, {
+  // puxa description/og:*/twitter:* pro topo do <head>, à frente dos ~110KB
+  // de CSS inline -- scrapers de preview (WhatsApp/Facebook) leem só o
+  // começo do HTML. Número e não 'critical': no capo sorting do Unhead
+  // <meta> pesa 100 ('critical' só tira 8 -> 92) e o <style> inline do Nuxt
+  // pesa 60, então só um peso explícito < 60 passa na frente do CSS. 15 =
+  // logo depois do <title> (10).
+  tagPriority: 15,
 })
 
 // Schema.org correto por tipo de conteúdo -- Guia é referência evergreen,

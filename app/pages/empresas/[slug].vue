@@ -41,6 +41,14 @@ useSeoMeta({
   twitterTitle: () => empresa.value?.nome,
   twitterDescription: () => descricaoTexto.value,
   twitterImage: () => empresa.value?.imagem_hero || empresa.value?.logo_url || undefined,
+}, {
+  // puxa description/og:*/twitter:* pro topo do <head>, à frente dos ~110KB
+  // de CSS inline -- scrapers de preview (WhatsApp/Facebook) leem só o
+  // começo do HTML. Número e não 'critical': no capo sorting do Unhead
+  // <meta> pesa 100 ('critical' só tira 8 -> 92) e o <style> inline do Nuxt
+  // pesa 60, então só um peso explícito < 60 passa na frente do CSS. 15 =
+  // logo depois do <title> (10).
+  tagPriority: 15,
 })
 
 // LocalBusiness -- só com o que a RPC realmente devolve. Não infere um tipo

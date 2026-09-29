@@ -24,6 +24,19 @@ ErrorDocument 404 /_current/pagina-nao-encontrada/index.html
 # real rodando, achado num teste de seguranca real).
 RewriteRule ^wordpress_backup_2026/ - [F,L]
 
+# og:image das noticias (29/set): o IPX gera JPEG mas o arquivo mantem o
+# nome/extensao da capa original (.png, do Storage), entao o Apache servia
+# "image/png" com conteudo JPEG. Navegador e WhatsApp toleram; outros
+# crawlers de preview podem nao tolerar. Forca image/jpeg pra tudo gerado
+# com f_jpeg.
+# So casa na SEGUNDA passada (/_current/_ipx/...), depois que a regra
+# generica mais abaixo reescreveu /_ipx/... pra /_current/...: a doc do
+# mod_rewrite avisa que, em .htaccess, o tipo do flag T se perde se a
+# mesma regra faz redirect interno -- por isso "-" como substituicao e sem
+# [L]. Se por algum motivo nao casar, nada muda (continua como hoje).
+RewriteCond %{REQUEST_URI} ^/_current/_ipx/[^/]*f_jpeg
+RewriteRule ^ - [T=image/jpeg]
+
 # Fase 7b -- URLs antigas do site em WordPress (plugin de diretório de
 # negócios; prefixo real era /listing/ e /listing-cat/, não /places/
 # como o briefing original presumia -- confirmado via Wayback Machine,

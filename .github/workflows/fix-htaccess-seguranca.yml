@@ -1,8 +1,20 @@
-name: Fix Seguranca - Bloqueia backup do WordPress
+name: Aplica .htaccess de producao (com backup)
 
-# Uploads so o .htaccess corrigido -- achado real de seguranca: a regra
-# anterior deixava wordpress_backup_2026/ acessivel publicamente (PHP
-# real executando). So sobe o arquivo, nao mexe em mais nada.
+# Sobe deploy/htaccess-producao como public_html/.htaccess -- arquivo
+# sensivel (redirects, bloqueio do backup do WordPress, roteamento pro
+# _current). Criado originalmente pro bloqueio do wordpress_backup_2026/
+# (achado real de seguranca); hoje e o jeito de aplicar QUALQUER mudanca
+# do .htaccess. So sobe esse arquivo, nao mexe em mais nada.
+#
+# Disciplina (29/set): backup ANTES (copia no servidor + artifact do run),
+# diff do que vai mudar no log, e conferencia DEPOIS (o arquivo no
+# servidor tem que ser byte a byte o do repo). Teste HTTP nao roda daqui:
+# o Cloudflare responde com desafio anti-bot pro IP do runner (ver step de
+# verificacao do deploy.yml) -- testar de fora depois de aplicar.
+#
+# Rollback: o nome do backup sai no resumo do run; restaurar com
+#   put .htaccess.bak_<timestamp> -o .htaccess  (dentro de public_html)
+# ou baixando o artifact "htaccess-backup" e subindo como .htaccess.
 on:
   workflow_dispatch:
 
@@ -15,7 +27,47 @@ jobs:
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Sobe .htaccess corrigido
+      - name: Backup do .htaccess atual (servidor + artifact) e diff
+        timeout-minutes: 5
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          BACKUP=".htaccess.bak_$(date -u +%Y%m%dT%H%M%SZ)"
+          echo "BACKUP=$BACKUP" >> "$GITHUB_ENV"
+
+          # baixa o atual e grava uma COPIA no servidor (nunca "mv": se o
+          # put seguinte falhasse, o site ficaria sem .htaccess). Arquivos
+          # ".ht*" nao sao servidos pelo Apache, entao o backup nao fica
+          # publico.
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          get .htaccess -o htaccess-antes.txt
+          put htaccess-antes.txt -o $BACKUP
+          ls -la $BACKUP
+          bye
+          EOF
+
+          test -s htaccess-antes.txt || { echo "::error::backup vazio -- abortando antes de tocar no .htaccess"; exit 1; }
+          echo "Backup gravado no servidor: public_html/$BACKUP ($(wc -c < htaccess-antes.txt) bytes)"
+          echo "--- diff (servidor atual -> repo) ---"
+          diff -u htaccess-antes.txt deploy/htaccess-producao || true
+
+      - name: Guarda o backup como artifact do run
+        uses: actions/upload-artifact@v4
+        with:
+          name: htaccess-backup
+          path: htaccess-antes.txt
+          retention-days: 30
+
+      - name: Sobe .htaccess novo e confere byte a byte
         timeout-minutes: 5
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -31,6 +83,14 @@ jobs:
           set cmd:fail-exit yes
           cd public_html
           put deploy/htaccess-producao -o .htaccess
-          ls -la .htaccess
+          get .htaccess -o htaccess-depois.txt
           bye
           EOF
+
+          if cmp -s htaccess-depois.txt deploy/htaccess-producao; then
+            echo "Conferido: public_html/.htaccess e identico a deploy/htaccess-producao."
+          else
+            echo "::error::.htaccess no servidor DIFERENTE do repo depois do upload -- restaurar o backup $BACKUP"
+            exit 1
+          fi
+          echo "::notice title=.htaccess aplicado::Backup do anterior: public_html/$BACKUP (e artifact htaccess-backup). Testar de fora: home, uma noticia, redirects e /_ipx/...f_jpeg."

@@ -62,7 +62,11 @@ export default defineNuxtConfig({
     serverBundle: false,
   },
 
-  css: ['~/assets/css/main.css'],
+  // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxt/ui v2 já
+  // instala o @nuxtjs/tailwindcss, que injeta o próprio tailwind.css (com
+  // @tailwind base/components/utilities). O main.css repetia as mesmas 3
+  // diretivas -- o Tailwind inteiro saía DUAS vezes inline no <head> de
+  // toda página (~220KB antes das tags og:*).
 
   app: {
     head: {

@@ -95,11 +95,17 @@ useJsonLd({
       loading="eager"
       :img-attrs="{ class: 'mt-6 w-full rounded-2xl object-cover' }"
     />
+    <!-- imagem de Storage (upload pelo admin) não tem dimensão conhecida em
+    build-time -- sem espaço reservado, o texto abaixo saltava ~360px quando
+    ela carregava (era a causa do CLS 0.12 do site). Proporção fixa 1200x630,
+    a mesma do branch local acima e do og:image. -->
     <img
       v-else-if="noticia.imagem_destaque_url"
       :src="noticia.imagem_destaque_url"
       :alt="noticia.imagem_destaque_alt || noticia.titulo"
-      class="mt-6 w-full rounded-2xl object-cover"
+      width="1200"
+      height="630"
+      class="mt-6 aspect-[1200/630] w-full rounded-2xl object-cover"
     />
 
     <!-- eslint-disable-next-line vue/no-v-html -->

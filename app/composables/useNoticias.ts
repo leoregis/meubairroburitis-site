@@ -201,7 +201,15 @@ export function useNoticiasRelacionadas(
 
     if (error) throw error
 
-    const curadas = ((data ?? []) as any[]).map((r) => r.relacionada) as Noticia[]
+    // relacionada que não está publicada fica de fora: no build (anon) o RLS
+    // esconde rascunho e o embed volta null -- passar null pro NoticiaCard
+    // quebrava o prerender da página inteira com 500, e o failOnError:false
+    // tirava a matéria do site em silêncio (7 matérias sumiram assim em
+    // 24/set, por link recíproco gravado a partir de um rascunho). O filtro
+    // por status cobre a mesma situação com sessão de admin (RLS deixa ver).
+    const curadas = ((data ?? []) as any[])
+      .map((r) => r.relacionada as Noticia | null)
+      .filter((n): n is Noticia => n?.status === 'publicado')
     if (curadas.length || !categoriaId) return curadas
 
     let queryFallback = $supabase

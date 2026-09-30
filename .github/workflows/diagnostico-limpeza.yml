@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       pasta:
-        description: 'Pasta a medir (vazio = a _old_* mais antiga encontrada)'
+        description: 'Pasta a medir (vazio = a _old_* mais recente que esteja completa)'
         required: false
         default: ''
 
@@ -46,9 +46,48 @@ jobs:
           done
           echo "  pastas de release no servidor:"; grep -E '^(_old_[0-9]+|_release_.*|_current)$' raiz.txt | sort | sed 's/^/    /'
 
+          echo "=== 1b. integridade de cada pasta de release (comparada com _current) ==="
+          # timeout da limpeza (60 min, estourou no #218) interrompe o rm -rf no meio:
+          # a pasta continua existindo, mas incompleta. Medida barata (poucas
+          # listagens por pasta): entradas no 1o nivel, arquivos em _nuxt/, subpastas
+          # de noticias/ e se index.html existe. Pasta bem abaixo do _current = PARCIAL.
+          assinatura() {
+            lftpc "cd public_html/$1; cls -1" > nivel1.txt 2>/dev/null || true
+            N1=$(wc -l < nivel1.txt)
+            IDX=$(grep -qx 'index.html' nivel1.txt && echo sim || echo NAO)
+            NUXT=$(lftpc "cd public_html/$1/_nuxt; cls -1" 2>/dev/null | wc -l)
+            NOT=$(lftpc "cd public_html/$1/noticias; cls -1" 2>/dev/null | wc -l)
+            echo "$N1 $NUXT $NOT $IDX"
+          }
+          read R1 RNUXT RNOT RIDX <<< "$(assinatura _current)"
+          echo "  _current (referencia): nivel1=$R1 _nuxt=$RNUXT noticias=$RNOT index.html=$RIDX"
+          PARCIAIS=""
+          for p in $(grep -E '^(_old_[0-9]+|_release_.*)$' raiz.txt | sort); do
+            read A1 ANUXT ANOT AIDX <<< "$(assinatura "$p")"
+            estado="completa"
+            if [ "$AIDX" = "NAO" ] || [ "$A1" -lt $((R1 * 8 / 10)) ] || [ "$ANUXT" -lt $((RNUXT * 8 / 10)) ] || [ "$ANOT" -lt $((RNOT * 8 / 10)) ]; then
+              estado="PARCIAL"; PARCIAIS="$PARCIAIS $p"
+            fi
+            echo "  $p: nivel1=$A1 _nuxt=$ANUXT noticias=$ANOT index.html=$AIDX -> $estado"
+          done
+          for p in $PARCIAIS; do
+            lftpc "cd public_html; find $p" > parcial.txt 2>/dev/null || true
+            echo "  $p (PARCIAL): restam $(grep -vc '/$' parcial.txt || true) arquivos em $(grep -c '/$' parcial.txt || true) pastas"
+            echo "::warning title=Release parcialmente apagada::$p esta incompleta (limpeza interrompida por timeout?) -- continua ocupando espaco e sera reprocessada pela proxima limpeza"
+          done
+          [ -z "$PARCIAIS" ] && echo "  nenhuma pasta parcial encontrada"
+
+          # referencia de "release completa" pra medir: a _old_* MAIS RECENTE que nao
+          # esteja parcial (a mais antiga e justamente a candidata a ter sido
+          # interrompida pelo timeout, e daria contagem baixa demais)
           ALVO="$PASTA"
-          [ -z "$ALVO" ] && ALVO=$(grep -E '^_old_[0-9]+$' raiz.txt | sort -t_ -k3 -n | head -1)
-          if [ -z "$ALVO" ]; then echo "::warning::nenhuma pasta _old_* encontrada pra medir"; exit 0; fi
+          if [ -z "$ALVO" ]; then
+            for p in $(grep -E '^_old_[0-9]+$' raiz.txt | sort -t_ -k3 -rn); do
+              case " $PARCIAIS " in *" $p "*) continue ;; esac
+              ALVO=$p; break
+            done
+          fi
+          if [ -z "$ALVO" ]; then echo "::warning::nenhuma pasta _old_* completa encontrada pra medir"; exit 0; fi
 
           echo "=== 2. percorrer $ALVO recursivamente (so leitura) ==="
           t0=$(agora); lftpc "cd public_html; find $ALVO" > arvore.txt; t1=$(agora)
@@ -71,4 +110,4 @@ jobs:
           POR_ITEM=$(calc "$T_RM / 63")
           EST=$(awk -v f="$T_FIND" -v n="$((ARQS + PASTAS))" -v p="$POR_ITEM" 'BEGIN{printf "%.0f", (f + n*p)/60}')
           echo "  ~${EST} min (percorrer ${T_FIND}s + $((ARQS + PASTAS)) itens x ${POR_ITEM}s)"
-          echo "::notice title=Diagnostico da limpeza::$ALVO tem $ARQS arquivos/$PASTAS pastas; percorrer ${T_FIND}s; excluir ~${POR_ITEM}s/item; estimativa ~${EST} min por release"
+          echo "::notice title=Diagnostico da limpeza::$ALVO tem $ARQS arquivos/$PASTAS pastas; percorrer ${T_FIND}s; excluir ~${POR_ITEM}s/item; estimativa ~${EST} min por release; pastas parciais:${PARCIAIS:- nenhuma}"

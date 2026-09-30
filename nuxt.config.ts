@@ -30,6 +30,9 @@ export default defineNuxtConfig({
     '/guia/**': { prerender: false },
     // páginas dinâmicas/privadas: não existem em build-time (pedido) ou não
     // devem ser indexadas nem geradas estaticamente (admin).
+    // ATENÇÃO: toda rota com prerender:false precisa estar também na lista
+    // do shell client-only no fim de deploy/htaccess-producao -- lá, o que
+    // não tem HTML e não está na lista vira 404 no acesso direto.
     '/pedido/**': { prerender: false, robots: false },
     '/admin/**': { prerender: false, robots: false },
     '/carrinho': { prerender: false, robots: false },

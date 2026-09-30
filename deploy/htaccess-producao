@@ -376,21 +376,18 @@ RewriteCond %{REQUEST_URI} !^/_release_
 RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI}/index.html -f
 RewriteRule ^(.*)$ /_current/$1/index.html [L]
 
-# senao (rota dinamica sem HTML pre-gerado, ex: /carrinho, /pedido/[id],
-# /admin/*), cai no shell client-only (200.html) e o Vue Router assume
-# dali. Fase 7b -- /empresas/, /prestadores/, /noticias/ e /loja/
-# excluídos daqui de propósito: se chegou até aqui pra um desses 4
-# prefixos, o slug não existe (as 3 regras acima já teriam achado o
-# arquivo se existisse) -- deixa cair no 404 nativo do Apache em vez do
-# shell 200, virando erro HTTP de verdade (ver ErrorDocument 404 no
-# topo do arquivo).
-RewriteCond %{REQUEST_URI} !^/guia/
-RewriteCond %{REQUEST_URI} !^/\.well-known/
-RewriteCond %{REQUEST_URI} !^/_current/
-RewriteCond %{REQUEST_URI} !^/_old_
-RewriteCond %{REQUEST_URI} !^/_release_
-RewriteCond %{REQUEST_URI} !^/empresas/
-RewriteCond %{REQUEST_URI} !^/prestadores/
-RewriteCond %{REQUEST_URI} !^/noticias/
-RewriteCond %{REQUEST_URI} !^/loja/
-RewriteRule ^(.*)$ /_current/200.html [L]
+# senao: shell client-only (200.html) SÓ pras rotas que não têm HTML
+# pré-gerado de propósito -- as mesmas marcadas com prerender:false em
+# routeRules no nuxt.config.ts: /carrinho, /pedido/[id] e /admin/*. O Vue
+# Router assume dali. Qualquer outro caminho que chegou até aqui não existe
+# (as 3 regras acima já teriam achado o arquivo) e cai no 404 nativo do
+# Apache, que serve a página de erro real (ErrorDocument 404 no topo).
+#
+# Até 30/set era o contrário (tudo ia pro shell com 200, exceto
+# /empresas/, /prestadores/, /noticias/ e /loja/, excluídos na Fase 7b):
+# caminho inexistente fora desses 4 prefixos era soft-404 (HTTP 200,
+# título vazio, index,follow). ATENÇÃO: página nova só client-side
+# (prerender:false) precisa entrar nesta lista, senão dá 404 no acesso
+# direto.
+RewriteCond %{REQUEST_URI} ^/(carrinho/?$|pedido/|admin(/|$))
+RewriteRule ^ /_current/200.html [L]

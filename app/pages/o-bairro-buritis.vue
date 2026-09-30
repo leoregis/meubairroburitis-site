@@ -38,6 +38,14 @@ const DADOS_BAIRRO = {
   densidade: '11.015',
 }
 
+// og:image: a mesma foto da página (própria do Leo, uso autorizado em
+// 30/09/2026), recortada pelo IPX no build em JPEG 1200x630 -- a original tem
+// 1200x800, então sai exatamente 1200x630 sem ampliar. useImage() já
+// registra a URL pro prerender.
+const img = useImage()
+const OG_IMAGEM = `https://meubairroburitis.com.br${img('/hero/capa-buritis.jpg', { width: 1200, height: 630, fit: 'cover', format: 'jpeg', quality: 80 })}`
+const OG_IMAGEM_ALT = 'Edifícios residenciais do bairro Buritis ao entardecer, vistos do alto'
+
 useSeoMeta({
   title: TITULO_SEO,
   description: DESCRICAO_SEO,
@@ -45,9 +53,14 @@ useSeoMeta({
   ogDescription: DESCRICAO_SEO,
   ogUrl: URL_PAGINA,
   ogType: 'website',
-  // og:image fica de fora até a confirmação de origem/licença da foto
-  // (pendência registrada no relatório) -- sem imagem, o cartão é resumido.
-  twitterCard: 'summary',
+  ogImage: OG_IMAGEM,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageType: 'image/jpeg',
+  ogImageAlt: OG_IMAGEM_ALT,
+  twitterCard: 'summary_large_image',
+  twitterImage: OG_IMAGEM,
+  twitterImageAlt: OG_IMAGEM_ALT,
 }, { tagPriority: 15 })
 
 useJsonLd({

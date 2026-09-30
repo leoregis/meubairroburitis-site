@@ -3,7 +3,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 
 definePageMeta({ ssr: false })
 
-useSeoMeta({ title: 'Pedido — Meu Bairro Buritis' })
+// noindex explícito: rota client-only, o robots:false de routeRules não
+// chega ao HTML (ver carrinho.vue).
+useSeoMeta({ title: 'Pedido — Meu Bairro Buritis', robots: 'noindex' })
 
 const route = useRoute()
 const config = useRuntimeConfig()

@@ -5,7 +5,10 @@
 // e o estado real do navegador, mesmo padrão já usado em /pedido e /admin.
 definePageMeta({ ssr: false })
 
-useSeoMeta({ title: 'Carrinho — Meu Bairro Buritis' })
+// noindex explícito: é rota client-only (sem HTML pré-gerado), então o
+// robots:false de routeRules não chega ao HTML -- sem isto o shell saía
+// com o index,follow padrão do site.
+useSeoMeta({ title: 'Carrinho — Meu Bairro Buritis', robots: 'noindex' })
 
 const { itens, total, atualizarQuantidade, remover, limpar } = useCarrinho()
 const { carregando, erro, pagar } = useCheckout()

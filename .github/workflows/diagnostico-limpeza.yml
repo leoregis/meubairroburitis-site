@@ -13,6 +13,14 @@ name: Diagnostico - Lentidao da limpeza de releases
 on:
   workflow_dispatch:
     inputs:
+      modo:
+        description: 'completo = mede tudo (~1h); so_integridade = so lista as pastas de release e aponta parciais (poucos minutos)'
+        required: true
+        type: choice
+        options:
+          - completo
+          - so_integridade
+        default: completo
       pasta:
         description: 'Pasta a medir (vazio = a _old_* mais recente que esteja completa)'
         required: false
@@ -32,6 +40,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           PASTA: ${{ inputs.pasta }}
+          MODO: ${{ inputs.modo }}
         run: |
           CFG='set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set net:timeout 15; set net:max-retries 3'
           lftpc() { lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" -e "$CFG; $1; bye"; }
@@ -76,6 +85,18 @@ jobs:
             echo "::warning title=Release parcialmente apagada::$p esta incompleta (limpeza interrompida por timeout?) -- continua ocupando espaco e sera reprocessada pela proxima limpeza"
           done
           [ -z "$PARCIAIS" ] && echo "  nenhuma pasta parcial encontrada"
+
+          # resumo em anotacao (legivel no resumo do run sem abrir o log)
+          # "|| true": grep sem resultado (ex.: nenhuma _release_*, o normal) sai 1 e,
+          # com -eo pipefail, derrubaria o step antes do resumo
+          OLDS=$( (grep -E '^_old_[0-9]+$' raiz.txt || true) | sort | tr '\n' ' ')
+          RELS=$( (grep -E '^_release_' raiz.txt || true) | sort | tr '\n' ' ')
+          echo "::notice title=Pastas de release no servidor::_old_*: $(echo $OLDS | wc -w) (${OLDS:-nenhuma}) | _release_*: $(echo $RELS | wc -w) (${RELS:-nenhuma}) | parciais:${PARCIAIS:- nenhuma}"
+
+          if [ "$MODO" = "so_integridade" ]; then
+            echo "modo so_integridade: parando aqui (sem percorrer release nem medir exclusao)"
+            exit 0
+          fi
 
           # referencia de "release completa" pra medir: a _old_* MAIS RECENTE que nao
           # esteja parcial (a mais antiga e justamente a candidata a ter sido

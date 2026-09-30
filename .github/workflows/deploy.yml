@@ -366,8 +366,18 @@ jobs:
         # órfãs de ANTES desta correção existir ainda podem estar por aí).
         # Sem isso, essas pastas acumulariam do mesmo jeito que as _old_*
         # acumulavam antes -- só que de um tipo novo de lixo.
+        #
+        # timeout 120 (era 60): diagnostico de 30/set (diagnostico-limpeza.yml)
+        # mediu ~76 min pra apagar UMA release via FTP (3219 arquivos + 1513
+        # pastas; a maior parte do tempo e o LIST pasta por pasta). Com 60 o
+        # step estourava (53 -> 59 -> 60+ nos deploys #215/#216/#218) e o
+        # rm -rf interrompido deixava uma _old_* parcial, que somava ao
+        # proximo ciclo e estourava de novo. 120 cobre release inteira + uma
+        # parcial (~83 min) com folga. Correcao de fundo (exclusao paralela,
+        # ~13-15 min) fica como proximo item -- ate la, o deploy segura a fila
+        # de publicacao por ~1h20 enquanto este step roda.
         continue-on-error: true
-        timeout-minutes: 60
+        timeout-minutes: 120
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}

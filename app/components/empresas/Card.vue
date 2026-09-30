@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { EmpresaListagemItem } from '~/composables/useEmpresasPrestadoresListagem'
 
-defineProps<{ empresa: EmpresaListagemItem }>()
+// ocultarAvaliacoes: a contagem de avaliações de empresa na view de listagem
+// não filtra aprovação (a de prestadores filtra) -- a página O Bairro Buritis
+// esconde a linha em vez de exibir um número não moderado. Padrão: exibe.
+defineProps<{ empresa: EmpresaListagemItem; ocultarAvaliacoes?: boolean }>()
 </script>
 
 <template>
@@ -25,7 +28,7 @@ defineProps<{ empresa: EmpresaListagemItem }>()
       </p>
       <h3 class="font-serif text-sm font-bold text-stone-900 sm:text-base">{{ empresa.nome }}</h3>
       <p v-if="empresa.endereco" class="line-clamp-1 text-xs text-stone-500">{{ empresa.endereco }}</p>
-      <p class="mt-auto pt-1 text-xs text-stone-500">
+      <p v-if="!ocultarAvaliacoes" class="mt-auto pt-1 text-xs text-stone-500">
         <template v-if="empresa.total_avaliacoes > 0">
           ⭐ {{ Number(empresa.nota_media).toFixed(1) }} · {{ empresa.total_avaliacoes }} avaliaç{{ empresa.total_avaliacoes === 1 ? 'ão' : 'ões' }}
         </template>

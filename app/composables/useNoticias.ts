@@ -11,6 +11,28 @@ const SELECT_NOTICIA = `
   subcategoria_info:noticias_subcategorias_guia(id, rotulo)
 `
 
+// modo "resumo": mesmas consultas, mas só as colunas que um cartão
+// (NoticiaCard) usa -- sem o `conteudo` inteiro de cada matéria. Páginas que
+// só listam cartões (ex.: O Bairro Buritis, com ~30 cartões) mandavam centenas
+// de KB de conteúdo no payload à toa, pesando na hidratação. Chave de cache
+// própria (sufixo "-resumo"), pra nunca colidir com a versão completa.
+const SELECT_NOTICIA_RESUMO = `
+  id, titulo, subtitulo, slug, imagem_destaque_url, imagem_destaque_alt,
+  categoria, categoria_id, subcategoria_guia_id, tipo_conteudo, data_publicacao,
+  categoria_info:noticias_categorias(id, rotulo),
+  subcategoria_info:noticias_subcategorias_guia(id, rotulo)
+`
+
+interface OpcoesListagem {
+  resumo?: boolean
+}
+
+function selecao(opcoes?: OpcoesListagem) {
+  return opcoes?.resumo
+    ? { select: SELECT_NOTICIA_RESUMO, sufixo: '-resumo' }
+    : { select: SELECT_NOTICIA, sufixo: '' }
+}
+
 export interface NoticiaCategoria {
   id: string
   rotulo: string
@@ -44,10 +66,11 @@ export interface Noticia {
   subcategoria_info?: NoticiaCategoria | null
 }
 
-export function useNoticiasPagina(pagina: number) {
+export function useNoticiasPagina(pagina: number, opcoes?: OpcoesListagem) {
   const { $supabase } = useNuxtApp()
+  const { select, sufixo } = selecao(opcoes)
 
-  return useAsyncData(`noticias-pagina-${pagina}`, async () => {
+  return useAsyncData(`noticias-pagina-${pagina}${sufixo}`, async () => {
     if (!$supabase) return { itens: [] as Noticia[], totalPaginas: 1 }
 
     const de = (pagina - 1) * NOTICIAS_POR_PAGINA
@@ -55,7 +78,7 @@ export function useNoticiasPagina(pagina: number) {
 
     const { data, count, error } = await $supabase
       .from('noticias')
-      .select(SELECT_NOTICIA, { count: 'exact' })
+      .select(select, { count: 'exact' })
       .eq('status', 'publicado')
       .order('data_publicacao', { ascending: false })
       .range(de, ate)
@@ -87,15 +110,16 @@ export function useNoticia(slug: string) {
 }
 
 // Fase 2 -- navegação por categoria (clique no eyebrow de categoria)
-export function useNoticiasPorCategoria(categoriaId: string) {
+export function useNoticiasPorCategoria(categoriaId: string, opcoes?: OpcoesListagem) {
   const { $supabase } = useNuxtApp()
+  const { select, sufixo } = selecao(opcoes)
 
-  return useAsyncData(`noticias-categoria-${categoriaId}`, async () => {
+  return useAsyncData(`noticias-categoria-${categoriaId}${sufixo}`, async () => {
     if (!$supabase) return [] as Noticia[]
 
     const { data, error } = await $supabase
       .from('noticias')
-      .select(SELECT_NOTICIA)
+      .select(select)
       .eq('status', 'publicado')
       .eq('categoria_id', categoriaId)
       .order('data_publicacao', { ascending: false })
@@ -140,15 +164,16 @@ export function useCategorias() {
 
 // Fase 2 -- hub de Guias (rota /conteudo, reaproveitada). `subcategoriaId`
 // opcional filtra dentro de Guias (ex: só "Alimentação").
-export function useGuias(subcategoriaId?: string) {
+export function useGuias(subcategoriaId?: string, opcoes?: OpcoesListagem) {
   const { $supabase } = useNuxtApp()
+  const { select, sufixo } = selecao(opcoes)
 
-  return useAsyncData(`noticias-guias-${subcategoriaId || 'todos'}`, async () => {
+  return useAsyncData(`noticias-guias-${subcategoriaId || 'todos'}${sufixo}`, async () => {
     if (!$supabase) return [] as Noticia[]
 
     let query = $supabase
       .from('noticias')
-      .select(SELECT_NOTICIA)
+      .select(select)
       .eq('status', 'publicado')
       .eq('tipo_conteudo', 'guia')
       .order('data_publicacao', { ascending: false })

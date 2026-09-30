@@ -326,7 +326,12 @@ export async function salvarRelacionadosNoticia(
   }
 }
 
+// timeZone fixo: sem ele, o HTML estático saía com a data do fuso da máquina
+// do build (UTC no GitHub Actions) e o navegador recalculava no fuso do
+// leitor -- matéria publicada entre 21h e 0h de BH aparecia com o dia
+// seguinte no HTML e gerava "hydration mismatch" (visto na O Bairro Buritis,
+// 30/set). Fuso do bairro, igual no build e em qualquer navegador.
 export function formatarDataNoticia(data: string | null) {
   if (!data) return ''
-  return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })
 }

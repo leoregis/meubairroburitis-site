@@ -18,3 +18,18 @@ export const DADOS_INSTITUCIONAIS = {
   emailEditorial: 'contato@meubairroburitis.com.br',
   emailComercial: 'contato@meubairroburitis.com.br',
 }
+
+// Organization (Schema.org) do veículo -- fonte única pro JSON-LD da home e
+// pro publisher/author das notícias, com o mesmo @id em todo o site.
+// Logo: logo_mbb_completa.png (465x240, PNG transparente, legível em fundo
+// branco, como o Google recomenda). O logo_mbb_rodape.png que a home usava
+// tem letreiro branco e some em fundo branco.
+export const URL_SITE = 'https://meubairroburitis.com.br'
+
+export const ORGANIZACAO_SCHEMA = {
+  '@type': 'Organization',
+  '@id': `${URL_SITE}/#organization`,
+  name: DADOS_INSTITUCIONAIS.nomeVeiculo,
+  url: `${URL_SITE}/`,
+  logo: `${URL_SITE}/logo/logo_mbb_completa.png`,
+}

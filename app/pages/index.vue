@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ORGANIZACAO_SCHEMA } from '~/constants/institucional'
+
 const tituloHome = 'Meu Bairro Buritis — Anuncie no Buritis e Estoril'
 const descricaoHome =
   'A maior comunidade online do Buritis e Estoril desde 2012. Mais de 150 mil pessoas no Facebook e 55 mil no Instagram. Anuncie sua empresa com quem realmente vive o bairro.'
@@ -15,9 +17,7 @@ useSeoMeta({
 })
 
 useJsonLd({
-  '@type': 'Organization',
-  name: 'Meu Bairro Buritis',
-  logo: 'https://meubairroburitis.com.br/logo/logo_mbb_rodape.png',
+  ...ORGANIZACAO_SCHEMA,
   sameAs: [
     'https://www.instagram.com/meubairroburitis/',
     'https://www.facebook.com/MeuBairroBuritis/',

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { DADOS_INSTITUCIONAIS, ORGANIZACAO_SCHEMA } from '~/constants/institucional'
+
 const route = useRoute()
 const slug = route.params.slug as string
 
@@ -74,15 +76,25 @@ const tipoJsonLd: Record<string, string> = {
   nao_classificado: 'NewsArticle',
 }
 
+// Autor: o campo `autor` é texto livre. Quando ele é o próprio veículo
+// ("Meu Bairro Buritis", padrão das matérias da redação), o autor é a
+// Organization -- não uma pessoa. Qualquer outro nome continua Person, e
+// matéria sem autor continua sem `author` (comportamento anterior).
+function autorJsonLd(autor: string | null) {
+  const nome = autor?.trim()
+  if (!nome) return undefined
+  if (nome.toLowerCase() === DADOS_INSTITUCIONAIS.nomeVeiculo.toLowerCase()) return ORGANIZACAO_SCHEMA
+  return { '@type': 'Person', name: nome }
+}
+
 useJsonLd({
   '@type': tipoJsonLd[noticia.value.tipo_conteudo] ?? 'NewsArticle',
   headline: noticia.value.titulo,
   description: descricaoSeo,
   image: imagemSeo ? [imagemSeo] : undefined,
   datePublished: noticia.value.data_publicacao ?? undefined,
-  author: noticia.value.autor
-    ? { '@type': 'Person', name: noticia.value.autor }
-    : undefined,
+  author: autorJsonLd(noticia.value.autor),
+  publisher: ORGANIZACAO_SCHEMA,
 })
 </script>
 

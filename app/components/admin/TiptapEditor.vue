@@ -60,17 +60,37 @@ function inserirLink() {
 // chega como string (sem MIME html), entao a gente mesmo manda o Tiptap
 // tratar como HTML (insertContent faz parse de string como HTML por
 // padrao), depois de sanitizar.
+//
+// O mesmo botão também serve pra EDITAR o HTML de uma matéria que já tem
+// conteúdo: o textarea abre com o HTML atual do editor (getHTML(), já
+// normalizado pelo Tiptap e incluindo edições ainda não salvas -- é
+// exatamente o que vai pro banco ao salvar) e, ao aplicar, substitui o
+// documento inteiro em vez de inserir no cursor.
 const mostrarModalHtml = ref(false)
 const htmlColado = ref('')
+const editandoHtmlExistente = ref(false)
+
+// getHTML() sai numa linha só -- quebra depois de cada bloco pra dar pra
+// ler/editar. Os espaços entre blocos são descartados pelo parser do
+// Tiptap ao aplicar, então isso não muda o conteúdo.
+function formatarHtmlParaEdicao(html: string) {
+  return html.replace(/(<\/(?:p|h[1-6]|li|ul|ol|blockquote)>|<hr>|<img[^>]*>)/g, '$1\n').trim()
+}
 
 function abrirModalHtml() {
-  htmlColado.value = ''
+  const ed = editor.value
+  editandoHtmlExistente.value = !!ed && !ed.isEmpty
+  htmlColado.value = editandoHtmlExistente.value && ed ? formatarHtmlParaEdicao(ed.getHTML()) : ''
   mostrarModalHtml.value = true
 }
 
 function confirmarHtmlColado() {
   const sanitizado = sanitizeHtml(htmlColado.value)
-  editor.value?.chain().focus().insertContent(sanitizado).run()
+  if (editandoHtmlExistente.value) {
+    editor.value?.chain().focus().setContent(sanitizado, { emitUpdate: true }).run()
+  } else {
+    editor.value?.chain().focus().insertContent(sanitizado).run()
+  }
   mostrarModalHtml.value = false
   htmlColado.value = ''
 }
@@ -148,23 +168,32 @@ function confirmarHtmlColado() {
         class="rounded px-2 py-1 text-sm hover:bg-stone-100"
         @click="abrirModalHtml"
       >
-        &lt;/&gt; Colar HTML
+        &lt;/&gt; Editar HTML
       </button>
     </div>
 
     <EditorContent :editor="editor" class="noticia-editor-conteudo min-h-[240px] px-3 py-2" />
 
     <div v-if="mostrarModalHtml" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div class="w-full max-w-2xl rounded-lg bg-white p-5 shadow-xl">
-        <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-stone-500">Colar HTML bruto</h3>
-        <p class="mb-3 text-xs text-stone-500">
+      <div class="w-full max-w-3xl rounded-lg bg-white p-5 shadow-xl">
+        <h3 class="mb-2 text-sm font-bold uppercase tracking-wide text-stone-500">
+          {{ editandoHtmlExistente ? 'Editar HTML da matéria' : 'Colar HTML bruto' }}
+        </h3>
+        <p v-if="editandoHtmlExistente" class="mb-3 text-xs text-stone-500">
+          Este é o HTML atual da matéria, incluindo alterações ainda não salvas. Ao aplicar, ele
+          substitui todo o conteúdo do editor (é sanitizado antes). Depois, clique em salvar a matéria
+          normalmente.
+        </p>
+        <p v-else class="mb-3 text-xs text-stone-500">
           Cole aqui o HTML pronto (ex: com &lt;h3&gt;, &lt;strong&gt;, &lt;a&gt;...). Ao inserir, o
           conteúdo é sanitizado e vira formatação real no editor, não texto com as tags visíveis.
         </p>
         <textarea
           v-model="htmlColado"
-          rows="12"
-          class="w-full rounded-lg border border-stone-300 p-3 font-mono text-xs focus:border-orange-500 focus:outline-none"
+          :rows="editandoHtmlExistente ? 20 : 12"
+          spellcheck="false"
+          aria-label="Código HTML da matéria"
+          class="max-h-[65vh] w-full rounded-lg border border-stone-300 p-3 font-mono text-[13px] leading-relaxed focus:border-orange-500 focus:outline-none"
           placeholder="<h3>Título</h3><p><strong>Negrito</strong> e um <a href=&quot;https://...&quot;>link</a></p>"
         />
         <div class="mt-3 flex justify-end gap-2">
@@ -181,7 +210,7 @@ function confirmarHtmlColado() {
             :disabled="!htmlColado.trim()"
             @click="confirmarHtmlColado"
           >
-            Inserir
+            {{ editandoHtmlExistente ? 'Aplicar' : 'Inserir' }}
           </button>
         </div>
       </div>

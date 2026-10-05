@@ -1,0 +1,53 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "app/components/noticias/NoticiaCard.vue"
+        ],
+        "createdAt": "2026-09-26T17:44:22.546Z",
+        "reason": "Claude: L7 is a script comment mentioning <img>; both real <img> tags bind :src from noticia.imagem_destaque_url"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "app/pages/empresas/[slug].vue"
+        ],
+        "createdAt": "2026-09-28T13:38:09.659Z",
+        "reason": "Claude: icon links are text-stone-700 on the white card at rest; bg-orange-50 only applies on hover together with hover:text-orange-700"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "app/pages/o-bairro-buritis.vue"
+        ],
+        "createdAt": "2026-09-30T12:42:45.395Z",
+        "reason": "Claude: category chips are text-stone-700 on bg-white at rest; bg-orange-50 only applies on hover together with hover:text-orange-800"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "app/pages/carrinho.vue"
+        ],
+        "createdAt": "2026-09-30T23:06:22.502Z",
+        "reason": "Claude: payment method buttons use mutually exclusive :class branches (bg-orange-50+text-orange-800 when selected, text-stone-600 without colored bg otherwise); pre-existing code"
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "app/components/admin/TiptapEditor.vue"
+        ],
+        "createdAt": "2026-10-05T17:57:10.420Z",
+        "reason": "Claude: L77 is a regex literal matching <img> tags in getHTML() output, not a rendered image"
+      }
+    ]
+  }
+}

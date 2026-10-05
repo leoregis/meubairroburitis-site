@@ -1,21 +1,27 @@
 <script setup lang="ts">
-import { LINKS_MENU_PRINCIPAL, LINK_APP_GUIA } from '~/constants/navegacao'
+import { LINKS_MENU_PRINCIPAL, LINKS_INSTITUCIONAIS, LINK_APP_GUIA } from '~/constants/navegacao'
+import { DADOS_INSTITUCIONAIS } from '~/constants/institucional'
 
 const config = useRuntimeConfig()
+
+// Quem Somos já está na coluna Navegação (menu principal) -- não repete aqui.
+const linksInstitucionais = LINKS_INSTITUCIONAIS.filter(
+  (link) => !LINKS_MENU_PRINCIPAL.some((menu) => menu.to === link.to),
+)
 
 const canais = [
   { label: 'Instagram', href: 'https://www.instagram.com/meubairroburitis/', icon: 'lucide:instagram' },
   { label: 'Facebook', href: 'https://www.facebook.com/MeuBairroBuritis/', icon: 'lucide:facebook' },
   { label: 'Grupo Facebook', href: 'https://www.facebook.com/groups/MeuBairroBuritisGrupo', icon: 'lucide:users' },
   { label: 'WhatsApp', href: `https://wa.me/${config.public.whatsappNumero}`, icon: 'lucide:message-circle' },
-  { label: 'E-mail', href: 'mailto:contato@meubairroburitis.com.br', icon: 'lucide:mail' },
+  { label: 'E-mail', href: `mailto:${DADOS_INSTITUCIONAIS.emailContato}`, icon: 'lucide:mail' },
   { label: 'TikTok', href: 'https://www.tiktok.com/@meubairroburitis', icon: 'lucide:music-2' },
 ]
 </script>
 
 <template>
   <footer class="bg-stone-900">
-    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <NuxtPicture
           src="/logo/logo_mbb_rodape.png"
@@ -40,6 +46,15 @@ const canais = [
               <Icon name="lucide:smartphone" class="h-4 w-4" />
               {{ LINK_APP_GUIA.label }} (app)
             </a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">Institucional</p>
+        <ul class="space-y-2 text-sm text-white">
+          <li v-for="link in linksInstitucionais" :key="link.to">
+            <NuxtLink :to="link.to" class="hover:text-orange-400">{{ link.label }}</NuxtLink>
           </li>
         </ul>
       </div>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { LINKS_INSTITUCIONAIS } from '~/constants/navegacao'
+
 useSeoMeta({
   title: 'Quem Somos — Meu Bairro Buritis',
   description:
@@ -7,6 +9,10 @@ useSeoMeta({
 
 // background-image via CSS não passa pelo <NuxtPicture>, então usamos
 // useImage() pra gerar a mesma URL otimizada (webp) manualmente.
+const linksEstruturaEditorial = LINKS_INSTITUCIONAIS.filter((link) =>
+  ['/expediente', '/politica-editorial', '/correcoes-e-direito-de-resposta'].includes(link.to),
+)
+
 const img = useImage()
 const fundoOtimizado = img('/hero/postfixo-facebook.png', { width: 1600, format: 'webp' })
 
@@ -198,6 +204,24 @@ const marcos = [
         Juntos, somos mais fortes. Juntos, somos Meu Bairro Buritis.
       </p>
       </div>
+
+      <aside aria-labelledby="estrutura-editorial-titulo" class="mt-12 rounded-2xl border border-stone-200 bg-stone-50 p-5 sm:p-6">
+        <h2 id="estrutura-editorial-titulo" class="font-serif text-lg font-bold text-stone-900">Nossa estrutura editorial</h2>
+        <p class="mt-2 text-sm leading-relaxed text-stone-600">
+          Para conhecer os responsáveis pelo veículo, nossos princípios editoriais e os procedimentos para
+          correções e direito de resposta, consulte nosso Expediente e nossa Política Editorial.
+        </p>
+        <ul class="mt-3 flex flex-wrap gap-x-6 text-[15px]">
+          <li v-for="link in linksEstruturaEditorial" :key="link.to">
+            <NuxtLink
+              :to="link.to"
+              class="inline-flex min-h-[44px] items-center font-semibold text-orange-800 underline underline-offset-4 hover:text-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-700"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </li>
+        </ul>
+      </aside>
     </div>
 
     <div class="border-t border-stone-200 bg-stone-50 py-16">

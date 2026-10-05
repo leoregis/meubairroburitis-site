@@ -13,6 +13,17 @@ export const LINKS_MENU_PRINCIPAL = [
   { label: 'Canais', to: '/canais' },
 ]
 
+// Estrutura institucional/editorial -- rodapé, bloco em Quem Somos e a
+// navegação entre as próprias páginas institucionais. Fora do menu
+// principal de propósito.
+export const LINKS_INSTITUCIONAIS = [
+  { label: 'Quem Somos', to: '/quem-somos' },
+  { label: 'Expediente', to: '/expediente' },
+  { label: 'Política Editorial', to: '/politica-editorial' },
+  { label: 'Correções e Direito de Resposta', to: '/correcoes-e-direito-de-resposta' },
+  { label: 'Publicidade e Conteúdo Patrocinado', to: '/publicidade-e-conteudo-patrocinado' },
+]
+
 // 🔥 app é uma aplicação separada (meubairro-app, hospedado em /guia) --
 // abre em nova aba, por isso fica fora da lista acima (que alimenta
 // NuxtLink, só pra rotas internas).

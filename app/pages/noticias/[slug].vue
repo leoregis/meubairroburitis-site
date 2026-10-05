@@ -78,12 +78,11 @@ const tipoJsonLd: Record<string, string> = {
 
 // Autor: o campo `autor` é texto livre. Quando ele é o próprio veículo
 // ("Meu Bairro Buritis", padrão das matérias da redação), o autor é a
-// Organization -- não uma pessoa. Qualquer outro nome continua Person, e
-// matéria sem autor continua sem `author` (comportamento anterior).
+// Organization -- não uma pessoa. Matéria sem autor também é da redação
+// (decisão de 05/10/2026). Qualquer outro nome continua Person.
 function autorJsonLd(autor: string | null) {
   const nome = autor?.trim()
-  if (!nome) return undefined
-  if (nome.toLowerCase() === DADOS_INSTITUCIONAIS.nomeVeiculo.toLowerCase()) return ORGANIZACAO_SCHEMA
+  if (!nome || nome.toLowerCase() === DADOS_INSTITUCIONAIS.nomeVeiculo.toLowerCase()) return ORGANIZACAO_SCHEMA
   return { '@type': 'Person', name: nome }
 }
 

@@ -111,6 +111,10 @@ useJsonLd({
       <span v-if="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</span>
     </div>
 
+    <!-- antes da capa de propósito: logo abaixo de autor/data, o aviso já
+    aparece sem rolar no celular (depois da capa ele caía abaixo da dobra) -->
+    <NoticiasAvisoPublicitario v-if="noticia.tipo_conteudo === 'patrocinado'" />
+
     <NuxtPicture
       v-if="noticia.imagem_destaque_url && imagemEhLocal"
       :src="noticia.imagem_destaque_url"

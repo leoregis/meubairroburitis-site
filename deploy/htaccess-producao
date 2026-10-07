@@ -343,6 +343,25 @@ RewriteRule ^lugar/?$ /noticias [R=301,L]
 # o middleware do Nuxt continua existindo, não foi removido.
 RewriteRule ^noticias/categoria/guias/?$ /conteudo [R=301,L]
 
+# 06/out -- categoria antiga de /places/ sem mapeamento explícito acima
+# (as mapeadas já saíram com [L]) -> índice de empresas, em vez de 404.
+RewriteRule ^places/category/ /empresas? [R=301,L]
+
+# 06/out -- raiz do blog antigo (sem ?cat=, que já é tratado acima)
+RewriteRule ^blog/?$ /noticias? [R=301,L]
+
+# 06/out -- prefixos do WordPress sem equivalente no site atual: 410
+# (Gone) em vez de 404, sai do índice mais rápido. Conferido que nenhum
+# colide com rota do site (app/pages) -- /loja é a loja atual, /produto/
+# não é usado; /eventos só existe no app, em /guia/eventos (o .htaccess
+# de /guia/ tem RewriteEngine próprio, estas regras não chegam lá). Os
+# casos específicos com destino (listing/bolixe, produto/mbb-basic,
+# blog/<post> mapeados) vêm antes e já saíram com [L]. A condição -f
+# protege arquivo real do build (ex.: app/public/blog/*.png).
+RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI} !-f
+RewriteRule ^(profile|users|register|login-2|eventos|listing|produto|blog|wp-content|wp-admin|wp-includes|feed)(/|$) - [G]
+RewriteRule ^(wp-login|xmlrpc|noticias_detalhe)\.php$ - [G]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

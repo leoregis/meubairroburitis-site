@@ -362,6 +362,16 @@ RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI} !-f
 RewriteRule ^(profile|users|register|login-2|eventos|listing|produto|blog|wp-content|wp-admin|wp-includes|feed)(/|$) - [G]
 RewriteRule ^(wp-login|xmlrpc|noticias_detalhe)\.php$ - [G]
 
+# 06/out -- barra final: /rota/ -> /rota (301, um salto). O canonical,
+# o sitemap e os links internos já usam a versão sem barra; o Google
+# vinha escolhendo a com barra por conta dos links antigos. Fica DEPOIS
+# dos redirects legados (que aceitam /? no fim) pra /places/x/ continuar
+# com um salto só. Não toca na raiz, em /guia/ (app à parte), nas pastas
+# internas de release nem em diretório físico real.
+RewriteCond %{REQUEST_URI} !^/(guia|\.well-known|_current|_old_|_release_)(/|$)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)/$ /$1 [R=301,L]
+
 # Se o arquivo existe direto na raiz do public_html (fora de _current/,
 # ex: verificacao de propriedade do Google, algum arquivo herdado do
 # hosting), serve ele como esta -- sem redirecionar pro site novo.

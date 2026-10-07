@@ -101,13 +101,14 @@ export default defineNuxtConfig({
   },
 
   // robots.txt gerado pelo build (nuxt-robots, via @nuxtjs/seo) é o dono da
-  // raiz do domínio: declara o sitemap deste site (automático) e também o
-  // do Guia Buritis (app em /guia/, deploy separado), pra não tirar o app
-  // dos buscadores. O robots.txt solto que o app subia pra raiz saiu do
-  // deploy dele, e o deploy.yml daqui remove a cópia que ficou lá.
-  robots: {
-    sitemap: ['https://meubairroburitis.com.br/guia/sitemap.xml'],
-  },
+  // raiz do domínio e declara só o sitemap deste site (automático). O
+  // sitemap do Guia (/guia/sitemap.xml) saiu em 06/out: as páginas do app
+  // são SPA sem conteúdo no HTML e competiam com /empresas e /prestadores
+  // -- hoje /guia/empresa|prestador/<slug> mandam canonical (header Link)
+  // pra página pública, e o resto do /guia/ sai com noindex (ver
+  // app/public/.htaccess do meubairro-app). O robots.txt solto que o app
+  // subia pra raiz saiu do deploy dele, e o deploy.yml daqui remove a
+  // cópia que ficou lá.
 
   site: {
     url: 'https://meubairroburitis.com.br',

@@ -435,6 +435,9 @@ RewriteRule ^avaliar/([^/]+)/?$ https://xtmwatregednbuupfdbl.supabase.co/functio
 # /empresas/<antigo>/ também chegar em um salto. Mapa completo e rollback:
 # backup_slugs_20261006 (banco do Guia) e meubairro-app/supabase/manutencao/.
 # Unidade 707 da Toca do Açaí era registro de teste (desativado) -- 410.
+# PENDÊNCIA (a partir de 06/11/2026, aprovada pelo Leo): nas 23 regras de
+# /places/ reapontadas, apagar a linha de RESERVA (a que aponta pro slug
+# antigo, logo depois do par RewriteCond -f + 301 novo) e o RewriteCond -f.
 RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dondoca-espeteria-35/index.html -f
 RewriteRule ^empresas/-ondoca-speteria--35/?$ /empresas/dondoca-espeteria-35 [R=301,L]
 RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-tabuleria-36/index.html -f

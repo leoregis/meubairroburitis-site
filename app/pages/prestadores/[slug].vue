@@ -13,9 +13,14 @@ if (!prestador.value) {
 const canonicalUrl = computed(() => `https://meubairroburitis.com.br/prestadores/${prestador.value?.slug}`)
 const linkGuia = computed(() => `https://meubairroburitis.com.br/guia/prestador/${prestador.value?.slug}`)
 
+// Fase C do SEO (07/out): title/description por padrão fixo (ver
+// utils/seoDiretorio.ts). Schema (Person) continua como estava.
+const tituloSeo = computed(() => (prestador.value ? tituloPrestador(prestador.value) : ''))
+const descricaoSeo = computed(() => (prestador.value ? descricaoPrestador(prestador.value) : undefined))
+
 useSeoMeta({
-  title: () => `${prestador.value?.nome} — ${prestador.value?.categoria_nome || 'Prestador de serviço'} — Meu Bairro Buritis`,
-  description: () => prestador.value?.descricao_curta || undefined,
+  title: () => tituloSeo.value,
+  description: () => descricaoSeo.value,
   ogTitle: () => prestador.value?.nome,
   ogDescription: () => prestador.value?.descricao_curta || undefined,
   ogImage: () => prestador.value?.foto_url || undefined,

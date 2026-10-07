@@ -21,6 +21,15 @@ onMounted(() => { diaAtual.value = new Date().getDay() })
 
 const descricaoTexto = computed(() => empresa.value?.descricao?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || undefined)
 
+// Fase C do SEO (07/out): title/description por padrão fixo (ver
+// utils/seoDiretorio.ts) -- a description da página não depende mais da
+// descrição livre da empresa (46 empresas não tinham nenhuma). Filial
+// (mais de uma unidade ativa com o mesmo nome) leva a unidade no title e no H1.
+const { data: ehFilial } = await useEhFilial(slug, () => empresa.value?.nome)
+const unidade = computed(() => (empresa.value ? unidadeDaEmpresa(empresa.value, Boolean(ehFilial.value)) : null))
+const tituloSeo = computed(() => (empresa.value ? tituloEmpresa(empresa.value, Boolean(ehFilial.value)) : ''))
+const descricaoSeo = computed(() => (empresa.value ? descricaoEmpresa(empresa.value) : undefined))
+
 const canonicalUrl = computed(() => `https://meubairroburitis.com.br/empresas/${empresa.value?.slug}`)
 const linkGuia = computed(() => `https://meubairroburitis.com.br/guia/empresa/${empresa.value?.slug}`)
 
@@ -31,15 +40,15 @@ const temLocalizacao = computed(() => Boolean(empresa.value?.latitude && empresa
 const temLinksSecundarios = computed(() => Boolean(empresa.value?.website || empresa.value?.instagram || empresa.value?.ifood_url))
 
 useSeoMeta({
-  title: () => `${empresa.value?.nome} — ${empresa.value?.categoria_nome || 'Empresa'} — Meu Bairro Buritis`,
-  description: () => descricaoTexto.value,
+  title: () => tituloSeo.value,
+  description: () => descricaoSeo.value,
   ogTitle: () => empresa.value?.nome,
-  ogDescription: () => descricaoTexto.value,
+  ogDescription: () => descricaoTexto.value || descricaoSeo.value,
   ogImage: () => empresa.value?.imagem_hero || empresa.value?.logo_url || undefined,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => empresa.value?.nome,
-  twitterDescription: () => descricaoTexto.value,
+  twitterDescription: () => descricaoTexto.value || descricaoSeo.value,
   twitterImage: () => empresa.value?.imagem_hero || empresa.value?.logo_url || undefined,
 }, {
   // puxa description/og:*/twitter:* pro topo do <head>, à frente dos ~110KB
@@ -61,9 +70,8 @@ useJsonLd({
   image: empresa.value.imagem_hero || empresa.value.logo_url || undefined,
   url: canonicalUrl.value,
   telephone: empresa.value.telefone || undefined,
-  address: empresa.value.endereco
-    ? { '@type': 'PostalAddress', streetAddress: empresa.value.endereco, addressCountry: 'BR' }
-    : undefined,
+  // endereço separado (rua/cidade/UF/CEP) a partir do texto do Google
+  address: enderecoSchemaEmpresa(empresa.value),
   geo: (empresa.value.latitude && empresa.value.longitude)
     ? { '@type': 'GeoCoordinates', latitude: empresa.value.latitude, longitude: empresa.value.longitude }
     : undefined,
@@ -134,7 +142,9 @@ useJsonLd({
       </nav>
 
       <div class="mt-3 flex flex-wrap items-center gap-3">
-        <h1 class="text-balance font-serif text-3xl font-bold text-stone-900 sm:text-4xl">{{ empresa.nome }}</h1>
+        <h1 class="text-balance font-serif text-3xl font-bold text-stone-900 sm:text-4xl">
+          {{ empresa.nome }}<template v-if="unidade"><span class="sr-only"> – </span><span class="block text-lg font-semibold text-stone-600 sm:text-xl">Unidade {{ unidade }}</span></template>
+        </h1>
         <span
           v-if="empresa.funciona_24h || empresa.aberto_agora"
           class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"

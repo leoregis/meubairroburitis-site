@@ -76,6 +76,50 @@ export function useEmpresaPublica(slug: string) {
   })
 }
 
+// Filial = mais de uma unidade ATIVA com o mesmo nome de empresa (07/out,
+// Fase C do SEO). Olha empresas_unidades, não a vw_empresas_publico_listagem:
+// a view tem DISTINCT ON (empresa_id) e esconde a 2a unidade da mesma
+// empresa (ex.: Depósito Ataíde 210/211). Lista inteira buscada UMA vez por
+// processo -- no prerender todas as ~500 páginas rodam no mesmo processo,
+// então não vira uma consulta por página. Só o booleano vai pro payload.
+type ClienteSupabase = NonNullable<ReturnType<typeof useNuxtApp>['$meubairroApp']>
+let unidadesAtivasCache: Promise<{ slug: string, nome: string }[]> | null = null
+
+function normalizarNome(nome: string) {
+  return nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+function listarUnidadesAtivas(cliente: ClienteSupabase) {
+  unidadesAtivasCache ??= (async () => {
+    const { data, error } = await cliente
+      .from('empresas_unidades')
+      .select('slug, empresas(nome)')
+      .eq('ativo', true)
+      .range(0, 4999)
+    if (error) throw error
+    return (data || []).map((u: { slug: string, empresas: { nome: string } | null }) => ({
+      slug: u.slug,
+      nome: normalizarNome(u.empresas?.nome || ''),
+    }))
+  })().catch((erro) => {
+    unidadesAtivasCache = null
+    throw erro
+  })
+  return unidadesAtivasCache
+}
+
+export function useEhFilial(slug: string, nome: () => string | undefined) {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData(`empresa-filial-${slug}`, async () => {
+    const nomeAtual = nome()
+    if (!$meubairroApp || !nomeAtual) return false
+    const unidades = await listarUnidadesAtivas($meubairroApp)
+    const alvo = normalizarNome(nomeAtual)
+    return unidades.filter((u) => u.nome === alvo).length > 1
+  })
+}
+
 export function usePrestadorPublico(slug: string) {
   const { $meubairroApp } = useNuxtApp()
 

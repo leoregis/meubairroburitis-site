@@ -66,6 +66,14 @@ jobs:
             "
           fi
 
+      - name: Barra registro de teste publicado (sitemap e titles)
+        # 07/out: registros de teste criados em produção ficaram semanas no
+        # ar e no sitemap. Se o sitemap ou algum <title> gerado tiver
+        # "teste", "apagar", "lorem" ou "dummy", o deploy para AQUI, antes
+        # de subir qualquer coisa. Nome legítimo -> exceção com motivo em
+        # scripts/checar-registros-teste.excecoes.json.
+        run: node scripts/checar-registros-teste.mjs .output/public
+
       - name: Confere se toda noticia publicada virou pagina no build
         # o prerender roda com failOnError:false -- pagina que quebra com
         # 500 no build some do site sem erro nenhum (7 materias sumiram

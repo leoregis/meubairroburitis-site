@@ -1,0 +1,9 @@
+{
+  "_sobre": "Exceções da checagem pós-build scripts/checar-registros-teste.mjs. Cada 'trecho' é parte de uma URL (caminho) ou de um título; se aparecer, o item é liberado. Sempre com o motivo e a data.",
+  "excecoes": [
+    {
+      "trecho": "/prestadores/gasmec-projetos-e-montagem-para-gas-glp-e-gn",
+      "motivo": "empresa real; a descrição fala em 'teste de estanqueidade' de gás (07/10/2026)"
+    }
+  ]
+}

@@ -136,7 +136,7 @@ jobs:
           fi
 
       - name: Sobe a release nova pra uma pasta a parte (fail-exit estrito, nao toca em _current)
-        timeout-minutes: 30
+        timeout-minutes: 60
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -164,11 +164,18 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate no
           set net:timeout 15
-          set net:max-retries 3
-          set net:reconnect-interval-base 5
+          # 07/out: hospedagem limita a 8 conexões por IP ("421 Too many
+          # connections (8)" derrubou o deploy de 07/out com --parallel=6).
+          # 3 em paralelo + até 6 novas tentativas com espera crescente
+          # (10s, 20s, 40s, teto 60s) nos erros de conexão.
+          set net:connection-limit 3
+          set net:max-retries 6
+          set net:reconnect-interval-base 10
+          set net:reconnect-interval-multiplier 2
+          set net:reconnect-interval-max 60
           set cmd:fail-exit yes
           mkdir -p public_html/$RELEASE
-          mirror -R --parallel=6 .output/public/ public_html/$RELEASE/
+          mirror -R --parallel=3 .output/public/ public_html/$RELEASE/
 
           # public_html/.htaccess exclui /.well-known/ de TODA regra de
           # rewrite pra _current/ (de propósito -- é onde ficam arquivos de

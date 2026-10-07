@@ -36,10 +36,11 @@ export default defineNuxtConfig({
     '/pedido/**': { prerender: false, robots: false },
     '/admin/**': { prerender: false, robots: false },
     '/carrinho': { prerender: false, robots: false },
-    // páginas 2+ da listagem de notícias -- conteúdo já indexado via a
-    // página do artigo em si, não precisa disputar posição no Google nem
-    // aparecer no sitemap (página 1, /noticias, continua indexável normal)
-    '/noticias/pagina/**': { robots: false },
+    // /noticias/pagina/N é indexável desde 06/out (antes "noindex,
+    // nofollow" -- o nofollow impedia o robô de seguir até as notícias
+    // mais antigas). Mesmo tratamento de /empresas/pagina/N: canonical
+    // pra própria página (plugin seo-canonical), title com o número da
+    // página e entrada no sitemap.
     // Fase 7b -- página de erro 404 real (ver ErrorDocument no
     // .htaccess) -- existe só pra ser servida como erro, nunca deve
     // aparecer no sitemap nem ser indexada como se fosse conteúdo.

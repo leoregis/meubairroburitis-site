@@ -419,4 +419,13 @@ RewriteRule ^(.*)$ /_current/$1/index.html [L]
 # (prerender:false) precisa entrar nesta lista, senão dá 404 no acesso
 # direto.
 RewriteCond %{REQUEST_URI} ^/(carrinho/?$|pedido/|admin(/|$))
-RewriteRule ^ /_current/200.html [L]
+RewriteRule ^ /_current/200.html [L,E=MBB_NOINDEX:1]
+
+# 06/out -- noindex dessas 3 rotas no HEADER: o shell client-only sai com
+# "index, follow" no HTML e o noindex só aparecia depois do JS. Depois do
+# rewrite interno acima o Apache renomeia a variável pra REDIRECT_*, por
+# isso as duas condições.
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow" env=MBB_NOINDEX
+  Header always set X-Robots-Tag "noindex, nofollow" env=REDIRECT_MBB_NOINDEX
+</IfModule>

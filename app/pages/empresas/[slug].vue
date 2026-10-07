@@ -25,10 +25,14 @@ const descricaoTexto = computed(() => empresa.value?.descricao?.replace(/<[^>]+>
 // utils/seoDiretorio.ts) -- a description da página não depende mais da
 // descrição livre da empresa (46 empresas não tinham nenhuma). Filial
 // (mais de uma unidade ativa com o mesmo nome) leva a unidade no title e no H1.
-const { data: ehFilial } = await useEhFilial(slug, () => empresa.value?.nome)
-const unidade = computed(() => (empresa.value ? unidadeDaEmpresa(empresa.value, Boolean(ehFilial.value)) : null))
-const tituloSeo = computed(() => (empresa.value ? tituloEmpresa(empresa.value, Boolean(ehFilial.value)) : ''))
-const descricaoSeo = computed(() => (empresa.value ? descricaoEmpresa(empresa.value) : undefined))
+// Bairro: o do endereço do Google; sem ele, o escolhido no cadastro; sem
+// nenhum, "em BH" (não presume Buritis).
+const { data: contexto } = await useContextoUnidade(slug, () => empresa.value?.nome)
+const ehFilial = computed(() => Boolean(contexto.value?.ehFilial))
+const bairroCadastro = computed(() => contexto.value?.bairroCadastro ?? null)
+const unidade = computed(() => (empresa.value ? unidadeDaEmpresa(empresa.value, ehFilial.value) : null))
+const tituloSeo = computed(() => (empresa.value ? tituloEmpresa(empresa.value, ehFilial.value, bairroCadastro.value) : ''))
+const descricaoSeo = computed(() => (empresa.value ? descricaoEmpresa(empresa.value, bairroCadastro.value) : undefined))
 
 const canonicalUrl = computed(() => `https://meubairroburitis.com.br/empresas/${empresa.value?.slug}`)
 const linkGuia = computed(() => `https://meubairroburitis.com.br/guia/empresa/${empresa.value?.slug}`)

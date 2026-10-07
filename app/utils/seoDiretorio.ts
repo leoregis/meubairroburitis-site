@@ -5,8 +5,10 @@ import type { EmpresaPublica, PrestadorPublico } from '~/composables/useEmpresas
 // montam texto a partir do que a RPC devolve, sem buscar nada.
 //
 // Limites: ~60 caracteres no title e ~155 na description. Quando passa, a
-// escada de redução tira primeiro o "(BH)" e depois o trecho após os
-// dois-pontos (title), ou a frase do endereço (description).
+// escada de redução tira primeiro o "(BH)", depois encurta/tira o trecho
+// após os dois-pontos (title) ou a frase do endereço (description). Title
+// nunca termina em "…": no último degrau o nome é cortado na última palavra
+// inteira.
 
 const LIMITE_TITULO = 60
 const LIMITE_DESCRICAO = 155
@@ -37,6 +39,18 @@ export function analisarEndereco(endereco?: string | null): EnderecoAnalisado | 
   return { rua, bairro, cidade, uf, cep }
 }
 
+// Bairro na ordem de confiança: o do endereço do Google; senão o escolhido
+// no cadastro (bairro_id -- obrigatório e sem valor padrão no formulário do
+// app); senão null, e o texto diz "em BH" em vez de presumir Buritis.
+export function bairroDaEmpresa(empresa: EmpresaPublica, bairroCadastro?: string | null) {
+  return analisarEndereco(empresa.endereco)?.bairro || bairroCadastro?.trim() || null
+}
+
+// "no Buritis" / "em BH" -- trecho de localização do title
+function ondeCurto(bairro: string | null) {
+  return bairro ? `no ${bairro}` : 'em BH'
+}
+
 // "Avenida Professor Mário Werneck, 2654" -> "Av. Prof. Mário Werneck, 2654"
 // (só pro title, onde cada caractere conta)
 export function abreviarRua(rua: string) {
@@ -52,13 +66,33 @@ export function juntarLista(itens: string[]) {
   return `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`
 }
 
-// corta em fim de palavra e marca com reticências
+// nome sem trechos entre parênteses: "Diogo Luiz Gonçalves (pinturas em
+// geral, ...)" -> "Diogo Luiz Gonçalves" (só pro title)
+export function nomeLimpo(nome: string) {
+  return nome.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').replace(/[\s\-–—,:]+$/, '').trim()
+}
+
+// trechos entre parênteses do nome, sem os parênteses
+function trechosEntreParenteses(nome: string) {
+  return [...nome.matchAll(/\(([^)]*)\)/g)].map((m) => m[1].trim()).filter(Boolean)
+}
+
+// corta em fim de palavra e marca com reticências (description)
 export function cortarTexto(texto: string, max: number) {
   const limpo = texto.replace(/\s+/g, ' ').trim()
   if (limpo.length <= max) return limpo
   const corte = limpo.slice(0, max - 1)
   const ultimoEspaco = corte.lastIndexOf(' ')
   return `${(ultimoEspaco > max * 0.5 ? corte.slice(0, ultimoEspaco) : corte).replace(/[\s,.;:–-]+$/, '')}…`
+}
+
+// corta na última palavra inteira, SEM reticências (title)
+export function cortarNaPalavra(texto: string, max: number) {
+  const limpo = texto.replace(/\s+/g, ' ').trim()
+  if (limpo.length <= max) return limpo
+  const corte = limpo.slice(0, max + 1)
+  const ultimoEspaco = corte.lastIndexOf(' ')
+  return (ultimoEspaco > 0 ? corte.slice(0, ultimoEspaco) : limpo.slice(0, max)).replace(/[\s,.;:–\-]+$/, '')
 }
 
 function primeiroQueCabe(candidatos: string[], limite: number) {
@@ -74,14 +108,15 @@ export function unidadeDaEmpresa(empresa: EmpresaPublica, ehFilial: boolean) {
   return analisarEndereco(empresa.endereco)?.rua || null
 }
 
-export function tituloEmpresa(empresa: EmpresaPublica, ehFilial = false) {
-  const nome = empresa.nome.trim()
+export function tituloEmpresa(empresa: EmpresaPublica, ehFilial = false, bairroCadastro?: string | null) {
+  const nome = nomeLimpo(empresa.nome)
   const endereco = analisarEndereco(empresa.endereco)
-  const bairro = endereco?.bairro || 'Buritis'
+  const bairro = bairroDaEmpresa(empresa, bairroCadastro)
+  const ultimo = cortarNaPalavra(nome, LIMITE_TITULO)
 
   if (ehFilial && endereco?.rua) {
     const base = `${nome} – ${abreviarRua(endereco.rua)}`
-    return primeiroQueCabe([`${base} (${bairro})`, base, cortarTexto(nome, LIMITE_TITULO)], LIMITE_TITULO)
+    return primeiroQueCabe([bairro ? `${base} (${bairro})` : base, base, ultimo], LIMITE_TITULO)
   }
 
   const campos: string[] = []
@@ -89,23 +124,27 @@ export function tituloEmpresa(empresa: EmpresaPublica, ehFilial = false) {
   if (empresa.telefone || empresa.whatsapp) campos.push('telefone')
   if (empresa.horarios?.length) campos.push('horário')
   const sufixo = (n: number) => (n > 0 ? `: ${juntarLista(campos.slice(0, n))}` : '')
+  const onde = ondeCurto(bairro)
 
-  // escada: tira o "(BH)"; depois encurta a lista do fim pro começo
-  // (horário, telefone...) antes de tirar o trecho todo; por último o nome,
-  // cortado se ele sozinho já passar do limite
-  const candidatos = [`${nome} no ${bairro} (BH)${sufixo(campos.length)}`]
-  for (let n = campos.length; n >= 0; n--) candidatos.push(`${nome} no ${bairro}${sufixo(n)}`)
-  candidatos.push(cortarTexto(nome, LIMITE_TITULO))
+  // escada: tira o "(BH)" (só existe quando há bairro); depois encurta a
+  // lista do fim pro começo (horário, telefone...) antes de tirar o trecho
+  // todo; por último o nome sozinho, cortado na palavra se precisar
+  const candidatos: string[] = []
+  if (bairro) candidatos.push(`${nome} ${onde} (BH)${sufixo(campos.length)}`)
+  for (let n = campos.length; n >= 0; n--) candidatos.push(`${nome} ${onde}${sufixo(n)}`)
+  candidatos.push(ultimo)
   return primeiroQueCabe(candidatos, LIMITE_TITULO)
 }
 
-export function descricaoEmpresa(empresa: EmpresaPublica) {
+export function descricaoEmpresa(empresa: EmpresaPublica, bairroCadastro?: string | null) {
   const endereco = analisarEndereco(empresa.endereco)
-  const bairro = endereco?.bairro || 'Buritis'
+  const bairro = bairroDaEmpresa(empresa, bairroCadastro)
   const categoria = (empresa.subcategoria_nome || empresa.categoria_nome || 'Empresa').trim()
 
-  const local = `${categoria} no ${bairro}, em Belo Horizonte.`
-  const rua = endereco?.rua ? `${endereco.rua}.` : ''
+  const local = bairro ? `${categoria} no ${bairro}, em Belo Horizonte.` : `${categoria} em Belo Horizonte.`
+  // só o pedaço "rua, número" -- endereço sem rua reconhecível ("Buritis")
+  // não vira frase
+  const rua = endereco?.rua && /\d|^(Av|R|Rua|Avenida|Al|Alameda|Pç|Praça|Rod)\b/i.test(endereco.rua) ? `${endereco.rua}.` : ''
 
   const veja: string[] = []
   if (empresa.telefone) veja.push('telefone')
@@ -116,8 +155,7 @@ export function descricaoEmpresa(empresa: EmpresaPublica) {
 
   const montar = (...partes: string[]) => partes.filter(Boolean).join(' ')
   const candidatos = [montar(local, rua, chamada), montar(local, chamada), local]
-  const escolhido = primeiroQueCabe(candidatos, LIMITE_DESCRICAO)
-  return cortarTexto(escolhido, LIMITE_DESCRICAO)
+  return cortarTexto(primeiroQueCabe(candidatos, LIMITE_DESCRICAO), LIMITE_DESCRICAO)
 }
 
 // PostalAddress do LocalBusiness com os campos separados. addressLocality é
@@ -137,22 +175,29 @@ export function enderecoSchemaEmpresa(empresa: EmpresaPublica) {
 
 // ----- Prestadores -----
 
+// Prestador não tem endereço fixo: atende o bairro e a região. Sem
+// bairro_nome, o padrão aprovado é Buritis (o "em BH" vale só pras
+// empresas, que têm endereço).
+function bairroDoPrestador(prestador: PrestadorPublico) {
+  return prestador.bairro_nome?.trim() || 'Buritis'
+}
+
 export function tituloPrestador(prestador: PrestadorPublico) {
-  const nome = prestador.nome.trim()
-  const bairro = prestador.bairro_nome?.trim() || 'Buritis'
+  const nome = nomeLimpo(prestador.nome)
+  const bairro = bairroDoPrestador(prestador)
   const categoria = (prestador.subcategoria_nome || prestador.categoria_nome || 'Prestador de serviço').trim()
 
   return primeiroQueCabe([
     `${nome}: ${categoria} no ${bairro} (BH)`,
     `${nome}: ${categoria} no ${bairro}`,
-    cortarTexto(nome, LIMITE_TITULO),
+    cortarNaPalavra(nome, LIMITE_TITULO),
   ], LIMITE_TITULO)
 }
 
 export function descricaoPrestador(prestador: PrestadorPublico) {
-  const bairro = prestador.bairro_nome?.trim() || 'Buritis'
+  const bairro = bairroDoPrestador(prestador)
   const categoria = (prestador.subcategoria_nome || prestador.categoria_nome || 'Prestador de serviço').trim()
-  const atende = `${categoria} que atende o ${bairro} e região.`
+  const atende = `Atende o ${bairro} e região.`
 
   const temContato = prestador.exibir_telefone || prestador.exibir_whatsapp
   const temAvaliacao = prestador.total_avaliacoes > 0
@@ -162,12 +207,22 @@ export function descricaoPrestador(prestador: PrestadorPublico) {
 
   const fixo = [atende, chamada].filter(Boolean).join(' ')
   const espaco = LIMITE_DESCRICAO - fixo.length - 1
-  // texto livre do cadastro: tira HTML e espaço antes de pontuação ("a , b")
-  const resumo = prestador.descricao_curta?.replace(/<[^>]+>/g, ' ').replace(/\s+([,.;:!?])/g, '$1').trim()
 
-  if (!resumo || espaco < 40) return cortarTexto(fixo, LIMITE_DESCRICAO)
+  // texto livre do cadastro: tira HTML e espaço antes de pontuação ("a , b"),
+  // e não começa repetindo o trecho entre parênteses do nome (ex.: Diogo
+  // Luiz Gonçalves, cuja descrição é o próprio "(pinturas em geral, ...)")
+  let resumo = prestador.descricao_curta?.replace(/<[^>]+>/g, ' ').replace(/\s+([,.;:!?])/g, '$1').replace(/\s+/g, ' ').trim() || ''
+  for (const trecho of trechosEntreParenteses(prestador.nome)) {
+    const t = trecho.toLowerCase()
+    const r = resumo.replace(/^\(/, '').toLowerCase()
+    if (r.startsWith(t)) resumo = resumo.replace(/^\(/, '').slice(trecho.length).replace(/^[)\s.,;:–-]+/, '').trim()
+  }
 
-  let inicio = cortarTexto(resumo, espaco)
+  // sem texto próprio (ou só o trecho do nome), abre com a categoria
+  if (!resumo) return cortarTexto(`${categoria}. ${fixo}`, LIMITE_DESCRICAO)
+  if (espaco < 40) return cortarTexto(fixo, LIMITE_DESCRICAO)
+
+  let inicio = cortarTexto(resumo.charAt(0).toUpperCase() + resumo.slice(1), espaco)
   if (!/[.!?…]$/.test(inicio)) inicio += '.'
   return cortarTexto(`${inicio} ${fixo}`, LIMITE_DESCRICAO)
 }

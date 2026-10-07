@@ -76,30 +76,36 @@ export function useEmpresaPublica(slug: string) {
   })
 }
 
-// Filial = mais de uma unidade ATIVA com o mesmo nome de empresa (07/out,
-// Fase C do SEO). Olha empresas_unidades, não a vw_empresas_publico_listagem:
-// a view tem DISTINCT ON (empresa_id) e esconde a 2a unidade da mesma
-// empresa (ex.: Depósito Ataíde 210/211). Lista inteira buscada UMA vez por
-// processo -- no prerender todas as ~500 páginas rodam no mesmo processo,
-// então não vira uma consulta por página. Só o booleano vai pro payload.
+// Dados de contexto da unidade que a RPC não devolve (07/out, Fase C do SEO):
+// - filial = mais de uma unidade ATIVA com o mesmo nome de empresa. Olha
+//   empresas_unidades, não a vw_empresas_publico_listagem: a view tem
+//   DISTINCT ON (empresa_id) e esconde a 2a unidade da mesma empresa
+//   (ex.: Depósito Ataíde 210/211);
+// - bairro do cadastro (bairro_id, obrigatório e sem valor padrão no
+//   formulário do app) -- usado quando o endereço não diz o bairro.
+// Lista inteira buscada UMA vez por processo -- no prerender todas as ~500
+// páginas rodam no mesmo processo, então não vira uma consulta por página.
+// Só o resultado da página vai pro payload.
 type ClienteSupabase = NonNullable<ReturnType<typeof useNuxtApp>['$meubairroApp']>
-let unidadesAtivasCache: Promise<{ slug: string, nome: string }[]> | null = null
+interface UnidadeAtiva { slug: string, nome: string, bairro: string | null }
+let unidadesAtivasCache: Promise<UnidadeAtiva[]> | null = null
 
 function normalizarNome(nome: string) {
-  return nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
 function listarUnidadesAtivas(cliente: ClienteSupabase) {
   unidadesAtivasCache ??= (async () => {
     const { data, error } = await cliente
       .from('empresas_unidades')
-      .select('slug, empresas(nome)')
+      .select('slug, empresas(nome), bairros(nome)')
       .eq('ativo', true)
       .range(0, 4999)
     if (error) throw error
-    return (data || []).map((u: { slug: string, empresas: { nome: string } | null }) => ({
+    return (data || []).map((u: { slug: string, empresas: { nome: string } | null, bairros: { nome: string } | null }) => ({
       slug: u.slug,
       nome: normalizarNome(u.empresas?.nome || ''),
+      bairro: u.bairros?.nome?.trim() || null,
     }))
   })().catch((erro) => {
     unidadesAtivasCache = null
@@ -108,15 +114,18 @@ function listarUnidadesAtivas(cliente: ClienteSupabase) {
   return unidadesAtivasCache
 }
 
-export function useEhFilial(slug: string, nome: () => string | undefined) {
+export function useContextoUnidade(slug: string, nome: () => string | undefined) {
   const { $meubairroApp } = useNuxtApp()
 
-  return useAsyncData(`empresa-filial-${slug}`, async () => {
+  return useAsyncData(`empresa-contexto-${slug}`, async () => {
     const nomeAtual = nome()
-    if (!$meubairroApp || !nomeAtual) return false
+    if (!$meubairroApp || !nomeAtual) return { ehFilial: false, bairroCadastro: null as string | null }
     const unidades = await listarUnidadesAtivas($meubairroApp)
     const alvo = normalizarNome(nomeAtual)
-    return unidades.filter((u) => u.nome === alvo).length > 1
+    return {
+      ehFilial: unidades.filter((u) => u.nome === alvo).length > 1,
+      bairroCadastro: unidades.find((u) => u.slug === slug)?.bairro ?? null,
+    }
   })
 }
 

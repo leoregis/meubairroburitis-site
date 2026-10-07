@@ -76,22 +76,36 @@ RewriteRule ^listing-cat/ /empresas [R=301,L]
 # desativadas hoje (vino, juliane-raposo-estetica) -- 410, mesmo
 # critério de "existiu mas não existe mais" do resto do arquivo.
 RewriteRule ^places/coreu-burguer/?$ /empresas/coreu-burguer-122 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-bolaria-59/index.html -f
+RewriteRule ^places/la-bolaria/?$ /empresas/la-bolaria-59 [R=301,L]
 RewriteRule ^places/la-bolaria/?$ /empresas/-a-olaria-59 [R=301,L]
 RewriteRule ^places/bd-beer/?$ /empresas/bd-beer-102 [R=301,L]
 RewriteRule ^places/beaga-da-gema/?$ /empresas/beaga-da-gema-126 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/mata-das-borboletas-50/index.html -f
+RewriteRule ^places/mata-das-borboletas/?$ /empresas/mata-das-borboletas-50 [R=301,L]
 RewriteRule ^places/mata-das-borboletas/?$ /empresas/-ata-das-orboletas--50 [R=301,L]
 RewriteRule ^places/flavia-nogueira-confeitaria/?$ /empresas/flavia-nogueira-confeitaria-87 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/hortisul-43/index.html -f
+RewriteRule ^places/hortisul/?$ /empresas/hortisul-43 [R=301,L]
 RewriteRule ^places/hortisul/?$ /empresas/-ortisul-43 [R=301,L]
 RewriteRule ^places/lu-cakes/?$ /empresas/lu-cakes-100 [R=301,L]
 RewriteRule ^places/rust-music-bar/?$ /empresas/rust-music-bar-79 [R=301,L]
 RewriteRule ^places/choperia-do-lugui/?$ /empresas/choperia-do-lugui-125 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-tabuleria-36/index.html -f
+RewriteRule ^places/la-tabuleria/?$ /empresas/la-tabuleria-36 [R=301,L]
 RewriteRule ^places/la-tabuleria/?$ /empresas/-a-abuleria-36 [R=301,L]
 RewriteRule ^places/picco-sky-bar/?$ /empresas/picco-sky-bar-83 [R=301,L]
 RewriteRule ^places/claudia-guimaraes-beauty/?$ /empresas/claudia-guimaraes-beauty-161 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sodie-doces-53/index.html -f
+RewriteRule ^places/sodie-doces/?$ /empresas/sodie-doces-53 [R=301,L]
 RewriteRule ^places/sodie-doces/?$ /empresas/-odie-oces--53 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sr-a-granel-57/index.html -f
+RewriteRule ^places/sr-a-granel/?$ /empresas/sr-a-granel-57 [R=301,L]
 RewriteRule ^places/sr-a-granel/?$ /empresas/-r-a-ranel-57 [R=301,L]
 RewriteRule ^places/rota-88/?$ /empresas/rota-88-489 [R=301,L]
 RewriteRule ^places/boi-werneck/?$ /empresas/boi-werneck-113 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/casa-de-bolos-56/index.html -f
+RewriteRule ^places/casa-de-bolos/?$ /empresas/casa-de-bolos-56 [R=301,L]
 RewriteRule ^places/casa-de-bolos/?$ /empresas/-asa-de-olos-56 [R=301,L]
 RewriteRule ^places/algaroba/?$ /empresas/algaroba-97 [R=301,L]
 RewriteRule ^places/adega-guga/?$ /empresas/adega-guga-88 [R=301,L]
@@ -108,9 +122,15 @@ RewriteRule ^places/careca-burguer/?$ /empresas/careca-burguer-72 [R=301,L]
 RewriteRule ^places/quintal-do-chale/?$ /empresas/quintal-do-chale-76 [R=301,L]
 RewriteRule ^places/romeo-pizza-bar/?$ /empresas/romeo-pizza-bar-129 [R=301,L]
 RewriteRule ^places/papagueti/?$ /empresas/papagueti-492 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/fabrica-de-bolos-vo-alzira-54/index.html -f
+RewriteRule ^places/fabrica-de-bolos-vo-alzira/?$ /empresas/fabrica-de-bolos-vo-alzira-54 [R=301,L]
 RewriteRule ^places/fabrica-de-bolos-vo-alzira/?$ /empresas/-abrica-de-olos-o-lzira--54 [R=301,L]
 RewriteRule ^places/sushiloko/?$ /empresas/sushiloko-75 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/santo-emporio-48/index.html -f
+RewriteRule ^places/santo-emporio/?$ /empresas/santo-emporio-48 [R=301,L]
 RewriteRule ^places/santo-emporio/?$ /empresas/-anto-mporio--48 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/bury-bar-40/index.html -f
+RewriteRule ^places/bury-bar/?$ /empresas/bury-bar-40 [R=301,L]
 RewriteRule ^places/bury-bar/?$ /empresas/-ury-ar-40 [R=301,L]
 RewriteRule ^places/subway/?$ /empresas/subway-434 [R=301,L]
 RewriteRule ^places/divinnus-burguer/?$ /empresas/divinnus-burguer-65 [R=301,L]
@@ -122,6 +142,8 @@ RewriteRule ^places/praiou/?$ /empresas/praiou-116 [R=301,L]
 RewriteRule ^places/parada-do-acai/?$ /empresas/parada-do-acai-64 [R=301,L]
 RewriteRule ^places/toca-do-acai/?$ /empresas/toca-do-acai-63 [R=301,L]
 RewriteRule ^places/bendito-japa/?$ /empresas/bendito-japa-86 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dom-ze-41/index.html -f
+RewriteRule ^places/dom-ze/?$ /empresas/dom-ze-41 [R=301,L]
 RewriteRule ^places/dom-ze/?$ /empresas/-om-e--41 [R=301,L]
 RewriteRule ^places/botopremium/?$ /empresas/botopremium-350 [R=301,L]
 RewriteRule ^places/capilar-turbo-10/?$ /empresas/capilar-turbo-10-410 [R=301,L]
@@ -134,36 +156,52 @@ RewriteRule ^places/piu-braziliano/?$ /empresas/piu-braziliano-109 [R=301,L]
 RewriteRule ^places/boca-do-forno/?$ /empresas/boca-do-forno-365 [R=301,L]
 RewriteRule ^places/burger-king/?$ /empresas/burger-king-433 [R=301,L]
 RewriteRule ^places/quioxque-botequim-carioca/?$ /empresas/quioxque-botequim-carioca-81 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sol-e-neve-61/index.html -f
+RewriteRule ^places/sol-e-neve/?$ /empresas/sol-e-neve-61 [R=301,L]
 RewriteRule ^places/sol-e-neve/?$ /empresas/-ol-e-eve-61 [R=301,L]
 RewriteRule ^places/mirian-maria/?$ /prestadores/mirian-maria-174 [R=301,L]
 RewriteRule ^places/sterna-cafe/?$ /empresas/sterna-cafe-112 [R=301,L]
 RewriteRule ^places/sr-forneria/?$ /empresas/sr-forneria-94 [R=301,L]
 RewriteRule ^places/axado/?$ /empresas/axado-115 [R=301,L]
 RewriteRule ^places/kinoko/?$ /empresas/kinoko-107 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dupao-46/index.html -f
+RewriteRule ^places/dupao/?$ /empresas/dupao-46 [R=301,L]
 RewriteRule ^places/dupao/?$ /empresas/-upao-46 [R=301,L]
 RewriteRule ^places/encantos-e-sabores/?$ /empresas/encantos-e-sabores-90 [R=301,L]
 RewriteRule ^places/clube-chalezinho/?$ /empresas/clube-chalezinho-77 [R=301,L]
 RewriteRule ^places/praia-buritis/?$ /empresas/praia-buritis-103 [R=301,L]
 RewriteRule ^places/cuca-libre/?$ /empresas/cuca-libre-488 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/acai-werneck-39/index.html -f
+RewriteRule ^places/acai-werneck/?$ /empresas/acai-werneck-39 [R=301,L]
 RewriteRule ^places/acai-werneck/?$ /empresas/-cai-erneck-39 [R=301,L]
 RewriteRule ^places/rokkon/?$ /empresas/rokkon-73 [R=301,L]
 RewriteRule ^places/recanto-buri/?$ /empresas/recanto-buri-106 [R=301,L]
 RewriteRule ^places/kopenhagen/?$ /empresas/kopenhagen-180 [R=301,L]
 RewriteRule ^places/up-modas/?$ /empresas/up-modas-163 [R=301,L]
 RewriteRule ^places/elis-bar/?$ /empresas/elis-bar-121 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/bread-baker-49/index.html -f
+RewriteRule ^places/bread-baker/?$ /empresas/bread-baker-49 [R=301,L]
 RewriteRule ^places/bread-baker/?$ /empresas/-read-aker-49 [R=301,L]
 RewriteRule ^places/madero/?$ /empresas/madero-397 [R=301,L]
 RewriteRule ^places/hamoni-fusion/?$ /empresas/hamoni-fusion-85 [R=301,L]
 RewriteRule ^places/china-in-box/?$ /empresas/china-in-box-226 [R=301,L]
 RewriteRule ^places/bar-ideal/?$ /empresas/bar-ideal-110 [R=301,L]
 RewriteRule ^places/hakuna-batata/?$ /empresas/hakuna-batata-372 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/flow-62/index.html -f
+RewriteRule ^places/flow/?$ /empresas/flow-62 [R=301,L]
 RewriteRule ^places/flow/?$ /empresas/-low-62 [R=301,L]
 RewriteRule ^places/nacho-man/?$ /empresas/nacho-man-93 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/guud-42/index.html -f
+RewriteRule ^places/guud/?$ /empresas/guud-42 [R=301,L]
 RewriteRule ^places/guud/?$ /empresas/-uud-42 [R=301,L]
 RewriteRule ^places/hot-gringo/?$ /empresas/hot-gringo-92 [R=301,L]
 RewriteRule ^places/era-uma-vez-um-armazem/?$ /empresas/era-uma-vez-um-armazem-84 [R=301,L]
 RewriteRule ^places/canto-de-mainha/?$ /empresas/canto-de-mainha-108 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/alento-60/index.html -f
+RewriteRule ^places/alento/?$ /empresas/alento-60 [R=301,L]
 RewriteRule ^places/alento/?$ /empresas/-lento-60 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dondoca-espeteria-35/index.html -f
+RewriteRule ^places/dondoca-espeteria/?$ /empresas/dondoca-espeteria-35 [R=301,L]
 RewriteRule ^places/dondoca-espeteria/?$ /empresas/-ondoca-speteria--35 [R=301,L]
 RewriteRule ^places/mercado-da-boca/?$ /empresas/mercado-da-boca-119 [R=301,L]
 RewriteRule ^places/delicerie/?$ /empresas/delicerie-69 [R=301,L]
@@ -175,16 +213,24 @@ RewriteRule ^places/gori-grill/?$ /empresas/gorigrill-124 [R=301,L]
 RewriteRule ^places/shopping-paragem/?$ /empresas/paragem-213 [R=301,L]
 RewriteRule ^places/j-san/?$ /empresas/jsan-131 [R=301,L]
 RewriteRule ^places/trigopane-2/?$ /empresas/trigopane-567 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/katia-bueno-417/index.html -f
+RewriteRule ^places/studio-katia-bueno/?$ /prestadores/katia-bueno-417 [R=301,L]
 RewriteRule ^places/studio-katia-bueno/?$ /prestadores/kátia-bueno- [R=301,L]
 RewriteRule ^places/cheirin-bao-2/?$ /empresas/cheirin-bao-71 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/santa-clara-padaria-47/index.html -f
+RewriteRule ^places/santa-clara/?$ /empresas/santa-clara-padaria-47 [R=301,L]
 RewriteRule ^places/santa-clara/?$ /empresas/-anta-lara-adaria-47 [R=301,L]
 RewriteRule ^places/oyaji/?$ /empresas/oyaji-culinaria-oriental-80 [R=301,L]
 RewriteRule ^places/meatz-burger-n-beer/?$ /empresas/meatz-burger-95 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dona-baguete-44/index.html -f
+RewriteRule ^places/dona-baguette/?$ /empresas/dona-baguete-44 [R=301,L]
 RewriteRule ^places/dona-baguette/?$ /empresas/-ona-aguete--44 [R=301,L]
 RewriteRule ^places/night-market-rooftop/?$ /empresas/night-market-roof-top-117 [R=301,L]
 RewriteRule ^places/play-bar/?$ /empresas/playbar-78 [R=301,L]
 RewriteRule ^places/monts-burger/?$ /empresas/mont-s-burguer-574 [R=301,L]
 RewriteRule ^places/grelhados-e-cia/?$ /empresas/grelhados-cia-371 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-notre-patisserie-45/index.html -f
+RewriteRule ^places/la-notre/?$ /empresas/la-notre-patisserie-45 [R=301,L]
 RewriteRule ^places/la-notre/?$ /empresas/-a-otre-atisserie-45 [R=301,L]
 
 # correspondência exata, mas registro desativado hoje -- 410
@@ -243,6 +289,12 @@ RewriteRule ^places/josi-cakes/?$ - [G]
 RewriteRule ^places/bolo-nosso/?$ - [G]
 RewriteRule ^places/cacau-show/?$ - [G]
 RewriteRule ^places/phaellas/?$ - [G]
+
+# 07/out -- cruzamento com o Search Console (293 URLs /places/): só 2
+# sem regra. jah-acai: fn_slugify("Jah Açaí") idêntico ao slug antigo,
+# unidade ativa. a-biscoiteria: nada correspondente no banco -- 410.
+RewriteRule ^places/jah-acai/?$ /empresas/jah-acai-91 [R=301,L]
+RewriteRule ^places/a-biscoiteria/?$ - [G]
 
 # categorias antigas (page/N e ?sort_by= incluídos automaticamente pelo
 # padrão -- o "?" final descarta a query string original)
@@ -361,6 +413,210 @@ RewriteRule ^blog/?$ /noticias? [R=301,L]
 RewriteCond %{DOCUMENT_ROOT}/_current%{REQUEST_URI} !-f
 RewriteRule ^(profile|users|register|login-2|eventos|listing|produto|blog|wp-content|wp-admin|wp-includes|feed)(/|$) - [G]
 RewriteRule ^(wp-login|xmlrpc|noticias_detalhe)\.php$ - [G]
+
+# 07/out -- link de avaliação enviado pelo WhatsApp (webhook do Guia):
+# https://meubairroburitis.com.br/avaliar/<slug do prestador>. Não é página
+# do site nem do app: quem resolve é a edge function "webhook", que acha o
+# prestador e responde 302 pro wa.me com a mensagem "avaliar_<id>_<token>".
+# O desvio de /avaliar/ pra função existia antes da virada (WordPress) e não
+# veio pro .htaccess novo -- desde 02/08/2026 o link dava 404. 302 (não 301)
+# porque o destino é um endpoint técnico que pode mudar; o link público
+# continua sendo o do domínio. [B] reescapa o slug (acento, ', @); a query
+# string segue junto. Antes da regra de barra final: /avaliar/x/ num salto
+# (a função ignora a barra).
+RewriteRule ^avaliar/([^/]+)/?$ https://xtmwatregednbuupfdbl.supabase.co/functions/v1/webhook/avaliar/$1 [R=302,L,B,NE]
+
+# 07/out -- Fase B: slugs corrigidos no banco do Guia (24 empresas sem as
+# maiúsculas da importação de 29/04 + 65 prestadores com acento/pontuação/
+# hífen sobrando) -> slug novo (nome-ID). Cada 301 só vale quando a página
+# nova JÁ existe no build publicado (RewriteCond -f): até o rebuild que vem
+# depois do UPDATE, a URL antiga continua servindo a página antiga; depois,
+# redireciona -- sem janela de 404. Fica antes da regra da barra final pra
+# /empresas/<antigo>/ também chegar em um salto. Mapa completo e rollback:
+# backup_slugs_20261006 (banco do Guia) e meubairro-app/supabase/manutencao/.
+# Unidade 707 da Toca do Açaí era registro de teste (desativado) -- 410.
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dondoca-espeteria-35/index.html -f
+RewriteRule ^empresas/-ondoca-speteria--35/?$ /empresas/dondoca-espeteria-35 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-tabuleria-36/index.html -f
+RewriteRule ^empresas/-a-abuleria-36/?$ /empresas/la-tabuleria-36 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/acai-werneck-39/index.html -f
+RewriteRule ^empresas/-cai-erneck-39/?$ /empresas/acai-werneck-39 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/bury-bar-40/index.html -f
+RewriteRule ^empresas/-ury-ar-40/?$ /empresas/bury-bar-40 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dom-ze-41/index.html -f
+RewriteRule ^empresas/-om-e--41/?$ /empresas/dom-ze-41 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/guud-42/index.html -f
+RewriteRule ^empresas/-uud-42/?$ /empresas/guud-42 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/hortisul-43/index.html -f
+RewriteRule ^empresas/-ortisul-43/?$ /empresas/hortisul-43 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dona-baguete-44/index.html -f
+RewriteRule ^empresas/-ona-aguete--44/?$ /empresas/dona-baguete-44 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-notre-patisserie-45/index.html -f
+RewriteRule ^empresas/-a-otre-atisserie-45/?$ /empresas/la-notre-patisserie-45 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/dupao-46/index.html -f
+RewriteRule ^empresas/-upao-46/?$ /empresas/dupao-46 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/santa-clara-padaria-47/index.html -f
+RewriteRule ^empresas/-anta-lara-adaria-47/?$ /empresas/santa-clara-padaria-47 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/santo-emporio-48/index.html -f
+RewriteRule ^empresas/-anto-mporio--48/?$ /empresas/santo-emporio-48 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/bread-baker-49/index.html -f
+RewriteRule ^empresas/-read-aker-49/?$ /empresas/bread-baker-49 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/mata-das-borboletas-50/index.html -f
+RewriteRule ^empresas/-ata-das-orboletas--50/?$ /empresas/mata-das-borboletas-50 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/maffille-51/index.html -f
+RewriteRule ^empresas/-rigopane-51/?$ /empresas/maffille-51 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/maffille-52/index.html -f
+RewriteRule ^empresas/-rigopane-52/?$ /empresas/maffille-52 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sodie-doces-53/index.html -f
+RewriteRule ^empresas/-odie-oces--53/?$ /empresas/sodie-doces-53 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/fabrica-de-bolos-vo-alzira-54/index.html -f
+RewriteRule ^empresas/-abrica-de-olos-o-lzira--54/?$ /empresas/fabrica-de-bolos-vo-alzira-54 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/casa-de-bolos-56/index.html -f
+RewriteRule ^empresas/-asa-de-olos-56/?$ /empresas/casa-de-bolos-56 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sr-a-granel-57/index.html -f
+RewriteRule ^empresas/-r-a-ranel-57/?$ /empresas/sr-a-granel-57 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/la-bolaria-59/index.html -f
+RewriteRule ^empresas/-a-olaria-59/?$ /empresas/la-bolaria-59 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/alento-60/index.html -f
+RewriteRule ^empresas/-lento-60/?$ /empresas/alento-60 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/sol-e-neve-61/index.html -f
+RewriteRule ^empresas/-ol-e-eve-61/?$ /empresas/sol-e-neve-61 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/empresas/flow-62/index.html -f
+RewriteRule ^empresas/-low-62/?$ /empresas/flow-62 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/guiu-reformas-construcoes-228/index.html -f
+RewriteRule ^prestadores/guiu_reformasconstrucoes-228/?$ /prestadores/guiu-reformas-construcoes-228 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/kenia-cristina-248/index.html -f
+RewriteRule ^prestadores/kênia-cristina-/?$ /prestadores/kenia-cristina-248 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/flavio-de-oliveira-249/index.html -f
+RewriteRule ^prestadores/flávio-de-oliveira-/?$ /prestadores/flavio-de-oliveira-249 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/rosana-souza-conecta-ar-condicionado-416/index.html -f
+RewriteRule ^prestadores/rosana-souza-/?$ /prestadores/rosana-souza-conecta-ar-condicionado-416 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/katia-bueno-417/index.html -f
+RewriteRule ^prestadores/kátia-bueno-/?$ /prestadores/katia-bueno-417 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/mont-s-burguer-418/index.html -f
+RewriteRule ^prestadores/mont's-burguer/?$ /prestadores/mont-s-burguer-418 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/global-colchoes-home-decor-419/index.html -f
+RewriteRule ^prestadores/global-colchões-home-decor/?$ /prestadores/global-colchoes-home-decor-419 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/clinica-bella-odonto-421/index.html -f
+RewriteRule ^prestadores/clínica-bella-odonto/?$ /prestadores/clinica-bella-odonto-421 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/luiz-422/index.html -f
+RewriteRule ^prestadores/luiz-/?$ /prestadores/luiz-422 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/gioia-dolce-e-caffe-429/index.html -f
+RewriteRule ^prestadores/gioia-dolce-e-caffè/?$ /prestadores/gioia-dolce-e-caffe-429 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/beaga-da-gema-430/index.html -f
+RewriteRule ^prestadores/beagá-da-gema/?$ /prestadores/beaga-da-gema-430 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/alphaville-pizzaria-432/index.html -f
+RewriteRule ^prestadores/alphaville-pizzaria-/?$ /prestadores/alphaville-pizzaria-432 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/michely-oliveira-maria-433/index.html -f
+RewriteRule ^prestadores/michely-oliveira-maria-/?$ /prestadores/michely-oliveira-maria-433 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/marcilane-de-souza-moreira-436/index.html -f
+RewriteRule ^prestadores/marcilane-de-souza-moreira-/?$ /prestadores/marcilane-de-souza-moreira-436 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/codice-digital-439/index.html -f
+RewriteRule ^prestadores/códice-digital/?$ /prestadores/codice-digital-439 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/jessica-loschi-440/index.html -f
+RewriteRule ^prestadores/jéssica-loschi/?$ /prestadores/jessica-loschi-440 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/abadia-incendio-442/index.html -f
+RewriteRule ^prestadores/abadia@2020/?$ /prestadores/abadia-incendio-442 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/barbara-pimentel-fisioterapia-domiciliar-443/index.html -f
+RewriteRule ^prestadores/bárbara-pimentel-fisioterapia-domiciliar-/?$ /prestadores/barbara-pimentel-fisioterapia-domiciliar-443 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/dra-cynthia-neves-444/index.html -f
+RewriteRule ^prestadores/dra\.-cynthia-neves/?$ /prestadores/dra-cynthia-neves-444 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/servcad-servicos-ltda-446/index.html -f
+RewriteRule ^prestadores/servcad-serviços-ltda/?$ /prestadores/servcad-servicos-ltda-446 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/alessandra-447/index.html -f
+RewriteRule ^prestadores/alessandra-/?$ /prestadores/alessandra-447 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/fabiana-alves-448/index.html -f
+RewriteRule ^prestadores/fabiana-alves-/?$ /prestadores/fabiana-alves-448 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/teacher-selene-450/index.html -f
+RewriteRule ^prestadores/teacher-selene-/?$ /prestadores/teacher-selene-450 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/euridice-guimaraes-452/index.html -f
+RewriteRule ^prestadores/eurídice-guimarães-/?$ /prestadores/euridice-guimaraes-452 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/unimov-decor-453/index.html -f
+RewriteRule ^prestadores/unimov-decor-/?$ /prestadores/unimov-decor-453 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/jonathan-souza-454/index.html -f
+RewriteRule ^prestadores/jonathan-souza-/?$ /prestadores/jonathan-souza-454 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/raquel-bittencourt-odontologia-e-harmonizacao-orofacial-455/index.html -f
+RewriteRule ^prestadores/raquel-bittencourt-odontologia-e-harmonização-orofacial-/?$ /prestadores/raquel-bittencourt-odontologia-e-harmonizacao-orofacial-455 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/brie-me-home-460/index.html -f
+RewriteRule ^prestadores/brie-me-home-/?$ /prestadores/brie-me-home-460 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/graziella-461/index.html -f
+RewriteRule ^prestadores/graziella-/?$ /prestadores/graziella-461 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/daniela-galvao-464/index.html -f
+RewriteRule ^prestadores/daniela-galvão/?$ /prestadores/daniela-galvao-464 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/juliana-466/index.html -f
+RewriteRule ^prestadores/juliana-/?$ /prestadores/juliana-466 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/carol-467/index.html -f
+RewriteRule ^prestadores/carol-/?$ /prestadores/carol-467 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/dois-amores-confeitaria-471/index.html -f
+RewriteRule ^prestadores/dois-amores-confeitaria-/?$ /prestadores/dois-amores-confeitaria-471 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/henrique-474/index.html -f
+RewriteRule ^prestadores/henrique-/?$ /prestadores/henrique-474 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/marcio-linhares-475/index.html -f
+RewriteRule ^prestadores/márcio-linhares-/?$ /prestadores/marcio-linhares-475 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/docuras-da-beta-476/index.html -f
+RewriteRule ^prestadores/doçuras-da-beta/?$ /prestadores/docuras-da-beta-476 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/upper-som-acessorios-automotivos-477/index.html -f
+RewriteRule ^prestadores/upper-som-acessórios-automotivos-/?$ /prestadores/upper-som-acessorios-automotivos-477 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/confiber-telecom-482/index.html -f
+RewriteRule ^prestadores/confiber-telecom-/?$ /prestadores/confiber-telecom-482 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/leticia-mariz-pilates-classico-483/index.html -f
+RewriteRule ^prestadores/letícia-mariz-pilates-clássico-/?$ /prestadores/leticia-mariz-pilates-classico-483 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/edm-imoveis-484/index.html -f
+RewriteRule ^prestadores/edm-imóveis-/?$ /prestadores/edm-imoveis-484 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/fabiana-485/index.html -f
+RewriteRule ^prestadores/fabiana-/?$ /prestadores/fabiana-485 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/isabella-486/index.html -f
+RewriteRule ^prestadores/isabella-/?$ /prestadores/isabella-486 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/rosana-494/index.html -f
+RewriteRule ^prestadores/rosana-/?$ /prestadores/rosana-494 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/cristiano-cordeiro-santos-496/index.html -f
+RewriteRule ^prestadores/cristiano-cordeiro-santos-/?$ /prestadores/cristiano-cordeiro-santos-496 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/mauro-churrascos-497/index.html -f
+RewriteRule ^prestadores/mauro-churrascos-/?$ /prestadores/mauro-churrascos-497 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/mayara-498/index.html -f
+RewriteRule ^prestadores/mayara-/?$ /prestadores/mayara-498 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/luana-proenca-499/index.html -f
+RewriteRule ^prestadores/luana-proença/?$ /prestadores/luana-proenca-499 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/puro-brownie-500/index.html -f
+RewriteRule ^prestadores/puro-brownie-/?$ /prestadores/puro-brownie-500 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/grandi-agencia-501/index.html -f
+RewriteRule ^prestadores/grandi-agência/?$ /prestadores/grandi-agencia-501 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/paula-viggiano-personal-organizer-504/index.html -f
+RewriteRule ^prestadores/paula-viggiano---personal-organizer/?$ /prestadores/paula-viggiano-personal-organizer-504 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/fernanda-ribeiro-506/index.html -f
+RewriteRule ^prestadores/fernanda-ribeiro-/?$ /prestadores/fernanda-ribeiro-506 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/larissa-pimenta-507/index.html -f
+RewriteRule ^prestadores/larissa-pimenta-/?$ /prestadores/larissa-pimenta-507 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/marcela-508/index.html -f
+RewriteRule ^prestadores/marcela-/?$ /prestadores/marcela-508 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/maxlimp-limpeza-e-higienizacao-estofados-509/index.html -f
+RewriteRule ^prestadores/maxlimp-limpeza-e-higienização-estofados-/?$ /prestadores/maxlimp-limpeza-e-higienizacao-estofados-509 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/marinho-510/index.html -f
+RewriteRule ^prestadores/marinho-/?$ /prestadores/marinho-510 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/silvana-lamounier-512/index.html -f
+RewriteRule ^prestadores/silvana-lamounier-/?$ /prestadores/silvana-lamounier-512 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/awdrey-pereira-513/index.html -f
+RewriteRule ^prestadores/awdrey-pereira-/?$ /prestadores/awdrey-pereira-513 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/richard-domingos-515/index.html -f
+RewriteRule ^prestadores/richard-domingos-/?$ /prestadores/richard-domingos-515 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/dra-samara-guimaraes-516/index.html -f
+RewriteRule ^prestadores/dra\.-samara-guimarães-/?$ /prestadores/dra-samara-guimaraes-516 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/jm-cortinas-persianas-e-servicos-517/index.html -f
+RewriteRule ^prestadores/jm-cortinas,-persianas-e-serviços/?$ /prestadores/jm-cortinas-persianas-e-servicos-517 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/luiz-carlos-518/index.html -f
+RewriteRule ^prestadores/luiz-carlos-/?$ /prestadores/luiz-carlos-518 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/glesia-519/index.html -f
+RewriteRule ^prestadores/glesia-/?$ /prestadores/glesia-519 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/jessica-martins-braz-521/index.html -f
+RewriteRule ^prestadores/jessica-martins-braz-/?$ /prestadores/jessica-martins-braz-521 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/apice-servicos-em-saude-ltda-522/index.html -f
+RewriteRule ^prestadores/ápice-serviços-em-saúde-ltda/?$ /prestadores/apice-servicos-em-saude-ltda-522 [R=301,L]
+RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/airton-527/index.html -f
+RewriteRule ^prestadores/airton-/?$ /prestadores/airton-527 [R=301,L]
+RewriteRule ^empresas/toca-do-acai-707/?$ - [G]
+# Via Werneck: 212 e 391 eram o mesmo cadastro (mesmo endereço e telefone);
+# fica a 391 (dono vinculado). A 391 já existe -- 301 incondicional.
+RewriteRule ^empresas/via-werneck-212/?$ /empresas/via-werneck-391 [R=301,L]
 
 # 06/out -- barra final: /rota/ -> /rota (301, um salto). O canonical,
 # o sitemap e os links internos já usam a versão sem barra; o Google

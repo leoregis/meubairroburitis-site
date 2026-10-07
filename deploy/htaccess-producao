@@ -617,6 +617,9 @@ RewriteRule ^prestadores/ápice-serviços-em-saúde-ltda/?$ /prestadores/apice-s
 RewriteCond %{DOCUMENT_ROOT}/_current/prestadores/airton-527/index.html -f
 RewriteRule ^prestadores/airton-/?$ /prestadores/airton-527 [R=301,L]
 RewriteRule ^empresas/toca-do-acai-707/?$ - [G]
+# 07/out -- mais dois registros de teste desativados (backup_estado_20261007)
+RewriteRule ^empresas/teste-fase6-aceitacao-apagar-depois-716/?$ - [G]
+RewriteRule ^prestadores/teste-fase6-aceitacao-apagar-depois/?$ - [G]
 # Via Werneck: 212 e 391 eram o mesmo cadastro (mesmo endereço e telefone);
 # fica a 391 (dono vinculado). A 391 já existe -- 301 incondicional.
 RewriteRule ^empresas/via-werneck-212/?$ /empresas/via-werneck-391 [R=301,L]

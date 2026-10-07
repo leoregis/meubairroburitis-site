@@ -620,6 +620,8 @@ RewriteRule ^empresas/toca-do-acai-707/?$ - [G]
 # 07/out -- mais dois registros de teste desativados (backup_estado_20261007)
 RewriteRule ^empresas/teste-fase6-aceitacao-apagar-depois-716/?$ - [G]
 RewriteRule ^prestadores/teste-fase6-aceitacao-apagar-depois/?$ - [G]
+# 07/out -- prestadores de teste de QA (storylink, 28/07)
+RewriteRule ^prestadores/prestador-storylink-(728864355|730296170)/?$ - [G]
 # Via Werneck: 212 e 391 eram o mesmo cadastro (mesmo endereço e telefone);
 # fica a 391 (dono vinculado). A 391 já existe -- 301 incondicional.
 RewriteRule ^empresas/via-werneck-212/?$ /empresas/via-werneck-391 [R=301,L]

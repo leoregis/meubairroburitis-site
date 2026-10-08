@@ -8,7 +8,7 @@ const route = useRoute()
 const produtoId = route.params.id as string
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
 const dados = ref<DadosProdutoForm>({
@@ -23,11 +23,11 @@ const dados = ref<DadosProdutoForm>({
   ativo: true,
 })
 
+const ativoOriginal = ref(false)
 const carregando = ref(true)
 const naoEncontrado = ref(false)
 const salvando = ref(false)
 const erro = ref('')
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 onMounted(async () => {
   if (!$supabase) return
@@ -55,6 +55,7 @@ onMounted(async () => {
     ordem: data.ordem,
     ativo: data.ativo,
   }
+  ativoOriginal.value = data.ativo
 })
 
 async function salvar() {
@@ -84,16 +85,21 @@ async function salvar() {
     return
   }
 
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  // só pede publicação se o produto é ou ERA ativo (ativar, desativar ou
+  // editar ativo); inativo -> inativo não muda o site
+  if (dados.value.ativo || ativoOriginal.value) {
+    await dispararDeploy('produto editado: ' + dados.value.slug)
+    ativoOriginal.value = dados.value.ativo
+  } else {
+    avisarSemPublicacao()
+  }
   router.push('/admin/produtos')
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-2xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
 
     <NuxtLink to="/admin/produtos" class="text-sm text-stone-500 hover:text-orange-700">← Voltar</NuxtLink>
     <h1 class="mt-2 font-serif text-2xl font-bold text-stone-900">Editar produto</h1>

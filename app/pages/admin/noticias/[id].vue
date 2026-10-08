@@ -8,7 +8,7 @@ const route = useRoute()
 const noticiaId = route.params.id as string
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
 const dados = ref<DadosNoticiaForm>({
@@ -35,12 +35,12 @@ const dados = ref<DadosNoticiaForm>({
 // a notícia vira "publicado", uma edição posterior não deve empurrar a
 // data pra frente de novo
 const dataPublicacaoOriginal = ref<string | null>(null)
+const statusOriginal = ref<string | null>(null)
 
 const carregando = ref(true)
 const naoEncontrado = ref(false)
 const salvando = ref(false)
 const erro = ref('')
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 onMounted(async () => {
   if (!$supabase) return
@@ -58,6 +58,7 @@ onMounted(async () => {
   }
 
   dataPublicacaoOriginal.value = data.data_publicacao
+  statusOriginal.value = data.status
 
   const { data: relacoesExistentes } = await $supabase
     .from('noticias_relacionadas')
@@ -126,16 +127,21 @@ async function salvar() {
   await salvarRelacionadosNoticia($supabase, noticiaId, dados.value.relacionados, dados.value.status === 'publicado')
 
   salvando.value = false
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  // só pede publicação se a notícia é ou ERA publicada (publicar,
+  // despublicar ou editar publicada); rascunho -> rascunho não muda o site
+  if (dados.value.status === 'publicado' || statusOriginal.value === 'publicado') {
+    await dispararDeploy('noticia editada: ' + dados.value.slug)
+    statusOriginal.value = dados.value.status
+  } else {
+    avisarSemPublicacao()
+  }
   router.push('/admin/noticias')
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-2xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
 
     <NuxtLink to="/admin/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Voltar</NuxtLink>
     <h1 class="mt-2 font-serif text-2xl font-bold text-stone-900">Editar notícia</h1>

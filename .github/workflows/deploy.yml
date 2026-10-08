@@ -3,11 +3,19 @@ name: Deploy
 on:
   push:
     branches: [main]
-  # disparado pelo admin de produtos (/admin/produtos) via API do GitHub,
-  # sempre que um produto e criado/editado/excluido -- o site e estatico
-  # (SSG), entao qualquer mudanca no banco só aparece pro publico depois
-  # de um build novo.
+  # disparado via API do GitHub pela fila de publicação do admin
+  # (deploy_fila no banco do site: só mudança pública, 3 min de calma --
+  # ver edge function disparar_deploy_fila) e pelo Guia (empresa/prestador
+  # criado, ativado ou desativado) -- o site e estatico (SSG), entao
+  # qualquer mudanca no banco só aparece pro publico depois de um build novo.
   workflow_dispatch:
+  # 08/out: deploy diário às 05:30 UTC (02:30 em Brasília). Edição de nome,
+  # descrição etc. de empresas/prestadores no Guia não dispara deploy (o
+  # trigger do Guia só olha criação e ativo/inativo); este rebuild diário
+  # garante que o site reflita essas edições em até ~24h. A limpeza de
+  # releases (limpeza-releases.yml) roda logo depois, ao fim dele.
+  schedule:
+    - cron: '30 5 * * *'
 
 # push e workflow_dispatch podem disparar quase juntos (ex: um push logo
 # seguido de um salvamento no admin de produtos) -- sem isso, duas runs

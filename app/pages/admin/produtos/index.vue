@@ -12,11 +12,10 @@ interface ProdutoAdmin {
 }
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 
 const produtos = ref<ProdutoAdmin[]>([])
 const carregando = ref(true)
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 async function carregar() {
   if (!$supabase) return
@@ -42,6 +41,9 @@ function pedirConfirmacaoExclusao(produto: ProdutoAdmin) {
 
 async function confirmarExclusao() {
   if (!produtoParaExcluir.value || !$supabase) return
+  // só republica se o item excluído estava no ar
+  const estavaNoAr = produtoParaExcluir.value.ativo
+  const slugExcluido = produtoParaExcluir.value.slug
   excluindo.value = true
 
   const { error } = await $supabase.from('produtos').delete().eq('id', produtoParaExcluir.value.id)
@@ -50,20 +52,18 @@ async function confirmarExclusao() {
   modalAberto.value = false
 
   if (error) {
-    statusPublicacao.value = 'erro'
+    aviso.value = { status: 'erro', previsaoMinutos: null }
     console.error('Erro ao excluir produto:', error)
     return
   }
 
   produtoParaExcluir.value = null
   await carregar()
-  await publicar()
-}
-
-async function publicar() {
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  if (estavaNoAr) {
+    await dispararDeploy('produto ativo excluido: ' + slugExcluido)
+  } else {
+    avisarSemPublicacao()
+  }
 }
 
 function formatarPreco(centavos: number) {
@@ -73,7 +73,7 @@ function formatarPreco(centavos: number) {
 
 <template>
   <div class="mx-auto max-w-6xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
     <AdminConfirmModal
       :aberto="modalAberto"
       titulo="Excluir produto?"

@@ -5,7 +5,7 @@ definePageMeta({ middleware: 'admin', ssr: false, layout: 'admin' })
 useSeoMeta({ title: 'Novo produto — Admin Meu Bairro Buritis' })
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
 const dados = ref<DadosProdutoForm>({
@@ -22,7 +22,6 @@ const dados = ref<DadosProdutoForm>({
 
 const salvando = ref(false)
 const erro = ref('')
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 async function salvar() {
   if (!$supabase || dados.value.preco_reais === null) return
@@ -48,16 +47,19 @@ async function salvar() {
     return
   }
 
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  // produto inativo não aparece no site: só pede publicação se nasceu ativo
+  if (dados.value.ativo) {
+    await dispararDeploy('produto novo: ' + dados.value.slug)
+  } else {
+    avisarSemPublicacao()
+  }
   router.push('/admin/produtos')
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-2xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
 
     <NuxtLink to="/admin/produtos" class="text-sm text-stone-500 hover:text-orange-700">← Voltar</NuxtLink>
     <h1 class="mt-2 font-serif text-2xl font-bold text-stone-900">Novo produto</h1>

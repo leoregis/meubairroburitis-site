@@ -12,11 +12,10 @@ interface NoticiaAdmin {
 }
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 
 const noticias = ref<NoticiaAdmin[]>([])
 const carregando = ref(true)
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 async function carregar() {
   if (!$supabase) return
@@ -42,6 +41,9 @@ function pedirConfirmacaoExclusao(noticia: NoticiaAdmin) {
 
 async function confirmarExclusao() {
   if (!noticiaParaExcluir.value || !$supabase) return
+  // só republica se o item excluído estava no ar
+  const estavaNoAr = noticiaParaExcluir.value.status === 'publicado'
+  const slugExcluido = noticiaParaExcluir.value.slug
   excluindo.value = true
 
   const { error } = await $supabase.from('noticias').delete().eq('id', noticiaParaExcluir.value.id)
@@ -50,20 +52,18 @@ async function confirmarExclusao() {
   modalAberto.value = false
 
   if (error) {
-    statusPublicacao.value = 'erro'
+    aviso.value = { status: 'erro', previsaoMinutos: null }
     console.error('Erro ao excluir notícia:', error)
     return
   }
 
   noticiaParaExcluir.value = null
   await carregar()
-  await publicar()
-}
-
-async function publicar() {
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  if (estavaNoAr) {
+    await dispararDeploy('noticia publicada excluida: ' + slugExcluido)
+  } else {
+    avisarSemPublicacao()
+  }
 }
 
 function formatarData(data: string | null) {
@@ -74,7 +74,7 @@ function formatarData(data: string | null) {
 
 <template>
   <div class="mx-auto max-w-6xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
     <AdminConfirmModal
       :aberto="modalAberto"
       titulo="Excluir notícia?"

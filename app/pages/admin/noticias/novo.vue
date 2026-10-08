@@ -5,7 +5,7 @@ definePageMeta({ middleware: 'admin', ssr: false, layout: 'admin' })
 useSeoMeta({ title: 'Nova notícia — Admin Meu Bairro Buritis' })
 
 const { $supabase } = useNuxtApp()
-const { dispararDeploy } = useDispararDeploy()
+const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
 const dados = ref<DadosNoticiaForm>({
@@ -30,7 +30,6 @@ const dados = ref<DadosNoticiaForm>({
 
 const salvando = ref(false)
 const erro = ref('')
-const statusPublicacao = ref<'publicando' | 'ok' | 'erro' | null>(null)
 
 onMounted(async () => {
   if (!$supabase) return
@@ -84,16 +83,19 @@ async function salvar() {
   await salvarRelacionadosNoticia($supabase, criada.id, dados.value.relacionados, dados.value.status === 'publicado')
 
   salvando.value = false
-  statusPublicacao.value = 'publicando'
-  const ok = await dispararDeploy()
-  statusPublicacao.value = ok ? 'ok' : 'erro'
+  // rascunho não muda nada público: só pede publicação se nasceu publicada
+  if (dados.value.status === 'publicado') {
+    await dispararDeploy('noticia publicada: ' + dados.value.slug)
+  } else {
+    avisarSemPublicacao()
+  }
   router.push('/admin/noticias')
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-2xl px-4 py-10">
-    <AdminBannerPublicando :status="statusPublicacao" @fechar="statusPublicacao = null" />
+    <AdminBannerPublicando :status="aviso.status" :previsao-minutos="aviso.previsaoMinutos" @fechar="fecharAviso" />
 
     <NuxtLink to="/admin/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Voltar</NuxtLink>
     <h1 class="mt-2 font-serif text-2xl font-bold text-stone-900">Nova notícia</h1>

@@ -1,0 +1,218 @@
+name: Limpeza de releases antigas (rotina)
+
+# Limpeza de rotina das pastas _old_* e _release_* no public_html, FORA do
+# deploy (08/out). Até 08/out era o penúltimo passo do deploy.yml e somava
+# ~1h a cada deploy (~76 min por release via FTP, ver diagnostico-limpeza.yml),
+# segurando a fila de publicação com o site já no ar. Agora o deploy termina
+# no purge do Cloudflare e esta limpeza roda à parte:
+#   - ao fim de cada deploy (workflow_run, sucesso ou falha -- deploy que
+#     falhou no meio do upload deixa _release_* órfã);
+#   - todo dia às 06:30 UTC (03:30 em Brasília), como rede de segurança;
+#   - manualmente (workflow_dispatch).
+#
+# Concorrência PRÓPRIA (não é deploy-producao): nunca segura um deploy.
+# Rodando em paralelo com um deploy, as travas abaixo garantem que ela
+# não toca em nada que o deploy esteja usando:
+#   - _current nunca entra no plano (checado em runtime; aborta se entrar)
+#     e, se _current não existir na listagem, aborta sem apagar nada;
+#   - mantém _current + as 3 _old_* COMPLETAS mais recentes (completa =
+#     tem index.html, _build.txt e _nuxt/ na raiz). Uma _old_* incompleta
+#     no meio dessas 3 fica também (não conta, não apaga). Se houver menos
+#     de 2 _old_* completas, aborta sem apagar nada;
+#   - _release_<sha8>_<runid>: só apaga se o run <runid> do Deploy já
+#     terminou (consulta à API do GitHub). Run em andamento = upload em
+#     andamento, fica. Se a API não responder, fica também;
+#   - o swap do deploy só cria a _old_* MAIS NOVA, e o plano só apaga as
+#     mais velhas que a 3ª completa -- um swap no meio desta limpeza não
+#     muda o que ela apaga.
+# Cancelamento: mesmo grupo, cancel-in-progress false -- só um run espera;
+# um disparo novo substitui o que estava esperando (ele relista tudo).
+#
+# Uma conexão FTP só (o deploy usa até 4; a hospedagem limita a 8).
+# Exclusão em paralelo (~13-15 min por release) fica como próximo item.
+
+on:
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: limpeza-releases
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  limpar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Lista o public_html e confere a completude das _old_*
+        timeout-minutes: 10
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+          tr -d '\r' < listagem.txt > l.tmp && mv l.tmp listagem.txt
+
+          echo "===== public_html ====="
+          cat listagem.txt
+
+          if ! grep -qx "_current" listagem.txt; then
+            echo "ABORTANDO: _current não aparece na listagem do public_html. Servidor fora do estado esperado -- nada será apagado."
+            exit 1
+          fi
+
+          # _old_* do mais novo pro mais velho (epoch no nome)
+          grep -E '^_old_[0-9]+$' listagem.txt | sed -E 's/^_old_//' | sort -rn | sed 's/^/_old_/' > olds.txt || true
+
+          # lista só o primeiro nível de cada _old_* (rápido; não desce nas pastas)
+          {
+            echo "set ftp:ssl-force true"
+            echo "set ftp:ssl-protect-data true"
+            echo "set ssl:verify-certificate no"
+            echo "set net:timeout 15"
+            echo "set net:max-retries 3"
+            echo "set cmd:fail-exit no"
+            while IFS= read -r d; do
+              echo "echo '### $d'"
+              echo "nlist public_html/$d"
+            done < olds.txt
+            echo "bye"
+          } > completude.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < completude.lftp 2>&1 | tr -d '\r' > completude.txt || true
+
+          : > olds_status.txt
+          while IFS= read -r d; do
+            itens=$(awk -v d="### $d" '$0==d{f=1;next} /^### /{f=0} f' completude.txt | sed 's#.*/##')
+            if echo "$itens" | grep -qx "index.html" && echo "$itens" | grep -qx "_build.txt" && echo "$itens" | grep -qx "_nuxt"; then
+              echo "$d completa" >> olds_status.txt
+            else
+              echo "$d INCOMPLETA" >> olds_status.txt
+            fi
+          done < olds.txt
+          echo "===== _old_* (mais nova primeiro) ====="
+          cat olds_status.txt
+
+      - name: Calcula o plano de exclusão (imprime antes de apagar)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          : > apagar.txt
+          completas=0
+          while read -r d status; do
+            if [ "$completas" -ge 3 ]; then
+              echo "$d" >> apagar.txt
+              continue
+            fi
+            if [ "$status" = "completa" ]; then
+              completas=$((completas + 1))
+              echo "mantém $d (completa nº $completas)"
+            else
+              echo "::warning::mantém $d (incompleta, mais nova que a 3ª completa -- não apagada, não conta como rollback)"
+            fi
+          done < olds_status.txt
+
+          if [ "$completas" -lt 2 ]; then
+            echo "ABORTANDO: só $completas _old_* completa(s) -- o mínimo pra rollback é 2. Nada será apagado; investigar manualmente."
+            exit 1
+          fi
+
+          # _release_<sha8>_<runid>: só se o run do Deploy já terminou
+          for r in $(grep -E '^_release_[A-Za-z0-9_]+$' listagem.txt || true); do
+            runid=$(echo "$r" | sed -nE 's/^_release_[0-9a-f]{8}_([0-9]+)$/\1/p')
+            if [ -z "$runid" ]; then
+              echo "::warning::mantém $r (nome fora do padrão _release_<sha8>_<runid> -- não dá pra confirmar que o upload terminou)"
+              continue
+            fi
+            st=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$runid" --jq .status 2>/dev/null || echo "erro_api")
+            if [ "$st" = "completed" ]; then
+              echo "$r" >> apagar.txt
+            else
+              echo "mantém $r (run $runid com status '$st' -- upload pode estar em andamento)"
+            fi
+          done
+
+          if grep -qx "_current" apagar.txt; then
+            echo "ABORTANDO: _current apareceu no plano de exclusão. Isso nunca deveria acontecer -- não apagando nada."
+            exit 1
+          fi
+
+          echo "===== PLANO DE EXCLUSÃO ====="
+          if [ -s apagar.txt ]; then cat apagar.txt; else echo "(nada pra apagar)"; fi
+          {
+            echo "### Limpeza de releases"
+            echo '```'
+            cat olds_status.txt
+            echo "--- apagar:"
+            cat apagar.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apaga (um item por vez, com horário no log)
+        timeout-minutes: 160
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          [ -s apagar.txt ] || { echo "Nada pra apagar."; exit 0; }
+          # um lftp por item: se o timeout interromper, os itens já
+          # apagados ficam registrados e o próximo run relista do zero
+          while IFS= read -r nome; do
+            [ -z "$nome" ] && continue
+            case "$nome" in _old_[0-9]*|_release_*) ;; *) echo "ABORTANDO: '$nome' fora dos padrões permitidos"; exit 1;; esac
+            echo "$(date -u +%H:%M:%S) apagando $nome"
+            lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF || echo "::warning::falha ao apagar $nome (o próximo run tenta de novo)"
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          set cmd:fail-exit yes
+          rm -rf public_html/$nome
+          bye
+          EOF
+            echo "$(date -u +%H:%M:%S) fim $nome"
+          done < apagar.txt
+
+      - name: Confere o que sobrou
+        if: always()
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF | tr -d '\r' > depois.txt
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set cmd:fail-exit yes
+          cd public_html
+          nlist
+          bye
+          EOF
+          echo "===== _current/_old_*/_release_* depois ====="
+          grep -E '^(_current|_old_[0-9]+|_release_[A-Za-z0-9_]+)$' depois.txt || true
+          grep -qx "_current" depois.txt || { echo "::error::_current NÃO aparece depois da limpeza"; exit 1; }

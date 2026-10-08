@@ -112,8 +112,10 @@ jobs:
         # FTP puro (RFC 959) nao tem comando nativo de cota/espaco livre
         # -- isso só existe via API HTTP separada do cPanel (UAPI), sem
         # credencial configurada neste projeto. Proxy pratico: com a
-        # limpeza automatica no final deste workflow funcionando, nunca
-        # deveria sobrar mais que ~3 pastas _old_* por muito tempo. Um
+        # limpeza automatica funcionando (desde 08/out em workflow
+        # separado, limpeza-releases.yml, disparado ao fim de cada deploy e
+        # todo dia de madrugada -- fora do caminho deste deploy), nunca
+        # deveria sobrar mais que ~3-5 pastas _old_* por muito tempo. Um
         # numero bem maior que isso e sinal de que a limpeza parou de
         # rodar em algum deploy anterior (ou falhou) -- mesmo padrao que
         # levou ao disco cheio de 23/set (chegou a 148+ pastas
@@ -367,87 +369,9 @@ jobs:
           echo "ERRO: site nao respondeu 200 depois do swap (ultimo status: $status, sem desafio do Cloudflare -- erro veio da origem ou da rede). _current e este build no servidor mas o site publico nao esta respondendo certo -- investigar manualmente antes de considerar este deploy bem-sucedido."
           exit 1
 
-      - name: Limpa releases antigas, mantendo as 3 _old_* mais recentes
-        # roda so depois do swap JA confirmado com sucesso (step anterior)
-        # -- o site ja esta no ar e verificado nesse ponto, entao um erro
-        # aqui e so uma falha de limpeza/higiene, nunca uma falha do
-        # deploy em si. continue-on-error pra nunca marcar o deploy como
-        # falho por causa disso.
-        #
-        # Apaga TODAS as _release_* encontradas aqui (sem reter nenhuma).
-        # O concurrency deste workflow (group: deploy-producao) garante
-        # que só um deploy roda por vez, e a release boa deste próprio
-        # deploy já foi renomeada pra _current no step anterior -- então
-        # qualquer _release_* que ainda exista neste ponto é órfã de um
-        # deploy anterior que falhou no meio do upload (mesmo cenário que
-        # o step "Sobe a release nova" agora aborta cedo, mas releases
-        # órfãs de ANTES desta correção existir ainda podem estar por aí).
-        # Sem isso, essas pastas acumulariam do mesmo jeito que as _old_*
-        # acumulavam antes -- só que de um tipo novo de lixo.
-        #
-        # timeout 120 (era 60): diagnostico de 30/set (diagnostico-limpeza.yml)
-        # mediu ~76 min pra apagar UMA release via FTP (3219 arquivos + 1513
-        # pastas; a maior parte do tempo e o LIST pasta por pasta). Com 60 o
-        # step estourava (53 -> 59 -> 60+ nos deploys #215/#216/#218) e o
-        # rm -rf interrompido deixava uma _old_* parcial, que somava ao
-        # proximo ciclo e estourava de novo. 120 cobre release inteira + uma
-        # parcial (~83 min) com folga. Correcao de fundo (exclusao paralela,
-        # ~13-15 min) fica como proximo item -- ate la, o deploy segura a fila
-        # de publicacao por ~1h20 enquanto este step roda.
-        continue-on-error: true
-        timeout-minutes: 120
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-        run: |
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > listagem_pos.txt
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate no
-          set net:timeout 15
-          set cmd:fail-exit yes
-          cd public_html
-          nlist
-          bye
-          EOF
-
-          grep -E '^_old_[0-9]+$' listagem_pos.txt | sed -E 's/^_old_//' | sort -rn > epochs.txt
-          tail -n +4 epochs.txt | sed 's/^/_old_/' > apagar.txt
-
-          # releases orfas (mirror/upload de um deploy anterior que falhou
-          # no meio) -- todas, sem reter nenhuma.
-          grep -E '^_release_[A-Za-z0-9_]+$' listagem_pos.txt >> apagar.txt || true
-
-          if [ ! -s apagar.txt ]; then
-            echo "3 ou menos pastas _old_* existem e nenhuma _release_* orfa -- nada pra apagar."
-            exit 0
-          fi
-
-          echo "===== apagando (mantendo as 3 _old_* mais recentes; releases orfas vao todas) ====="
-          cat apagar.txt
-
-          # "_current" nunca deveria aparecer aqui -- nao bate em nenhum
-          # dos dois regex usados acima. Checagem explicita mesmo assim:
-          if grep -qx "_current" apagar.txt; then
-            echo "ABORTANDO limpeza automatica: _current apareceu no plano de exclusao. Isso nunca deveria acontecer -- não apagando nada."
-            exit 1
-          fi
-
-          {
-            echo "set ftp:ssl-force true"
-            echo "set ftp:ssl-protect-data true"
-            echo "set ssl:verify-certificate no"
-            echo "set net:timeout 15"
-            echo "set cmd:fail-exit no"
-            echo "cd public_html"
-            while IFS= read -r nome; do
-              [ -z "$nome" ] && continue
-              printf 'rm -rf %s\n' "$nome"
-            done < apagar.txt
-            echo "bye"
-          } > comandos.lftp
-          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < comandos.lftp
+      # A limpeza das _old_*/_release_* saiu daqui em 08/out: roda em
+      # limpeza-releases.yml (ao fim de cada deploy e diariamente), com
+      # concorrência própria -- este run termina logo depois da purga.
 
       - name: Purga cache do Cloudflare
         # sem isso, depois do swap atomico na origem (passo anterior), o

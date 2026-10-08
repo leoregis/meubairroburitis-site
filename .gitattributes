@@ -1,0 +1,3 @@
+# SQL sempre em LF: colado no SQL Editor do Supabase com CRLF, o  entra
+# no corpo das funcoes (ex.: minha_avaliacao_por_telefone, deploy_fila_confirmar).
+*.sql text eol=lf

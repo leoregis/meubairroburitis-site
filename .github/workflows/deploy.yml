@@ -71,7 +71,9 @@ jobs:
         # ar e no sitemap. Se o sitemap ou algum <title> gerado tiver
         # "teste", "apagar", "lorem" ou "dummy", o deploy para AQUI, antes
         # de subir qualquer coisa. Nome legítimo -> exceção com motivo em
-        # scripts/checar-registros-teste.excecoes.json.
+        # scripts/checar-registros-teste.excecoes.json. Escopo: só /empresas
+        # e /prestadores (dados do Guia) -- notícias e institucionais ficam
+        # de fora ("teste do pezinho" é título legítimo).
         run: node scripts/checar-registros-teste.mjs .output/public
 
       - name: Confere se toda noticia publicada virou pagina no build

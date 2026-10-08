@@ -174,16 +174,17 @@ jobs:
           set net:timeout 15
           # 07/out: hospedagem limita a 8 conexões por IP ("421 Too many
           # connections (8)" derrubou o deploy de 07/out com --parallel=6).
-          # 3 em paralelo + até 6 novas tentativas com espera crescente
-          # (10s, 20s, 40s, teto 60s) nos erros de conexão.
-          set net:connection-limit 3
+          # 4 em paralelo (08/out; com 3 o envio levou 50 min, com 6 ~22 min
+          # mas estourava o limite) + até 6 novas tentativas com espera
+          # crescente (10s, 20s, 40s, teto 60s) nos erros de conexão.
+          set net:connection-limit 4
           set net:max-retries 6
           set net:reconnect-interval-base 10
           set net:reconnect-interval-multiplier 2
           set net:reconnect-interval-max 60
           set cmd:fail-exit yes
           mkdir -p public_html/$RELEASE
-          mirror -R --parallel=3 .output/public/ public_html/$RELEASE/
+          mirror -R --parallel=4 .output/public/ public_html/$RELEASE/
 
           # public_html/.htaccess exclui /.well-known/ de TODA regra de
           # rewrite pra _current/ (de propósito -- é onde ficam arquivos de

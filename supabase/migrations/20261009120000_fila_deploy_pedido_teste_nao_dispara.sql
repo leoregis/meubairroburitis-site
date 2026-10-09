@@ -6,6 +6,9 @@
 -- completo real (run 37787231961) sem mudança de conteúdo.
 -- O resto é igual à 20261008180000 (e corrige o CRLF que entrou no corpo ao
 -- colar no SQL Editor).
+-- Testado em 09/10: pedido "teste da fila (Claude, 09/10)" às 15:13:21 UTC
+-- entrou como pedido_teste, deploy_fila não mudou, cron 15:14/15:16 sem
+-- disparo e nenhum workflow_dispatch no GitHub.
 -- Rollback: manutencao/20261009_fila_deploy_pedido_teste_rollback.sql
 
 create or replace function public.deploy_fila_solicitar(p_motivo text)

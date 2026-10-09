@@ -2,23 +2,24 @@
 // Build incremental (etapa 3, 09/out): o build parcial não gera o sitemap
 // inteiro (só conhece as rotas que regerou). Este script parte do
 // sitemap.xml que está no ar e aplica só as mudanças:
-//   - tira as <url> das rotas removidas e das páginas /noticias/pagina/N que
-//     deixaram de existir;
+//   - tira as <url> das rotas removidas e das páginas <listagem>/pagina/N que
+//     passaram do total ("paginacao" do rotas.json) -- e grava essas páginas
+//     em <sobras.txt>, pro envio apagar as pastas;
 //   - acrescenta as rotas novas (notícia/produto publicados) e páginas de
 //     listagem que passaram a existir, só com <loc> -- imagem e lastmod
 //     entram no próximo build completo (diário, 02:30);
 //   - corrige o escape duplo &amp;amp; (mesma correção do build completo).
 //
-// Uso: node scripts/incremental/mesclar-sitemap.mjs <sitemap_no_ar.xml> <rotas.json> <saida.xml>
+// Uso: node scripts/incremental/mesclar-sitemap.mjs <sitemap_no_ar.xml> <rotas.json> <saida.xml> [sobras.txt]
 
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const [, , arqAtual, arqRotas, arqSaida] = process.argv
+const [, , arqAtual, arqRotas, arqSaida, arqSobras] = process.argv
 // staging (deploy-staging.yml): https://meubairroburitis.com.br/_staging_test
 const SITE = process.env.MBB_SITE || 'https://meubairroburitis.com.br'
 
 const xml = readFileSync(arqAtual, 'utf8')
-const { remover = [], novas = [], paginasNoticias = 1 } = JSON.parse(readFileSync(arqRotas, 'utf8'))
+const { remover = [], novas = [], paginacao = {} } = JSON.parse(readFileSync(arqRotas, 'utf8'))
 
 if (!/<urlset[\s>]/.test(xml) || !xml.includes('</urlset>')) {
   console.error('ERRO: sitemap no ar não parece um <urlset> válido')
@@ -32,7 +33,8 @@ const blocos = xml.match(/<url>[\s\S]*?<\/url>/g) || []
 const comBarra = blocos.filter((b) => /<loc>[^<]*\/<\/loc>/.test(b)).length > blocos.length / 2
 
 const sair = new Set(remover.map(normalizar))
-const paginaN = /^\/noticias\/pagina\/(\d+)$/
+const paginaN = /^(.*)\/pagina\/(\d+)$/
+const sobras = []
 const presentes = new Set()
 let removidas = 0
 let saida = xml
@@ -41,7 +43,9 @@ for (const b of blocos) {
   if (!loc) continue
   const caminho = caminhoDe(loc)
   const m = caminho.match(paginaN)
-  if (sair.has(caminho) || (m && Number(m[1]) > paginasNoticias)) {
+  const sobrou = Boolean(m && m[1] in paginacao && Number(m[2]) > paginacao[m[1]])
+  if (sobrou) sobras.push(caminho)
+  if (sair.has(caminho) || sobrou) {
     saida = saida.replace(b, '')
     removidas++
   } else {
@@ -50,7 +54,9 @@ for (const b of blocos) {
 }
 
 const acrescentar = [...novas.map(normalizar)]
-for (let p = 2; p <= paginasNoticias; p++) acrescentar.push(`/noticias/pagina/${p}`)
+for (const [base, total] of Object.entries(paginacao)) {
+  for (let p = 2; p <= total; p++) acrescentar.push(`${base}/pagina/${p}`)
+}
 const novasUrls = acrescentar
   .filter((c) => !presentes.has(c) && !sair.has(c))
   .filter((c, i, a) => a.indexOf(c) === i)
@@ -61,4 +67,5 @@ const escapes = (saida.match(/&amp;amp;/g) || []).length
 saida = saida.replaceAll('&amp;amp;', '&amp;')
 
 writeFileSync(arqSaida, saida)
-console.log(`sitemap: ${blocos.length} url(s) no ar, ${removidas} removida(s), ${novasUrls.length} acrescentada(s), ${escapes} escape(s) duplo(s) corrigido(s)`)
+if (arqSobras) writeFileSync(arqSobras, sobras.length ? sobras.join('\n') + '\n' : '')
+console.log(`sitemap: ${blocos.length} url(s) no ar, ${removidas} removida(s), ${novasUrls.length} acrescentada(s), ${escapes} escape(s) duplo(s) corrigido(s), ${sobras.length} página(s) de listagem a apagar`)

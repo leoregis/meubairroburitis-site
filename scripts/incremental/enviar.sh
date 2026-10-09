@@ -34,12 +34,13 @@ cabecalho() {
 case "$fase" in
 preparar)
   { cabecalho; echo 'set cmd:fail-exit yes'; echo "cd $REMOTO/_nuxt"; echo 'cls -1'; echo bye; } | ftp > "$DIR/nuxt_remoto.txt"
-  { cabecalho; echo "cd $REMOTO/noticias/pagina"; echo 'cls -1'; echo bye; } | ftp > "$DIR/paginas_remotas.txt" 2>/dev/null || true
   { cabecalho; echo 'set cmd:fail-exit yes'; echo "get $REMOTO/sitemap.xml -o $DIR/sitemap_ar.xml"
     echo 'set cmd:fail-exit no'; echo "get $REMOTO/_ipx-lista.txt -o $DIR/ipx_remoto.txt"; echo bye; } | ftp
-  echo "_nuxt no ar: $(wc -l < "$DIR/nuxt_remoto.txt") arquivo(s); páginas de notícias no ar: $(tr '\n' ' ' < "$DIR/paginas_remotas.txt")"
+  echo "_nuxt no ar: $(wc -l < "$DIR/nuxt_remoto.txt") arquivo(s)"
 
-  node scripts/incremental/mesclar-sitemap.mjs "$DIR/sitemap_ar.xml" "$ROTAS" "$SAIDA/sitemap.xml"
+  # sitemap: base é o que está no ar; páginas de listagem que sobraram vão
+  # pra sobras.txt (apagadas no envio)
+  node scripts/incremental/mesclar-sitemap.mjs "$DIR/sitemap_ar.xml" "$ROTAS" "$SAIDA/sitemap.xml" "$DIR/sobras.txt"
 
   echo "commit=${GITHUB_SHA} build_id=${MBB_BUILD_ID} run=${GITHUB_RUN_ID} attempt=${GITHUB_RUN_ATTEMPT} tipo=incremental base_run=${RUN_NO_AR:-}" > "$SAIDA/_build.txt"
   cat "$SAIDA/_build.txt"
@@ -51,7 +52,7 @@ preparar)
   node scripts/checar-registros-teste.mjs "$SAIDA"
 
   node scripts/incremental/preparar-envio.mjs "$ROTAS" "$SAIDA" "$DIR" \
-    "$DIR/nuxt_remoto.txt" "$DIR/paginas_remotas.txt" "$DIR/ipx_remoto.txt"
+    "$DIR/nuxt_remoto.txt" "$DIR/sobras.txt" "$DIR/ipx_remoto.txt"
   ;;
 
 backup)

@@ -3,9 +3,9 @@
 // envio parcial pra dentro de public_html/_current, a partir da lista de
 // rotas (rotas-afetadas.mjs) e do build parcial em .output/public.
 //
-// Uso: node scripts/incremental/preparar-envio.mjs <rotas.json> <.output/public> <saida/> [nuxt_remoto.txt] [paginas_remotas.txt] [ipx_remoto.txt]
+// Uso: node scripts/incremental/preparar-envio.mjs <rotas.json> <.output/public> <saida/> [nuxt_remoto.txt] [sobras.txt] [ipx_remoto.txt]
 //   nuxt_remoto.txt     -- nomes dos arquivos que já existem em _current/_nuxt (cls -1)
-//   paginas_remotas.txt -- pastas que existem em _current/noticias/pagina (cls -1)
+//   sobras.txt          -- páginas de listagem que passaram do total (mesclar-sitemap.mjs)
 //   ipx_remoto.txt      -- _current/_ipx-lista.txt (imagens já no ar, gravada pelo
 //                          build completo); sem ela, todas as imagens do build sobem
 //
@@ -23,12 +23,12 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 
-const [, , arqRotas, dirOutput, dirSaida, arqNuxtRemoto, arqPaginasRemotas, arqIpxRemoto] = process.argv
+const [, , arqRotas, dirOutput, dirSaida, arqNuxtRemoto, arqSobras, arqIpxRemoto] = process.argv
 // produção: _current; staging (deploy-staging.yml): public_html/_staging_test
 const SITE = process.env.MBB_SITE || 'https://meubairroburitis.com.br'
 const REMOTO = process.env.MBB_REMOTO || 'public_html/_current'
 
-const { regerar, remover, paginasNoticias } = JSON.parse(readFileSync(arqRotas, 'utf8'))
+const { regerar, remover } = JSON.parse(readFileSync(arqRotas, 'utf8'))
 mkdirSync(dirSaida, { recursive: true })
 
 const lerLista = (arq) => (arq && existsSync(arq) ? readFileSync(arq, 'utf8').split(/\r?\n/).map((l) => l.trim().replace(/\/$/, '')).filter(Boolean) : [])
@@ -83,11 +83,7 @@ const listaIpx = [...new Set([...ipxRemoto, ...ipxLocal])].sort()
 writeFileSync(join(dirOutput, '_ipx-lista.txt'), listaIpx.join('\n') + '\n')
 
 // --------------------------------------------------- páginas que sobram
-const removerPastas = remover.map(pastaDaRota)
-for (const p of lerLista(arqPaginasRemotas)) {
-  const n = Number(p)
-  if (Number.isInteger(n) && n > paginasNoticias) removerPastas.push(`noticias/pagina/${n}`)
-}
+const removerPastas = [...new Set([...remover, ...lerLista(arqSobras)].map(pastaDaRota))]
 
 // --------------------------------------------------- roteiros
 const cabecalho = (failExit) => [

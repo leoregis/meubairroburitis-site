@@ -3,6 +3,14 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # 09/out: push que só mexe nestes caminhos não gera deploy (o build não
+    # usa nenhum deles: .md da raiz, docs/ inexistente, supabase/ é só
+    # migrations/functions publicadas à parte). Vale só pro push --
+    # workflow_dispatch (fila e Guia) e schedule seguem iguais.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'supabase/**'
   # disparado via API do GitHub pela fila de publicação do admin
   # (deploy_fila no banco do site: só mudança pública, 3 min de calma --
   # ver edge function disparar_deploy_fila) e pelo Guia (empresa/prestador

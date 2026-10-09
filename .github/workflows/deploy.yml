@@ -17,6 +17,22 @@ on:
   # criado, ativado ou desativado) -- o site e estatico (SSG), entao
   # qualquer mudanca no banco só aparece pro publico depois de um build novo.
   workflow_dispatch:
+    # 09/out (build incremental, etapa 2): a fila manda os itens que mudaram
+    # (deploy_fila_itens: tipo, ação, slug, slug/categoria antigos). Por
+    # enquanto o build só REGISTRA os itens no log e continua completo; o
+    # modo incremental (etapa 3) usa os itens pra gerar só as rotas afetadas.
+    inputs:
+      modo:
+        description: 'auto = decide pelo que mudou (por enquanto sempre completo); completo = força build completo'
+        required: false
+        default: auto
+        type: choice
+        options: [auto, completo]
+      itens:
+        description: 'JSON com os itens da fila (preenchido pela fila; deixar vazio no disparo manual)'
+        required: false
+        default: ''
+        type: string
   # 08/out: deploy diário às 05:30 UTC (02:30 em Brasília). Edição de nome,
   # descrição etc. de empresas/prestadores no Guia não dispara deploy (o
   # trigger do Guia só olha criação e ativo/inativo); este rebuild diário
@@ -46,6 +62,20 @@ jobs:
           node-version: 20
 
       - run: npm ci
+
+      - name: Registra o pedido (origem, modo e itens da fila)
+        # etapa 2: só registra -- o build abaixo continua completo.
+        env:
+          MODO: ${{ inputs.modo }}
+          ITENS: ${{ inputs.itens }}
+        run: |
+          echo "evento: ${GITHUB_EVENT_NAME} | modo: ${MODO:-auto}"
+          if [ -n "$ITENS" ]; then
+            echo "$ITENS" > "$RUNNER_TEMP/itens.json"
+            node -e "const i=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); console.log(i.length+' item(ns) da fila:'); for (const x of i) console.log(' -', x.o||'site', x.t, x.a, x.s||x.id, x.sa?('(antes: '+x.sa+')'):'', x.ca?('(categoria antes: '+x.ca+')'):'')" "$RUNNER_TEMP/itens.json" || echo "::warning::itens da fila em formato inesperado (ignorados)"
+          else
+            echo "sem itens (push, schedule ou disparo manual)"
+          fi
 
       - name: Calcula o buildId (hash do codigo, nao do conteudo)
         # mesmo codigo -> mesmo buildId -> mesmos chunks em _nuxt/ (ver

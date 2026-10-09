@@ -37,6 +37,30 @@ Deno.serve(async (req) => {
   }
   if (!reivindicadoEm) return json({ ok: true, disparado: false, motivo: "nada pronto" });
 
+  // 09/out (build incremental, etapa 2): os itens que mudaram vão junto no
+  // disparo (input "itens" do workflow). Sem a função no banco (migration
+  // ainda não aplicada) ou com lista grande demais, dispara sem itens e com
+  // modo=completo -- o comportamento de antes.
+  const { data: itens, error: erroItens } = await supabase.rpc("deploy_fila_itens_para_disparo", { p_ate: reivindicadoEm });
+  if (erroItens) console.error("disparar_deploy_fila: sem itens (seguindo com build completo)", erroItens.message);
+  let itensJson = !erroItens && Array.isArray(itens) && itens.length ? JSON.stringify(itens) : "";
+  if (itensJson.length > 60000) itensJson = "";
+  const inputs = { modo: itensJson ? "auto" : "completo", itens: itensJson };
+
+  const workflow = Deno.env.get("GH_WORKFLOW") || "deploy.yml";
+  const corpo = JSON.stringify({ ref: "main", inputs });
+
+  // simulação: devolve o que seria enviado, sem chamar o GitHub. Liga sozinha
+  // fora do projeto de produção do site (branch de dev nunca dispara o deploy
+  // real por engano); GH_DRY_RUN=0 desliga (ex.: staging com token próprio),
+  // GH_DRY_RUN=1 força.
+  const naProducao = (Deno.env.get("SUPABASE_URL") || "").includes("peusailkyxqbhgdgmqyk");
+  const dryRun = Deno.env.get("GH_DRY_RUN");
+  if (dryRun === "1" || (!naProducao && dryRun !== "0")) {
+    await supabase.rpc("deploy_fila_confirmar", { p_reivindicado_em: reivindicadoEm });
+    return json({ ok: true, disparado: false, simulado: true, workflow, corpo: JSON.parse(corpo) });
+  }
+
   const ghToken = Deno.env.get("GH_DISPATCH_TOKEN");
   const repo = Deno.env.get("GH_REPO") || "leoregis/meubairroburitis-site";
   if (!ghToken) {
@@ -45,7 +69,7 @@ Deno.serve(async (req) => {
   }
 
   const respostaGh = await fetch(
-    `https://api.github.com/repos/${repo}/actions/workflows/deploy.yml/dispatches`,
+    `https://api.github.com/repos/${repo}/actions/workflows/${workflow}/dispatches`,
     {
       method: "POST",
       headers: {
@@ -54,7 +78,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "User-Agent": "meubairroburitis-fila-deploy",
       },
-      body: JSON.stringify({ ref: "main" }),
+      body: corpo,
     },
   );
 

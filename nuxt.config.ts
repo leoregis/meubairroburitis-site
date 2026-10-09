@@ -110,6 +110,29 @@ export default defineNuxtConfig({
   // subia pra raiz saiu do deploy dele, e o deploy.yml daqui remove a
   // cópia que ficou lá.
 
+  // 09/out: robôs de treinamento/coleta de IA ficam fora do domínio inteiro
+  // (vale pro /guia/ também -- o robots.txt é um só). Liberados: Googlebot,
+  // Bingbot, prévias de link (facebookexternalhit, WhatsApp, Twitterbot...)
+  // e os robôs de BUSCA com IA (OAI-SearchBot, ChatGPT-User,
+  // Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User), que citam
+  // a fonte com link. Google-Extended/Applebot-Extended são só sinais de uso
+  // pra IA: não afetam a indexação do Googlebot/Applebot. meta-externalagent
+  // (IA da Meta) é outro robô que não o facebookexternalhit das prévias.
+  robots: {
+    groups: [
+      {
+        comment: ['Robôs de treinamento/coleta de IA'],
+        userAgent: [
+          'GPTBot', 'ClaudeBot', 'anthropic-ai', 'CCBot', 'Google-Extended',
+          'Applebot-Extended', 'meta-externalagent', 'Reflectionbot', 'Bytespider',
+          'Amazonbot', 'cohere-ai', 'cohere-training-data-crawler', 'Diffbot',
+          'Omgilibot', 'AI2Bot', 'ImagesiftBot', 'Timpibot', 'PanguBot',
+        ],
+        disallow: ['/'],
+      },
+    ],
+  },
+
   site: {
     url: 'https://meubairroburitis.com.br',
     name: 'Meu Bairro Buritis',

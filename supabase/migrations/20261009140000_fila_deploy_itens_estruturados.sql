@@ -1,4 +1,8 @@
 -- 09/out/2026 (build incremental, etapa 2): itens estruturados na fila de deploy.
+-- APLICADA na produção em 09/10/2026 (CLI, transação única com o registro no
+-- histórico como 20261009140000). Testada com ROLLBACK: rascunho não gera
+-- item; publicar = nova; trocar slug/categoria = editada com sa/ca; voltar a
+-- rascunho = removida.
 --
 -- O banco registra, por trigger, O QUE mudou de público (comparando antes e
 -- depois -- não depende do que o navegador manda): notícia nova, editada
@@ -144,7 +148,10 @@ after insert or update or delete on public.noticias_subcategorias_guia
 for each statement execute function public.deploy_fila_item_estrutura();
 
 -- --------------------------------------------- entrega ao disparo e confirmação
--- itens pendentes até o instante reivindicado (o que o disparo vai levar)
+-- itens pendentes até o instante reivindicado (o que o disparo vai levar),
+-- sem repetição: o admin regrava todas as relacionadas a cada salvamento
+-- (apaga e insere), o que gera um item igual por linha. Fica a primeira
+-- ocorrência de cada item, na ordem em que aconteceram.
 create function public.deploy_fila_itens_para_disparo(p_ate timestamptz)
 returns jsonb
 language sql
@@ -152,11 +159,16 @@ stable
 security definer
 set search_path to 'public'
 as $$
-  select coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-           't', i.tipo, 'a', i.acao, 'id', i.ref_id, 's', i.slug, 'sa', i.slug_antigo,
-           'c', i.categoria, 'ca', i.categoria_antiga, 'o', i.origem)) order by i.id), '[]'::jsonb)
-  from public.deploy_fila_itens i
-  where i.atendido_em is null and i.em <= p_ate;
+  select coalesce(jsonb_agg(u.item order by u.primeiro), '[]'::jsonb)
+  from (
+    select jsonb_strip_nulls(jsonb_build_object(
+             't', i.tipo, 'a', i.acao, 'id', i.ref_id, 's', i.slug, 'sa', i.slug_antigo,
+             'c', i.categoria, 'ca', i.categoria_antiga, 'o', i.origem)) as item,
+           min(i.id) as primeiro
+    from public.deploy_fila_itens i
+    where i.atendido_em is null and i.em <= p_ate
+    group by 1
+  ) u;
 $$;
 
 -- confirmação passa a marcar os itens atendidos (o resto é igual à 20261008180000)

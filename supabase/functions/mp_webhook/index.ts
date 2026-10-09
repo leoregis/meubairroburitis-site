@@ -40,28 +40,6 @@ async function assinaturaValida(req: Request, dataId: string): Promise<boolean> 
   return compararEmTempoConstante(assinaturaHex, v1);
 }
 
-// 🩺 diagnostico temporario (ver migration webhook_debug_log) -- nunca
-// lança, best-effort, só pra poder investigar via SQL sem acesso aos logs
-// brutos da function.
-async function logDebug(
-  supabase: ReturnType<typeof createClient>,
-  etapa: string,
-  paymentId: string | null,
-  pedidoId: string | null,
-  detalhe: unknown,
-) {
-  try {
-    await supabase.from("webhook_debug_log").insert({
-      payment_id: paymentId,
-      pedido_id: pedidoId,
-      etapa,
-      detalhe,
-    });
-  } catch {
-    // nunca deixa o log atrapalhar o fluxo real
-  }
-}
-
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -71,12 +49,10 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const paymentId = body?.data?.id;
-    await logDebug(supabase, "recebido", paymentId ? String(paymentId) : null, null, { body });
     if (!paymentId) return new Response("ok");
 
     if (!(await assinaturaValida(req, String(paymentId)))) {
       console.warn("mp_webhook: assinatura inválida, ignorando notificação");
-      await logDebug(supabase, "assinatura_invalida", String(paymentId), null, null);
       return new Response("assinatura inválida", { status: 401 });
     }
 
@@ -85,16 +61,12 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${mpAccessToken}` },
     });
     if (!respostaMp.ok) {
-      await logDebug(supabase, "fetch_mp_falhou", String(paymentId), null, { status: respostaMp.status });
+      console.error(`mp_webhook: consulta do pagamento ${paymentId} no MP falhou (HTTP ${respostaMp.status})`);
       return new Response("ok");
     }
     const pagamento = await respostaMp.json();
 
     const pedidoId = pagamento.external_reference;
-    await logDebug(supabase, "pagamento_consultado", String(paymentId), pedidoId ?? null, {
-      status_mp: pagamento.status,
-      status_detail: pagamento.status_detail,
-    });
     if (!pedidoId) return new Response("ok");
 
     const novoStatus = pagamento.status === "approved"
@@ -122,11 +94,8 @@ Deno.serve(async (req) => {
 
     if (!atualizado) {
       console.log(`mp_webhook: pedido ${pedidoId} já processado ou não encontrado, ignorando`);
-      await logDebug(supabase, "update_nao_aplicado", String(paymentId), pedidoId, null);
       return new Response("ok");
     }
-
-    await logDebug(supabase, "update_aplicado", String(paymentId), pedidoId, { novoStatus });
 
     // 📡 avisa a tela /pedido/[id] em tempo real (se estiver aberta) --
     // broadcast num canal escopado pelo id do pedido, não a tabela
@@ -134,23 +103,14 @@ Deno.serve(async (req) => {
     // uma inscrição via postgres_changes com a anon key nunca receberia
     // nada. Broadcast não depende de RLS de tabela, só de quem já conhece
     // o id do pedido (o próprio comprador, pela URL que ele já tem aberta).
-    const inicioBroadcast = Date.now();
     try {
-      const resultado = await supabase.channel(`pedido:${pedidoId}`).send({
+      await supabase.channel(`pedido:${pedidoId}`).send({
         type: "broadcast",
         event: "status_atualizado",
         payload: { status: novoStatus },
       });
-      await logDebug(supabase, "broadcast_ok", String(paymentId), pedidoId, {
-        resultado,
-        duracao_ms: Date.now() - inicioBroadcast,
-      });
     } catch (erroBroadcast) {
       console.error(`mp_webhook: falha ao avisar via realtime o pedido ${pedidoId}:`, erroBroadcast);
-      await logDebug(supabase, "broadcast_erro", String(paymentId), pedidoId, {
-        erro: String(erroBroadcast),
-        duracao_ms: Date.now() - inicioBroadcast,
-      });
     }
 
     // e-mails de confirmação são best-effort: nunca podem impedir o

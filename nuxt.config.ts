@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-29',
   srcDir: 'app/',
+
+  // 09/out (build incremental, etapa 1): no deploy, MBB_BUILD_ID é o hash do
+  // CÓDIGO (árvore app/ + nuxt.config.ts + package*.json do commit) --
+  // mesmo código, mesmo buildId, mesmos chunks em _nuxt/. É o que permite
+  // saber se um build parcial pode ir pro ar junto com as páginas que já
+  // estão lá. Sem a variável (build local) fica o UUID aleatório de sempre.
+  buildId: process.env.MBB_BUILD_ID || undefined,
   devtools: { enabled: true },
 
   ssr: true,

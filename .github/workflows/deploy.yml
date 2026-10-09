@@ -46,6 +46,16 @@ jobs:
           node-version: 20
 
       - run: npm ci
+
+      - name: Calcula o buildId (hash do codigo, nao do conteudo)
+        # mesmo codigo -> mesmo buildId -> mesmos chunks em _nuxt/ (ver
+        # nuxt.config.ts). Vai pro _build.txt junto com o commit: e o que o
+        # build incremental vai conferir antes de subir paginas soltas.
+        run: |
+          id=$(git rev-parse HEAD:app HEAD:nuxt.config.ts HEAD:package.json HEAD:package-lock.json | sha1sum | cut -c1-16)
+          echo "MBB_BUILD_ID=$id" >> "$GITHUB_ENV"
+          echo "buildId deste build: $id"
+
       - run: npm run generate
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
@@ -108,7 +118,13 @@ jobs:
         # pra provar que _current e ESTE build, sem depender de requisicao
         # HTTP passando pelo Cloudflare. run_attempt entra junto pra um
         # re-run do mesmo run_id tambem ter marcador proprio.
-        run: echo "${GITHUB_SHA} ${GITHUB_RUN_ID} ${GITHUB_RUN_ATTEMPT}" > .output/public/_build.txt
+        # 09/out: uma linha com campos nomeados -- commit e build_id sao o que
+        # o build incremental confere (mesmo codigo no ar?) antes de subir
+        # paginas soltas.
+        run: |
+          echo "commit=${GITHUB_SHA} build_id=${MBB_BUILD_ID} run=${GITHUB_RUN_ID} attempt=${GITHUB_RUN_ATTEMPT}" > .output/public/_build.txt
+          cat .output/public/_build.txt
+          grep -q "buildId:\"${MBB_BUILD_ID}\"" .output/public/index.html || { echo "ERRO: index.html nao tem o buildId ${MBB_BUILD_ID}"; exit 1; }
 
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
@@ -338,7 +354,7 @@ jobs:
           EOF
           echo "_current confirmado no servidor -- index.html presente pos-rename."
 
-          esperado="${GITHUB_SHA} ${GITHUB_RUN_ID} ${GITHUB_RUN_ATTEMPT}"
+          esperado="commit=${GITHUB_SHA} build_id=${MBB_BUILD_ID} run=${GITHUB_RUN_ID} attempt=${GITHUB_RUN_ATTEMPT}"
           lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF > build_remoto.txt
           set ftp:ssl-force true
           set ftp:ssl-protect-data true

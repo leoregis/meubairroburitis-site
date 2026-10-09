@@ -15,6 +15,14 @@ name: EMERGENCIA - Restaurar _current
 #
 # So renomeia a pasta indicada pra _current. Nao apaga nada, nao mexe
 # em mais nenhuma outra pasta.
+#
+# ATENCAO (09/out, build incremental): uma pasta _old_* e uma foto do site
+# no fim de um build COMPLETO. Atualizacoes incrementais (noticia, produto,
+# empresa/prestador) feitas depois dela NAO estao la -- voltar pra ela tira
+# essas atualizacoes do ar ate o proximo build completo. Por isso, logo
+# depois do rollback, disparar um build completo (Deploy -> Run workflow,
+# modo=completo, ou com DEPLOY_MODO=completo nas variaveis do repositorio)
+# pra recolocar o conteudo atual em cima do codigo que se quer manter.
 on:
   workflow_dispatch:
     inputs:
@@ -54,3 +62,10 @@ jobs:
           ls -la
           bye
           EOF
+
+      - name: Lembrete -- disparar build completo
+        run: |
+          msg="Rollback feito para '${{ inputs.pasta_origem }}'. Atualizacoes incrementais feitas depois desse build completo NAO estao no ar. Dispare agora um build completo (Deploy -> Run workflow, modo=completo) para recolocar o conteudo atual."
+          echo "::warning title=Disparar build completo::$msg"
+          echo "### ⚠️ Disparar build completo agora" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"

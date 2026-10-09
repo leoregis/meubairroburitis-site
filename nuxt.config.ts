@@ -127,6 +127,12 @@ export default defineNuxtConfig({
   // (IA da Meta) é outro robô que não o facebookexternalhit das prévias.
   robots: {
     groups: [
+      // 09/out: /_staging_test/ (deploy-staging.yml, bancos de dev) nunca
+      // deve ser indexado -- além do noindex nas páginas e no header de lá.
+      {
+        userAgent: ['*'],
+        disallow: ['/_staging_test/'],
+      },
       {
         comment: ['Robôs de treinamento/coleta de IA'],
         userAgent: [
@@ -138,12 +144,18 @@ export default defineNuxtConfig({
         disallow: ['/'],
       },
     ],
+    // staging tem base URL (/_staging_test/) e o módulo não gera robots.txt
+    // em subpasta; lá valem o robots.txt da raiz, a meta e o header noindex
+    ...(process.env.MBB_STAGING === '1' ? { robotsTxt: false } : {}),
   },
 
   site: {
     url: 'https://meubairroburitis.com.br',
     name: 'Meu Bairro Buritis',
     defaultLocale: 'pt-BR',
+    // MBB_STAGING=1 (deploy-staging.yml): o build de teste em /_staging_test/
+    // sai com noindex, nofollow em toda página.
+    ...(process.env.MBB_STAGING === '1' ? { indexable: false } : {}),
   },
 
   // geração automática de OG image via satori está quebrando no build
@@ -173,6 +185,21 @@ export default defineNuxtConfig({
 
   hooks: {
     async 'nitro:config'(nitroConfig) {
+      // 09/out (build incremental, etapa 3): com MBB_ROTAS_ARQUIVO (o JSON
+      // de scripts/incremental/rotas-afetadas.mjs), gera SÓ as rotas da lista
+      // -- sem crawler e sem enumerar o banco. O sitemap.xml fica de fora: o
+      // deploy mescla as mudanças no sitemap que já está no ar. Sem a
+      // variável, nada muda (build completo de sempre).
+      const arqRotas = process.env.MBB_ROTAS_ARQUIVO
+      if (arqRotas) {
+        const { readFileSync } = await import('node:fs')
+        const { regerar } = JSON.parse(readFileSync(arqRotas, 'utf8'))
+        nitroConfig.prerender ||= {}
+        nitroConfig.prerender.crawlLinks = false
+        nitroConfig.prerender.routes = regerar
+        return
+      }
+
       // Garante que cada página de produto seja pré-renderizada mesmo que o
       // crawler não a alcance a partir de / — busca os slugs direto no
       // Supabase em tempo de build.

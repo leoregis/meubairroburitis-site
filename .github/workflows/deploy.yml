@@ -51,11 +51,21 @@ concurrency:
   group: deploy-producao
   cancel-in-progress: false
 
+# actions: write -- o modo incremental, se falhar, pede um build completo
+# (gh workflow run) e consulta os deploys anteriores (decidir-modo.sh).
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # histórico inteiro: o modo incremental compara o commit que está
+          # no ar com este (git diff) antes de subir páginas soltas
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -86,7 +96,58 @@ jobs:
           echo "MBB_BUILD_ID=$id" >> "$GITHUB_ENV"
           echo "buildId deste build: $id"
 
-      - run: npm run generate
+      - name: Instala lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      # ------------------------------------------------------------------
+      # 09/out (build incremental, etapa 3): decide se este deploy pode ser
+      # PARCIAL (só as páginas afetadas pelos itens da fila, enviadas direto
+      # pra _current) ou COMPLETO (o de sempre: release nova + swap).
+      # Desligado por padrão: só vira incremental com a variável do
+      # repositório DEPLOY_MODO=incremental. Na dúvida, completo -- ver
+      # scripts/incremental/decidir-modo.sh.
+      # ------------------------------------------------------------------
+      - name: Rotas afetadas pelos itens da fila
+        env:
+          ITENS: ${{ inputs.itens }}
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$ITENS" ]; then printf '%s' "$ITENS" > "$RUNNER_TEMP/itens.json"; else echo '[]' > "$RUNNER_TEMP/itens.json"; fi
+          node scripts/incremental/rotas-afetadas.mjs "$RUNNER_TEMP/itens.json" "$RUNNER_TEMP/rotas.json"
+
+      - name: Decide o modo (incremental ou completo)
+        id: decide
+        env:
+          DEPLOY_MODO: ${{ vars.DEPLOY_MODO }}
+          EVENTO: ${{ github.event_name }}
+          MODO_PEDIDO: ${{ inputs.modo }}
+          GH_TOKEN: ${{ github.token }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          export ROTAS="$RUNNER_TEMP/rotas.json"
+          NO_AR=""
+          if [ "$DEPLOY_MODO" = "incremental" ] && [ "$EVENTO" = "workflow_dispatch" ]; then
+            NO_AR=$(lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF 2>/dev/null | tr -d '\r\n'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          cat public_html/_current/_build.txt
+          bye
+          EOF
+          )
+            echo "_build.txt no ar: ${NO_AR:-(não lido)}"
+          fi
+          export NO_AR
+          bash scripts/incremental/decidir-modo.sh
+
+      - name: Gera o site inteiro (build completo)
+        if: steps.decide.outputs.modo == 'completo'
+        run: npm run generate
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -104,6 +165,7 @@ jobs:
           NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY }}
 
       - name: Corrige escape duplo (&amp;amp;) nas imagens do sitemap.xml
+        if: steps.decide.outputs.modo == 'completo'
         # o hook em nuxt.config.ts (prerender:generate) não é confiável --
         # o crawler de prerender do Nitro roda a partir de um bundle
         # próprio (.nuxt/prerender/), então o hook registrado no config
@@ -123,6 +185,7 @@ jobs:
           fi
 
       - name: Barra registro de teste publicado (sitemap e titles)
+        if: steps.decide.outputs.modo == 'completo'
         # 07/out: registros de teste criados em produção ficaram semanas no
         # ar e no sitemap. Se o sitemap ou algum <title> gerado tiver
         # "teste", "apagar", "lorem" ou "dummy", o deploy para AQUI, antes
@@ -133,6 +196,7 @@ jobs:
         run: node scripts/checar-registros-teste.mjs .output/public
 
       - name: Confere se toda noticia publicada virou pagina no build
+        if: steps.decide.outputs.modo == 'completo'
         # o prerender roda com failOnError:false -- pagina que quebra com
         # 500 no build some do site sem erro nenhum (7 materias sumiram
         # assim em 24/set e so foram notadas dias depois). Falha aqui, ANTES
@@ -144,6 +208,7 @@ jobs:
         run: node scripts/verificar-noticias-geradas.mjs .output/public
 
       - name: Grava marcador do build (_build.txt) pra verificacao pos-swap
+        if: steps.decide.outputs.modo == 'completo'
         # conferido via FTP depois do swap (step "Confirma que _current...")
         # pra provar que _current e ESTE build, sem depender de requisicao
         # HTTP passando pelo Cloudflare. run_attempt entra junto pra um
@@ -154,10 +219,11 @@ jobs:
         run: |
           echo "commit=${GITHUB_SHA} build_id=${MBB_BUILD_ID} run=${GITHUB_RUN_ID} attempt=${GITHUB_RUN_ATTEMPT}" > .output/public/_build.txt
           cat .output/public/_build.txt
+          # lista das imagens _ipx deste build: o modo incremental baixa ela
+          # e sobe só as imagens que faltam no ar
+          (cd .output/public && find _ipx -type f | sort) > .output/public/_ipx-lista.txt
+          echo "_ipx-lista.txt: $(wc -l < .output/public/_ipx-lista.txt) imagem(ns)"
           grep -q "buildId:\"${MBB_BUILD_ID}\"" .output/public/index.html || { echo "ERRO: index.html nao tem o buildId ${MBB_BUILD_ID}"; exit 1; }
-
-      - name: Instala lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
 
       # Incidente de 23/set: o deploy #194 falhou por "Disk quota
       # exceeded" no meio do mirror, mas o script continuava rodando com
@@ -171,6 +237,7 @@ jobs:
       # um erro ali NUNCA chegue perto de tocar em _current.
 
       - name: Checa acumulo de releases antigas antes de subir (proxy pra espaco em disco)
+        if: steps.decide.outputs.modo == 'completo'
         # FTP puro (RFC 959) nao tem comando nativo de cota/espaco livre
         # -- isso só existe via API HTTP separada do cPanel (UAPI), sem
         # credencial configurada neste projeto. Proxy pratico: com a
@@ -210,6 +277,7 @@ jobs:
           fi
 
       - name: Sobe a release nova pra uma pasta a parte (fail-exit estrito, nao toca em _current)
+        if: steps.decide.outputs.modo == 'completo'
         timeout-minutes: 60
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -297,6 +365,7 @@ jobs:
           echo "Release $RELEASE subida com sucesso (mirror sem erros)."
 
       - name: Confirma que a release nova esta completa antes de tocar em _current
+        if: steps.decide.outputs.modo == 'completo'
         # checagem basica de sanidade -- nao prova que o build inteiro
         # esta perfeito, mas pega o caso principal de "mirror terminou sem
         # erro reportado mas a pasta ficou vazia/incompleta por outro
@@ -322,6 +391,7 @@ jobs:
           echo "Release $RELEASE confirmada -- index.html presente."
 
       - name: Faz o swap (current -> old, release -> current), passos consecutivos
+        if: steps.decide.outputs.modo == 'completo'
         # os dois renames ficam o mais proximo possivel um do outro (mesma
         # sessao lftp, sem nada entre eles) -- FTP puro nao suporta um
         # symlink atomico pra _current (isso exigiria SFTP/SSH, que nao
@@ -356,6 +426,7 @@ jobs:
           echo "Release $RELEASE agora é public_html/_current. Versão anterior guardada em public_html/$OLD para rollback."
 
       - name: Confirma que _current existe e o site responde antes de marcar sucesso
+        if: steps.decide.outputs.modo == 'completo'
         # verificacao pos-rename pedida explicitamente depois do incidente
         # de 23/set. Camadas decisivas, ambas via FTP: (1) index.html existe
         # em _current logo apos o rename, (2) _current/_build.txt bate com o
@@ -436,6 +507,7 @@ jobs:
       # concorrência própria -- este run termina logo depois da purga.
 
       - name: Purga cache do Cloudflare
+        if: steps.decide.outputs.modo == 'completo'
         # sem isso, depois do swap atomico na origem (passo anterior), o
         # Cloudflare pode continuar servindo, POP por POP, HTML/JS de builds
         # anteriores por um tempo -- foi exatamente isso que quebrou a
@@ -495,3 +567,135 @@ jobs:
       # "/" -> "/_current/" (exceto /guia/ e /.well-known/) é configurada
       # manualmente UMA VEZ, só no dia da virada de fato (desligamento do
       # WordPress) — não faz parte deste workflow.
+
+      # ==================================================================
+      # MODO INCREMENTAL (etapa 3) -- só roda com DEPLOY_MODO=incremental e
+      # quando decidir-modo.sh confirmou: mesmo código e buildId no ar, itens
+      # só do site (notícia/produto), nenhum deploy anterior perdido. As
+      # páginas vão direto pra _current (sem release nova/swap), cada arquivo
+      # com nome temporário + rename; o que existia antes é baixado e guardado
+      # como artefato; qualquer falha devolve o backup e pede build completo.
+      # As fases ficam em scripts/incremental/enviar.sh -- o mesmo código que
+      # o deploy-staging.yml testa em /_staging_test/.
+      # ==================================================================
+      - name: "Incremental: gera só as rotas afetadas"
+        if: steps.decide.outputs.modo == 'incremental'
+        run: npm run generate
+        env:
+          MBB_ROTAS_ARQUIVO: ${{ runner.temp }}/rotas.json
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NUXT_PUBLIC_MP_PUBLIC_KEY: ${{ secrets.NUXT_PUBLIC_MP_PUBLIC_KEY }}
+          NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL }}
+          NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY }}
+
+      - name: "Incremental: prepara o envio (sitemap mesclado, marcador, checagens)"
+        if: steps.decide.outputs.modo == 'incremental'
+        timeout-minutes: 10
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+        run: bash scripts/incremental/enviar.sh preparar
+
+      - name: "Incremental: backup do que vai ser sobrescrito"
+        if: steps.decide.outputs.modo == 'incremental'
+        timeout-minutes: 10
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+        run: bash scripts/incremental/enviar.sh backup
+
+      - name: "Incremental: guarda o backup como artefato do run"
+        if: steps.decide.outputs.modo == 'incremental'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-incremental-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/envio/backup
+          retention-days: 14
+
+      - name: "Incremental: envia as páginas e remove as que saíram do ar"
+        id: envio
+        if: steps.decide.outputs.modo == 'incremental'
+        timeout-minutes: 20
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+        run: bash scripts/incremental/enviar.sh enviar
+
+      - name: "Incremental: confere no servidor"
+        if: steps.decide.outputs.modo == 'incremental'
+        timeout-minutes: 10
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+        run: |
+          bash scripts/incremental/enviar.sh conferir
+          echo "### ✅ Deploy incremental no ar" >> "$GITHUB_STEP_SUMMARY"
+          node scripts/incremental/resumo-rotas.mjs "$ROTAS" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Incremental: purga só as URLs afetadas no Cloudflare"
+        if: steps.decide.outputs.modo == 'incremental'
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ZONE_ID" ]; then
+            echo "::warning title=Purga do Cloudflare NAO executada::secrets ausentes"; exit 0
+          fi
+          # a API aceita até 30 URLs por chamada
+          split -l 30 "$RUNNER_TEMP/envio/urls.txt" "$RUNNER_TEMP/envio/lote_"
+          falhas=0
+          for lote in "$RUNNER_TEMP"/envio/lote_*; do
+            corpo=$(node scripts/incremental/corpo-purga.mjs "$lote")
+            status=$(curl -s -o /tmp/purge.json -w "%{http_code}" -X POST \
+              "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data "$corpo" || true)
+            if [ "$status" != "200" ] || ! grep -q '"success":[[:space:]]*true' /tmp/purge.json; then
+              falhas=$((falhas+1)); cat /tmp/purge.json; echo
+            fi
+          done
+          total=$(wc -l < "$RUNNER_TEMP/envio/urls.txt")
+          if [ "$falhas" -gt 0 ]; then
+            echo "::warning title=Purga do Cloudflare incompleta::$falhas lote(s) falharam ($total URLs no total)"
+          else
+            echo "Purga por URL: $total URL(s), success: true."
+            echo "Purga do Cloudflare: $total URL(s)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: "Incremental falhou: desfaz o envio e pede build completo"
+        if: failure() && steps.decide.outputs.modo == 'incremental'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+          ENVIO: ${{ steps.envio.outcome }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$ENVIO" = "success" ] || [ "$ENVIO" = "failure" ]; then
+            echo "Envio chegou a rodar ($ENVIO): devolvendo os arquivos do backup."
+            bash scripts/incremental/enviar.sh restaurar \
+              || echo "::warning::restauração do backup com erro -- o build completo pedido abaixo refaz tudo"
+          fi
+          gh workflow run deploy.yml --ref main -f modo=completo
+          echo "::warning title=Incremental falhou::backup devolvido (se o envio rodou) e build completo pedido"
+          echo "### ⚠️ Incremental falhou -- build completo pedido" >> "$GITHUB_STEP_SUMMARY"

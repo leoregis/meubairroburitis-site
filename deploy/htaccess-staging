@@ -1,0 +1,19 @@
+# public_html/_staging_test/.htaccess -- sobe junto com o build de staging
+# (deploy-staging.yml). RewriteEngine próprio: as regras do .htaccess da raiz
+# (que mandam tudo pra _current/) não valem aqui dentro.
+#
+# Staging usa os bancos de DEV (dados fictícios) e nunca deve ser indexado:
+# noindex também no header, além da meta das páginas e do robots.txt da raiz
+# (Disallow: /_staging_test/).
+RewriteEngine On
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
+# rotas só client-side (admin, carrinho, pedido): shell 200.html, como na produção
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/_staging_test/(carrinho/?$|pedido/|admin(/|$))
+RewriteRule ^ /_staging_test/200.html [L]

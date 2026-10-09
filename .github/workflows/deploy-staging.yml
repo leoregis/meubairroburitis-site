@@ -1,44 +1,82 @@
 name: Deploy Staging (teste manual)
 
 # Workflow separado do deploy.yml real -- só roda quando disparado manualmente.
-# Publica em public_html/_staging_test/ (pasta isolada, nunca servida por
-# nada hoje) pra teste manual completo antes de qualquer virada de produção.
-# Não mexe em public_html/_current/, .htaccess ou qualquer coisa que a
-# produção (WordPress) já serve.
+# Publica em public_html/_staging_test/ (pasta isolada, com .htaccess próprio)
+# usando os bancos de DEV (branches do Supabase, dados fictícios) -- nunca os
+# de produção. Não mexe em public_html/_current/ nem no .htaccess da raiz.
+#
+# 09/out (build incremental): testa o MESMO código do modo incremental da
+# produção (scripts/incremental/*), só com outra pasta de destino:
+#   modo=completo     build inteiro + mirror pra _staging_test/ (a base)
+#   modo=incremental  itens -> rotas -> build parcial -> envio parcial
+#   limpar=true       apaga public_html/_staging_test/ e para
+# Indexação: noindex nas páginas (MBB_STAGING=1), X-Robots-Tag no header
+# (deploy/htaccess-staging) e Disallow: /_staging_test/ no robots.txt da raiz.
 on:
   workflow_dispatch:
+    inputs:
+      modo:
+        description: 'completo = build inteiro; incremental = só as rotas dos itens'
+        required: false
+        default: completo
+        type: choice
+        options: [completo, incremental]
+      itens:
+        description: 'JSON com os itens (mesmo formato da fila de deploy)'
+        required: false
+        default: ''
+        type: string
+      limpar:
+        description: 'apaga public_html/_staging_test/ e não faz build'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  MBB_STAGING: '1'
+  NUXT_APP_BASE_URL: /_staging_test/
+  MBB_REMOTO: public_html/_staging_test
+  MBB_SITE: https://meubairroburitis.com.br/_staging_test
+  # bancos de DEV (branches do Supabase) -- chaves anônimas/publicáveis
+  NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+  NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+  NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL: ${{ secrets.STAGING_MBA_SUPABASE_URL }}
+  NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY: ${{ secrets.STAGING_MBA_SUPABASE_ANON_KEY }}
 
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     steps:
+      - name: Confere que os bancos são os de DEV
+        # trava contra segredo errado: staging nunca lê a produção
+        run: |
+          case "$NUXT_PUBLIC_SUPABASE_URL$NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL" in
+            *peusailkyxqbhgdgmqyk*|*xtmwatregednbuupfdbl*) echo "ERRO: staging apontando para banco de produção"; exit 1 ;;
+          esac
+          [ -n "$NUXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL" ] || { echo "ERRO: segredos STAGING_* ausentes"; exit 1; }
+          echo "Bancos de dev conferidos."
+
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm ci
-      - run: npm run generate
-        env:
-          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NUXT_PUBLIC_MP_PUBLIC_KEY: ${{ secrets.NUXT_PUBLIC_MP_PUBLIC_KEY }}
-          # prefixa todos os caminhos de asset/rota com /_staging_test/ --
-          # sem isso o build assume que vive na raiz do domínio e os
-          # assets (JS/CSS/imagens) dariam 404 dentro da subpasta.
-          NUXT_APP_BASE_URL: /_staging_test/
-
       - name: Instala lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Sobe pra pasta de staging isolada
-        # protocolo confirmado certo (FTPS explicito, porta 21) -- a 3a
-        # tentativa já estava transferindo de verdade, só não coube em
-        # 10min por causa do volume de subpastas (uma por variante de
-        # imagem do _ipx). Timeout maior + mais paralelismo agora que a
-        # conexão em si não é mais o problema.
-        timeout-minutes: 30
+      - name: Apaga a pasta de staging (limpar=true)
+        if: inputs.limpar
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -50,11 +88,148 @@ jobs:
           set ssl:verify-certificate no
           set net:timeout 15
           set net:max-retries 3
-          set net:reconnect-interval-base 5
-          set net:connection-limit 6
-          mkdir -p public_html/_staging_test
-          mirror -R --parallel=6 -v .output/public/ public_html/_staging_test/
+          set cmd:fail-exit no
+          rm -r public_html/_staging_test
           bye
           EOF
+          sobrou=$(lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF 2>/dev/null || true
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          cls -1 -d public_html/_staging_test
+          bye
+          EOF
+          )
+          [ -z "$sobrou" ] || { echo "ERRO: public_html/_staging_test ainda existe"; exit 1; }
+          echo "public_html/_staging_test apagada."
+          echo "### Pasta de staging apagada" >> "$GITHUB_STEP_SUMMARY"
 
-          echo "Staging publicado em https://meubairroburitis.com.br/_staging_test/"
+      - run: npm ci
+        if: ${{ !inputs.limpar }}
+
+      - name: Calcula o buildId (mesma conta do deploy.yml)
+        if: ${{ !inputs.limpar }}
+        run: |
+          id=$(git rev-parse HEAD:app HEAD:nuxt.config.ts HEAD:package.json HEAD:package-lock.json | sha1sum | cut -c1-16)
+          echo "MBB_BUILD_ID=$id" >> "$GITHUB_ENV"
+          echo "INICIO=$(date +%s)" >> "$GITHUB_ENV"
+          echo "buildId: $id"
+
+      - name: Rotas afetadas pelos itens
+        if: ${{ !inputs.limpar && inputs.modo == 'incremental' }}
+        env:
+          ITENS: ${{ inputs.itens }}
+        run: |
+          if [ -n "$ITENS" ]; then printf '%s' "$ITENS" > "$RUNNER_TEMP/itens.json"; else echo '[]' > "$RUNNER_TEMP/itens.json"; fi
+          node scripts/incremental/rotas-afetadas.mjs "$RUNNER_TEMP/itens.json" "$RUNNER_TEMP/rotas.json"
+
+      - name: Decide o modo (mesma regra da produção)
+        id: decide
+        if: ${{ !inputs.limpar && inputs.modo == 'incremental' }}
+        env:
+          DEPLOY_MODO: incremental
+          EVENTO: workflow_dispatch
+          MODO_PEDIDO: auto
+          WORKFLOW_ARQ: deploy-staging.yml
+          GH_TOKEN: ${{ github.token }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          export ROTAS="$RUNNER_TEMP/rotas.json"
+          NO_AR=$(lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF 2>/dev/null | tr -d '\r\n'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          cat public_html/_staging_test/_build.txt
+          bye
+          EOF
+          )
+          echo "_build.txt do staging: ${NO_AR:-(não lido)}"
+          export NO_AR
+          bash scripts/incremental/decidir-modo.sh
+
+      # ------------------------------------------------ completo (a base)
+      - name: "Completo: gera o site inteiro"
+        if: ${{ !inputs.limpar && (inputs.modo == 'completo' || steps.decide.outputs.modo == 'completo') }}
+        run: npm run generate
+
+      - name: "Completo: marcador, lista de imagens, .htaccess e checagem"
+        if: ${{ !inputs.limpar && (inputs.modo == 'completo' || steps.decide.outputs.modo == 'completo') }}
+        run: |
+          echo "commit=${GITHUB_SHA} build_id=${MBB_BUILD_ID} run=${GITHUB_RUN_ID} attempt=${GITHUB_RUN_ATTEMPT}" > .output/public/_build.txt
+          (cd .output/public && find _ipx -type f | sort) > .output/public/_ipx-lista.txt
+          cp deploy/htaccess-staging .output/public/.htaccess
+          if [ -f .output/public/sitemap.xml ]; then
+            node -e "const fs=require('fs');const p='.output/public/sitemap.xml';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replaceAll('&amp;amp;','&amp;'))"
+          fi
+          node scripts/checar-registros-teste.mjs .output/public
+          grep -q 'noindex' .output/public/index.html || { echo "ERRO: staging sem noindex no HTML"; exit 1; }
+          echo "Páginas: $(find .output/public -name index.html | wc -l) | arquivos: $(find .output/public -type f | wc -l)"
+
+      - name: "Completo: sobe pra public_html/_staging_test/"
+        if: ${{ !inputs.limpar && (inputs.modo == 'completo' || steps.decide.outputs.modo == 'completo') }}
+        timeout-minutes: 60
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 6
+          set net:reconnect-interval-base 10
+          set net:connection-limit 4
+          set cmd:fail-exit no
+          mkdir -p public_html/_staging_test
+          set cmd:fail-exit yes
+          mirror -R --delete --parallel=4 .output/public/ public_html/_staging_test/
+          bye
+          EOF
+          echo "### Staging completo publicado em $(( $(date +%s) - INICIO ))s" >> "$GITHUB_STEP_SUMMARY"
+          echo "Staging publicado: https://meubairroburitis.com.br/_staging_test/"
+
+      # ------------------------------------------------ incremental
+      - name: "Incremental: gera só as rotas afetadas"
+        if: ${{ !inputs.limpar && steps.decide.outputs.modo == 'incremental' }}
+        env:
+          MBB_ROTAS_ARQUIVO: ${{ runner.temp }}/rotas.json
+        run: npm run generate
+
+      - name: "Incremental: prepara, faz backup, envia e confere"
+        id: envio
+        if: ${{ !inputs.limpar && steps.decide.outputs.modo == 'incremental' }}
+        timeout-minutes: 30
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          ROTAS: ${{ runner.temp }}/rotas.json
+          DIR: ${{ runner.temp }}/envio
+          RUN_NO_AR: ${{ steps.decide.outputs.run_no_ar }}
+        run: |
+          bash scripts/incremental/enviar.sh preparar
+          bash scripts/incremental/enviar.sh backup
+          bash scripts/incremental/enviar.sh enviar
+          bash scripts/incremental/enviar.sh conferir
+          total=$(( $(date +%s) - INICIO ))
+          echo "### ✅ Staging incremental no ar em ${total}s (do início do job)" >> "$GITHUB_STEP_SUMMARY"
+          node scripts/incremental/resumo-rotas.mjs "$ROTAS" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"; cat "$DIR/resumo.json" >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Incremental falhou: devolve o backup"
+        if: ${{ failure() && steps.decide.outputs.modo == 'incremental' }}
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          DIR: ${{ runner.temp }}/envio
+        run: |
+          [ -f "$DIR/restaurar.lftp" ] && bash scripts/incremental/enviar.sh restaurar || true
+          echo "### ⚠️ Staging incremental falhou (backup devolvido)" >> "$GITHUB_STEP_SUMMARY"

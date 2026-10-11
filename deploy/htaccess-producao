@@ -24,6 +24,13 @@ ErrorDocument 404 /_current/pagina-nao-encontrada/index.html
 # real rodando, achado num teste de seguranca real).
 RewriteRule ^wordpress_backup_2026/ - [F,L]
 
+# Politica de privacidade (11/10/2026): a Play Console apontava pra
+# /politica-de-privacidade/, que nao existe no site (404). A politica fica
+# no Guia, em versao estatica (HTML puro, gerada no build do meubairro-app
+# a partir da tela do app). Com e sem barra; antes de qualquer outra regra
+# (a de barra final, mais abaixo, mandaria pra versao sem barra e 404).
+RewriteRule ^politica-de-privacidade/?$ https://meubairroburitis.com.br/guia/privacidade/ [R=301,L]
+
 # og:image das noticias (29/set): o IPX gera JPEG mas o arquivo mantem o
 # nome/extensao da capa original (.png, do Storage), entao o Apache servia
 # "image/png" com conteudo JPEG. Navegador e WhatsApp toleram; outros

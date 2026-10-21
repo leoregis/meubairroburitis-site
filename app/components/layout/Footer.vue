@@ -24,11 +24,11 @@ const canais = [
     <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <NuxtPicture
-          src="/logo/logo_mbb_rodape.png"
-          alt="Meu Bairro Buritis"
+          src="/logo/logo-mbb-registrada-branca.png"
+          alt="Meu Bairro Buritis e Região"
           format="webp"
           :width="140"
-          :height="68"
+          :height="72"
           sizes="140px"
           :img-attrs="{ class: 'mb-3 h-9 w-auto' }"
         />
@@ -79,6 +79,7 @@ const canais = [
 
     <div class="border-t border-stone-800 px-4 py-4 text-center text-xs text-stone-400">
       © {{ new Date().getFullYear() }} Meu Bairro Buritis. Todos os direitos reservados.
+      <span class="mt-1 block">Meu Bairro Buritis® é marca registrada.</span>
     </div>
   </footer>
 </template>

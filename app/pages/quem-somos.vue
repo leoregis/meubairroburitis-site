@@ -268,6 +268,16 @@ const marcos = [
             </div>
           </li>
         </ol>
+
+        <section aria-labelledby="marca-registrada-titulo" class="mt-4 border-t border-stone-200 pt-8">
+          <h2 id="marca-registrada-titulo" class="font-serif text-lg font-bold text-stone-900">Marca registrada</h2>
+          <p class="mt-2 text-sm leading-relaxed text-stone-600">
+            Meu Bairro Buritis® é marca registrada no Instituto Nacional da Propriedade Industrial
+            (INPI), processo nº 938862022, de titularidade de Leonardo Regis Orrico. O uso do nome, do
+            logotipo e dos demais elementos da marca sem autorização prévia é proibido e está sujeito
+            às medidas previstas na Lei nº 9.279/1996 (Lei de Propriedade Industrial).
+          </p>
+        </section>
       </div>
     </div>
   </article>

@@ -10,11 +10,11 @@ const { quantidadeTotal } = useCarrinho()
     <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
       <NuxtLink to="/" class="flex items-center gap-2">
         <NuxtPicture
-          src="/logo/logo_mbb_rodape.png"
-          alt="Meu Bairro Buritis"
+          src="/logo/logo-mbb-registrada-branca.png"
+          alt="Meu Bairro Buritis e Região"
           format="webp"
           :width="140"
-          :height="68"
+          :height="72"
           sizes="140px"
           fetchpriority="high"
           loading="eager"

@@ -33,8 +33,8 @@ function cabecalhoEmail() {
   return `
     <div style="background:#dd0202; padding:20px; text-align:center;">
       <img
-        src="https://meubairroburitis.com.br/logo/logo_mbb_rodape.png"
-        alt="Meu Bairro Buritis"
+        src="https://meubairroburitis.com.br/logo/logo-mbb-registrada-branca.png"
+        alt="Meu Bairro Buritis e Região"
         width="140"
         style="display:inline-block; width:140px; height:auto;"
       />

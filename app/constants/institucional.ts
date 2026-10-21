@@ -21,9 +21,11 @@ export const DADOS_INSTITUCIONAIS = {
 
 // Organization (Schema.org) do veículo -- fonte única pro JSON-LD da home e
 // pro publisher/author das notícias, com o mesmo @id em todo o site.
-// Logo: logo_mbb_completa.png (465x240, PNG transparente, legível em fundo
-// branco, como o Google recomenda). O logo_mbb_rodape.png que a home usava
-// tem letreiro branco e some em fundo branco.
+// Logo: logo-mbb-registrada-preta.png (600x309, PNG transparente, com o ®,
+// legível em fundo branco, como o Google recomenda). A versão branca
+// (cabeçalho e rodapé) tem letreiro branco e some em fundo branco.
+// logo_mbb_completa.png e logo_mbb_rodape.png (sem o ®) ficam no ar porque
+// caches externos (Google, e-mails já enviados) apontam pra elas.
 export const URL_SITE = 'https://meubairroburitis.com.br'
 
 export const ORGANIZACAO_SCHEMA = {
@@ -31,5 +33,5 @@ export const ORGANIZACAO_SCHEMA = {
   '@id': `${URL_SITE}/#organization`,
   name: DADOS_INSTITUCIONAIS.nomeVeiculo,
   url: `${URL_SITE}/`,
-  logo: `${URL_SITE}/logo/logo_mbb_completa.png`,
+  logo: `${URL_SITE}/logo/logo-mbb-registrada-preta.png`,
 }

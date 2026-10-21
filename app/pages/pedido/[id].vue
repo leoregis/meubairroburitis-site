@@ -6,10 +6,15 @@ definePageMeta({ ssr: false })
 // noindex explícito: rota client-only, o robots:false de routeRules não
 // chega ao HTML (ver carrinho.vue).
 useSeoMeta({ title: 'Pedido — Meu Bairro Buritis', robots: 'noindex' })
+// o link de acompanhamento não vaza pelo Referer ao abrir uma publicação
+useHead({ meta: [{ name: 'referrer', content: 'no-referrer' }] })
 
 const route = useRoute()
 const config = useRuntimeConfig()
 const pedidoId = route.params.id as string
+// /pedido/<token> (22 caracteres base64url, link de acompanhamento mandado
+// pela Central) x /pedido/<uuid> (a volta do checkout, abaixo)
+const ehAcompanhamento = /^[A-Za-z0-9_-]{22}$/.test(pedidoId)
 
 const { consultarStatus } = useCheckout()
 const { $supabase } = useNuxtApp()
@@ -56,6 +61,7 @@ function pararAtualizacaoAutomatica() {
 }
 
 onMounted(() => {
+  if (ehAcompanhamento) return
   const bruto = sessionStorage.getItem(`mbb-pedido-${pedidoId}`)
   if (bruto) pedidoSalvo.value = JSON.parse(bruto)
   statusAtual.value = pedidoSalvo.value?.status ?? null
@@ -108,7 +114,8 @@ const linkWhatsapp = computed(() => `https://wa.me/${config.public.whatsappNumer
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl px-4 py-16 text-center">
+  <PedidoAcompanhamento v-if="ehAcompanhamento" :token="pedidoId" />
+  <div v-else class="mx-auto max-w-xl px-4 py-16 text-center">
     <template v-if="statusAtual === 'pago'">
       <p class="text-4xl">✅</p>
       <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Pagamento confirmado!</h1>

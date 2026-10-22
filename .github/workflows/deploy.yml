@@ -699,3 +699,27 @@ jobs:
           gh workflow run deploy.yml --ref main -f modo=completo
           echo "::warning title=Incremental falhou::backup devolvido (se o envio rodou) e build completo pedido"
           echo "### ⚠️ Incremental falhou -- build completo pedido" >> "$GITHUB_STEP_SUMMARY"
+
+      # 23/out (regra do Leo): o .htaccess da raiz (deploy/htaccess-producao) vai
+      # ao ar pelo deploy normal quando muda -- antes só pelo workflow manual
+      # fix-htaccess-seguranca.yml, e a rota /meus-pedidos ficou em 404 até ele
+      # rodar. Igual ao que está no ar = não mexe. Diferente = backup (servidor
+      # e artifact), upload, conferência byte a byte e teste de / e /carrinho;
+      # se a origem responder erro, volta o anterior e o deploy falha com aviso.
+      # No fim, depois de o site novo estar no ar (nos dois modos).
+      - name: Aplica o .htaccess da raiz se mudou (com backup e volta automática)
+        id: htaccess
+        timeout-minutes: 8
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: bash deploy/aplicar-htaccess.sh
+
+      - name: Guarda o backup do .htaccess anterior como artifact
+        if: always() && steps.htaccess.outputs.aplicado == 'sim'
+        uses: actions/upload-artifact@v4
+        with:
+          name: htaccess-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/htaccess-antes.txt
+          retention-days: 30

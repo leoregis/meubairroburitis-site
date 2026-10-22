@@ -1,3 +1,8 @@
+# Este arquivo vai ao ar pelo deploy normal (deploy.yml) desde 23/out/2026:
+# se mudar, o deploy guarda o anterior (public_html/.htaccess.bak_<data> e
+# artifact), sobe, confere byte a byte e volta o anterior se o site der erro
+# (deploy/aplicar-htaccess.sh). Sem build: workflow fix-htaccess-seguranca.yml.
+
 RewriteEngine On
 
 # Fase 7b -- 404 real para slugs inválidos sob /empresas/, /prestadores/,

@@ -90,7 +90,7 @@ export function useCheckout() {
     if (!idempotencyKey) return null
 
     try {
-      const resposta = await $fetch<{ status?: string }>(
+      const resposta = await $fetch<{ status?: string, acompanhamento_token?: string | null }>(
         `${config.public.supabaseUrl}/functions/v1/consultar_pagamento`,
         {
           method: 'POST',
@@ -101,6 +101,9 @@ export function useCheckout() {
           body: { pedido_id: pedidoId, idempotency_key: idempotencyKey },
         },
       )
+      // pago: guarda o token do link de acompanhamento (/pedido/<token>) para a
+      // tela de pagamento confirmado
+      if (resposta.acompanhamento_token) sessionStorage.setItem(`mbb-acompanhamento-${pedidoId}`, resposta.acompanhamento_token)
       return resposta.status ?? null
     } catch {
       return null

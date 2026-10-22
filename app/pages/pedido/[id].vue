@@ -97,6 +97,19 @@ onBeforeUnmount(() => {
   pararAtualizacaoAutomatica()
 })
 
+// 22/out: pago -> link de acompanhamento (/pedido/<token>). O token vem da
+// consulta (consultarStatus guarda no sessionStorage); se o "pago" chegou pelo
+// broadcast, consulta uma vez para buscá-lo.
+const tokenAcompanhamento = ref<string | null>(null)
+watch(statusAtual, async (status) => {
+  if (status !== 'pago' || ehAcompanhamento) return
+  tokenAcompanhamento.value = sessionStorage.getItem(`mbb-acompanhamento-${pedidoId}`)
+  if (!tokenAcompanhamento.value) {
+    await consultarStatus(pedidoId)
+    tokenAcompanhamento.value = sessionStorage.getItem(`mbb-acompanhamento-${pedidoId}`)
+  }
+}, { immediate: true })
+
 async function verificarPagamento() {
   verificando.value = true
   const status = await consultarStatus(pedidoId)
@@ -137,6 +150,19 @@ const linkWhatsapp = computed(() => `https://wa.me/${config.public.whatsappNumer
         >
           Enviar material no WhatsApp
         </a>
+      </div>
+
+      <div v-if="tokenAcompanhamento" class="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-6 text-left">
+        <p class="font-semibold text-stone-900">Acompanhe o seu pedido</p>
+        <p class="mt-2 text-sm text-stone-600">
+          Guarde este link: nele você vê a situação de cada entrega, as datas e o link de cada publicação.
+        </p>
+        <NuxtLink
+          :to="`/pedido/${tokenAcompanhamento}`"
+          class="mt-4 block rounded-full border border-orange-600 px-6 py-3 text-center font-semibold text-orange-700 hover:bg-orange-50"
+        >
+          Acompanhar meu pedido
+        </NuxtLink>
       </div>
     </template>
 

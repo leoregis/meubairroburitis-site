@@ -33,13 +33,15 @@ Deno.serve(async (req) => {
 
     const { data } = await supabase
       .from("pedidos")
-      .select("status")
+      .select("status, acompanhamento_token")
       .eq("id", pedido_id)
       .eq("idempotency_key", idempotency_key)
       .maybeSingle();
 
     if (!data) return json({ erro: "Pedido não encontrado" }, 404);
-    return json({ status: data.status });
+    // 22/out: pago -> o token do link de acompanhamento (/pedido/<token>), só
+    // para quem prova a posse do pedido (a mesma idempotency_key).
+    return json({ status: data.status, acompanhamento_token: data.status === "pago" ? data.acompanhamento_token : null });
   } catch (e) {
     console.error("consultar_pagamento erro:", e);
     return json({ erro: "Erro inesperado" }, 500);

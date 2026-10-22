@@ -31,6 +31,10 @@ interface Resposta {
   em_aberto?: boolean
   itens?: Item[]
   atualizado_em?: string
+  // pedido feito no site: pago, ainda sem a venda registrada na Central
+  aguardando_registro?: boolean
+  // pedido feito no site: pagamento estornado/cancelado no Mercado Pago
+  pagamento_estornado?: boolean
 }
 
 const config = useRuntimeConfig()
@@ -91,7 +95,9 @@ function detalhe(e: Entrega): string | null {
 }
 
 const situacaoGeral = computed(() => {
+  if (pedido.value?.pagamento_estornado) return { rotulo: 'Pagamento estornado', classe: TONS.neutro }
   if (pedido.value?.cancelado) return { rotulo: 'Pedido cancelado', classe: TONS.neutro }
+  if (pedido.value?.aguardando_registro) return { rotulo: 'Pagamento confirmado', classe: TONS.feito }
   if (pedido.value?.em_aberto) return { rotulo: 'Em andamento', classe: TONS.andamento }
   return { rotulo: 'Concluído', classe: TONS.feito }
 })
@@ -143,15 +149,22 @@ const linkWhatsapp = computed(() => {
     <template v-else>
       <header>
         <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Acompanhe seu pedido</p>
-        <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Pedido nº {{ pedido.numero }}</h1>
+        <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">{{ pedido.numero ? `Pedido nº ${pedido.numero}` : 'Seu pedido' }}</h1>
         <p class="mt-2 text-stone-600">
-          {{ pedido.empresa }}<span v-if="pedido.data"> · {{ dataCurta(pedido.data) }}</span>
+          {{ pedido.empresa }}<span v-if="pedido.empresa && pedido.data"> · </span><span v-if="pedido.data">{{ pedido.empresa ? '' : 'Pago em ' }}{{ dataCurta(pedido.data) }}</span>
         </p>
         <p class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <span class="rounded-full px-3 py-1 font-semibold" :class="situacaoGeral.classe">{{ situacaoGeral.rotulo }}</span>
           <span v-if="pedido.atualizado_em" class="text-stone-500">Atualizado em {{ dataCurta(pedido.atualizado_em) }} às {{ hora(pedido.atualizado_em) }}</span>
         </p>
       </header>
+
+      <p v-if="pedido.pagamento_estornado" class="mt-6 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
+        O pagamento deste pedido foi estornado ou cancelado no Mercado Pago. Se tiver dúvida, fale com a gente pelo WhatsApp.
+      </p>
+      <p v-else-if="pedido.aguardando_registro" class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+        Recebemos o seu pagamento. Em breve falamos com você para combinar as datas, e cada etapa aparece aqui.
+      </p>
 
       <section
         v-for="(item, i) in pedido.itens"
@@ -210,7 +223,7 @@ const linkWhatsapp = computed(() => {
         </ol>
 
         <p
-          v-if="item.a_agendar > 0 && !pedido.cancelado"
+          v-if="item.a_agendar > 0 && !pedido.cancelado && !pedido.pagamento_estornado"
           class="text-sm text-stone-600"
           :class="item.entregas.length ? 'mt-5 border-t border-stone-100 pt-4' : 'mt-3'"
         >

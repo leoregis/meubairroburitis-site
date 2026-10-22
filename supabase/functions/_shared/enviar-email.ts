@@ -13,6 +13,7 @@ interface Pedido {
   itens: ItemPedido[];
   valor_total_centavos: number;
   metodo_pagamento: string;
+  acompanhamento_token?: string | null;
 }
 
 function formatarPreco(centavos: number) {
@@ -62,6 +63,10 @@ function emailComprador(pedido: Pedido, whatsappNumero: string) {
         <h3>Próximo passo</h3>
         <p>Nos envie a imagem, vídeo ou texto que você quer publicar, junto com a data/horário desejados, direto no nosso WhatsApp:</p>
         <p><a href="https://wa.me/${whatsappNumero}?text=${mensagemWhatsapp}" style="display:inline-block;background:#059669;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;">Enviar material no WhatsApp</a></p>
+        ${pedido.acompanhamento_token ? `
+        <h3>Acompanhe o seu pedido</h3>
+        <p>Neste link você vê, sempre atualizado, a situação de cada entrega, as datas e o link de cada publicação:</p>
+        <p><a href="${Deno.env.get("SITE_URL") || "https://meubairroburitis.com.br"}/pedido/${pedido.acompanhamento_token}" style="display:inline-block;background:#ea580c;color:#fff;padding:10px 20px;border-radius:999px;text-decoration:none;">Acompanhar meu pedido</a></p>` : ""}
         </div>
       </div>
     `,

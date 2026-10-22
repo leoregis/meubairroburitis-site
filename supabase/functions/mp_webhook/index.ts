@@ -69,6 +69,19 @@ Deno.serve(async (req) => {
     const pedidoId = pagamento.external_reference;
     if (!pedidoId) return new Response("ok");
 
+    // 22/out: estorno/chargeback/cancelamento de um pedido JÁ pago -- o status
+    // continua "pago" e só estornado_em é marcado (uma vez); o gatilho do banco
+    // avisa a Central e o link de acompanhamento passa a mostrar o estorno.
+    if (["refunded", "charged_back", "cancelled"].includes(pagamento.status)) {
+      await supabase
+        .from("pedidos")
+        .update({ estornado_em: new Date().toISOString() })
+        .eq("id", pedidoId)
+        .eq("status", "pago")
+        .is("estornado_em", null);
+      return new Response("ok");
+    }
+
     const novoStatus = pagamento.status === "approved"
       ? "pago"
       : pagamento.status === "rejected"

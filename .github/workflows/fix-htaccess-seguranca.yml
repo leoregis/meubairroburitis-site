@@ -19,6 +19,12 @@ name: Aplica .htaccess de producao (com backup)
 # ou baixando o artifact "htaccess-backup" e subindo como .htaccess.
 on:
   workflow_dispatch:
+    inputs:
+      somente_testar:
+        description: 'Só testa / e /carrinho direto na origem (e pelo Cloudflare, se a origem não responder), sem mexer no .htaccess'
+        required: false
+        default: false
+        type: boolean
 
 # mesma fila do deploy: nunca mexe no .htaccess no meio de um swap
 concurrency:
@@ -41,7 +47,7 @@ jobs:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-        run: bash deploy/aplicar-htaccess.sh
+        run: bash deploy/aplicar-htaccess.sh ${{ inputs.somente_testar && '--so-testar' || '' }}
 
       - name: Guarda o backup como artifact do run
         if: always() && steps.htaccess.outputs.aplicado == 'sim'

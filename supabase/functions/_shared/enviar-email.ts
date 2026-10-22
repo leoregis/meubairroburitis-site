@@ -102,6 +102,31 @@ function emailDono(pedido: Pedido, emailDestino: string, urlAdmin: string) {
  * resultado (aqui, `mp_webhook` só loga e grava um timestamp, sem nunca
  * bloquear a confirmação do pagamento em si).
  */
+/**
+ * 22/out: envia os e-mails de confirmação UMA vez por pedido, venha o "pago" do
+ * cartão (criar_pagamento, na hora) ou do webhook do Mercado Pago (Pix, ou o
+ * mesmo cartão chegando depois). Reserva atômica: emails_enviados_em só é
+ * gravado se ainda estiver vazio, e só quem conseguiu a reserva envia. Falha no
+ * envio desfaz a reserva (fica como antes: sem e-mail, timestamp nulo).
+ */
+// deno-lint-ignore no-explicit-any
+export async function enviarConfirmacaoUmaVez(supabase: any, pedidoId: string, origem: string): Promise<void> {
+  const { data: reservado } = await supabase
+    .from("pedidos")
+    .update({ emails_enviados_em: new Date().toISOString() })
+    .eq("id", pedidoId)
+    .eq("status", "pago")
+    .is("emails_enviados_em", null)
+    .select()
+    .maybeSingle();
+  if (!reservado) return; // já enviado (ou sendo enviado) pelo outro caminho
+  const resultado = await enviarEmailsConfirmacao(reservado as Pedido);
+  if (!resultado.sucesso) {
+    console.error(`${origem}: falha ao enviar e-mails do pedido ${pedidoId}:`, resultado.erro);
+    await supabase.from("pedidos").update({ emails_enviados_em: null }).eq("id", pedidoId);
+  }
+}
+
 export async function enviarEmailsConfirmacao(pedido: Pedido): Promise<{ sucesso: boolean; erro?: string }> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) return { sucesso: false, erro: "RESEND_API_KEY não configurada" };

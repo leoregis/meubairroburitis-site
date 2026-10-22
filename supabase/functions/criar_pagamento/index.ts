@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 import { ehHoneypotPreenchido, nomeValido, telefoneValido } from "../_shared/validar-comprador.ts";
+import { enviarConfirmacaoUmaVez } from "../_shared/enviar-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -271,10 +272,14 @@ Deno.serve(async (req) => {
     // cartão: MP responde de forma síncrona com approved/rejected/in_process —
     // o webhook confirma/atualiza de qualquer forma, isso só agiliza a UI.
     if (dadosMp.status === "approved") {
-      await supabase.from("pedidos").update({ status: "pago", pago_em: new Date().toISOString() }).eq(
-        "id",
-        pedido.id,
-      );
+      // só de pendente para pago (o webhook pode ter chegado antes); o gatilho do
+      // banco gera o link de acompanhamento e manda o pedido para a Central
+      await supabase.from("pedidos").update({ status: "pago", pago_em: new Date().toISOString() })
+        .eq("id", pedido.id)
+        .eq("status", "pendente");
+      // 22/out: e-mail de confirmação (com o link) também no cartão -- uma vez só,
+      // mesmo que o webhook chegue depois ou já tenha chegado
+      await enviarConfirmacaoUmaVez(supabase, pedido.id, "criar_pagamento");
     } else if (dadosMp.status === "rejected") {
       await supabase.from("pedidos").update({ status: "recusado" }).eq("id", pedido.id);
     }

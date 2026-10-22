@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
-import { enviarEmailsConfirmacao } from "../_shared/enviar-email.ts";
+import { enviarConfirmacaoUmaVez } from "../_shared/enviar-email.ts";
 
 function compararEmTempoConstante(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -127,18 +127,10 @@ Deno.serve(async (req) => {
     }
 
     // e-mails de confirmação são best-effort: nunca podem impedir o
-    // pagamento de já ter sido gravado acima. Falha aqui só é logada +
-    // registrada num timestamp nulo em `pedidos`, não propaga erro.
+    // pagamento de já ter sido gravado acima. Uma vez por pedido (reserva em
+    // emails_enviados_em): o cartão já pode ter enviado na criar_pagamento.
     if (novoStatus === "pago") {
-      const resultadoEmail = await enviarEmailsConfirmacao(atualizado);
-      if (resultadoEmail.sucesso) {
-        await supabase
-          .from("pedidos")
-          .update({ emails_enviados_em: new Date().toISOString() })
-          .eq("id", pedidoId);
-      } else {
-        console.error(`mp_webhook: falha ao enviar e-mails do pedido ${pedidoId}:`, resultadoEmail.erro);
-      }
+      await enviarConfirmacaoUmaVez(supabase, pedidoId, "mp_webhook");
     }
 
     return new Response("ok");

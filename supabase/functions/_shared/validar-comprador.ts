@@ -1,3 +1,5 @@
+import { normalizarTelefone } from "./telefone.ts";
+
 // validação anti-spam do checkout público -- não é validação de negócio,
 // é filtro de bot/lixo (ver auditoria do pedido "dgfysgdjf sdfege" com
 // telefone "02625480444", 2026-08-03). Fica isolado aqui pra criar_pagamento
@@ -8,15 +10,17 @@ export function ehHoneypotPreenchido(empresa: string | undefined | null): boolea
   return Boolean(empresa && empresa.trim().length > 0);
 }
 
-// aceita só telefone BR plausível: 10 ou 11 dígitos (com DDD), DDD não
-// pode começar em 0 (nenhum DDD real começa assim) e rejeita sequências
-// tipo "00000000000"/"11111111111" que bots costumam gerar.
+// aceita só telefone BR plausível: 10 ou 11 dígitos (com DDD; o 55 do país
+// na frente é aceito e tirado), DDD não pode começar em 0 (nenhum DDD real
+// começa assim) e rejeita sequências tipo "00000000000"/"11111111111" que
+// bots costumam gerar. O checkout grava o número normalizado
+// (normalizarTelefone, _shared/telefone.ts).
 export function telefoneValido(telefone: string): boolean {
-  const digitos = telefone.replace(/\D/g, "");
+  const digitos = telefone.replace(/\D/g, "").replace(/^55(\d{10,11})$/, "$1");
   if (digitos.length < 10 || digitos.length > 11) return false;
   if (digitos[0] === "0") return false;
   if (/^(\d)\1+$/.test(digitos)) return false;
-  return true;
+  return normalizarTelefone(digitos) !== null;
 }
 
 export function nomeValido(nome: string): boolean {

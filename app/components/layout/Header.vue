@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LINKS_MENU_PRINCIPAL as links, LINK_APP_GUIA as linkApp } from '~/constants/navegacao'
+import { LINKS_MENU_PRINCIPAL as links, LINK_APP_GUIA as linkApp, LINK_MEUS_PEDIDOS as linkPedidos } from '~/constants/navegacao'
 
 const menuAberto = ref(false)
 const { quantidadeTotal } = useCarrinho()
@@ -45,6 +45,17 @@ const { quantidadeTotal } = useCarrinho()
       </nav>
 
       <div class="flex items-center gap-4">
+        <!-- no celular só o ícone; no desktop com o texto "Pedidos" -->
+        <NuxtLink
+          :to="linkPedidos.to"
+          :aria-label="linkPedidos.label"
+          class="flex items-center gap-1.5 text-sm font-medium text-white/90 hover:text-white"
+          active-class="text-white font-semibold"
+        >
+          <Icon name="lucide:package" class="h-6 w-6 text-white" />
+          <span class="hidden md:inline" aria-hidden="true">Pedidos</span>
+        </NuxtLink>
+
         <NuxtLink to="/carrinho" aria-label="Ver carrinho" class="relative">
           <Icon name="lucide:shopping-cart" class="h-6 w-6 text-white" />
           <ClientOnly>

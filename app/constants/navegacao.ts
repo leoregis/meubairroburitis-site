@@ -24,6 +24,10 @@ export const LINKS_INSTITUCIONAIS = [
   { label: 'Publicidade e Conteúdo Patrocinado', to: '/publicidade-e-conteudo-patrocinado' },
 ]
 
+// área do cliente (login por código no WhatsApp) -- ícone ao lado do carrinho
+// no Header e item na coluna Navegação do Footer, fora do menu principal.
+export const LINK_MEUS_PEDIDOS = { label: 'Meus pedidos', to: '/meus-pedidos' }
+
 // 🔥 app é uma aplicação separada (meubairro-app, hospedado em /guia) --
 // abre em nova aba, por isso fica fora da lista acima (que alimenta
 // NuxtLink, só pra rotas internas).

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LINKS_MENU_PRINCIPAL, LINKS_INSTITUCIONAIS, LINK_APP_GUIA } from '~/constants/navegacao'
+import { LINKS_MENU_PRINCIPAL, LINKS_INSTITUCIONAIS, LINK_APP_GUIA, LINK_MEUS_PEDIDOS } from '~/constants/navegacao'
 import { DADOS_INSTITUCIONAIS } from '~/constants/institucional'
 
 const config = useRuntimeConfig()
@@ -40,6 +40,9 @@ const canais = [
         <ul class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-white">
           <li v-for="link in LINKS_MENU_PRINCIPAL" :key="link.to">
             <NuxtLink :to="link.to" class="hover:text-orange-400">{{ link.label }}</NuxtLink>
+          </li>
+          <li>
+            <NuxtLink :to="LINK_MEUS_PEDIDOS.to" class="hover:text-orange-400">{{ LINK_MEUS_PEDIDOS.label }}</NuxtLink>
           </li>
           <li>
             <a :href="LINK_APP_GUIA.href" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-orange-400">

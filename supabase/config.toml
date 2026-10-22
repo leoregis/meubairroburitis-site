@@ -26,3 +26,8 @@ verify_jwt = true
 # o Mercado Pago não envia um JWT do Supabase — a autenticidade da chamada
 # é garantida pela validação de x-signature dentro da função, não aqui.
 verify_jwt = false
+
+[functions.meus_pedidos_codigo]
+# visitante sem login (exige só a anon key); a proteção são os limites por
+# número, por IP e o teto diário no banco (meus_pedidos_preparar_codigo).
+verify_jwt = true

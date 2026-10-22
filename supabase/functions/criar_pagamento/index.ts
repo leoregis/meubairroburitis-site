@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 import { ehHoneypotPreenchido, nomeValido, telefoneValido } from "../_shared/validar-comprador.ts";
+import { normalizarTelefone } from "../_shared/telefone.ts";
 import { enviarConfirmacaoUmaVez } from "../_shared/enviar-email.ts";
 
 const corsHeaders = {
@@ -165,7 +166,8 @@ Deno.serve(async (req) => {
       .from("pedidos")
       .insert({
         nome_comprador: comprador.nome,
-        telefone_comprador: comprador.telefone,
+        // 22/out: um formato só (55 + DDD + número), para o "Meus pedidos" e a Central
+        telefone_comprador: normalizarTelefone(comprador.telefone),
         email_comprador: comprador.email ?? null,
         itens: itensComPreco,
         valor_total_centavos: valorTotalCentavos,

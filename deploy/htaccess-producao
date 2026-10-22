@@ -678,7 +678,8 @@ RewriteRule ^(.*)$ /_current/$1/index.html [L]
 
 # senao: shell client-only (200.html) SÓ pras rotas que não têm HTML
 # pré-gerado de propósito -- as mesmas marcadas com prerender:false em
-# routeRules no nuxt.config.ts: /carrinho, /pedido/[id] e /admin/*. O Vue
+# routeRules no nuxt.config.ts: /carrinho, /meus-pedidos, /pedido/[id] e
+# /admin/*. O Vue
 # Router assume dali. Qualquer outro caminho que chegou até aqui não existe
 # (as 3 regras acima já teriam achado o arquivo) e cai no 404 nativo do
 # Apache, que serve a página de erro real (ErrorDocument 404 no topo).
@@ -689,10 +690,10 @@ RewriteRule ^(.*)$ /_current/$1/index.html [L]
 # título vazio, index,follow). ATENÇÃO: página nova só client-side
 # (prerender:false) precisa entrar nesta lista, senão dá 404 no acesso
 # direto.
-RewriteCond %{REQUEST_URI} ^/(carrinho/?$|pedido/|admin(/|$))
+RewriteCond %{REQUEST_URI} ^/(carrinho/?$|meus-pedidos/?$|pedido/|admin(/|$))
 RewriteRule ^ /_current/200.html [L,E=MBB_NOINDEX:1]
 
-# 06/out -- noindex dessas 3 rotas no HEADER: o shell client-only sai com
+# 06/out -- noindex dessas rotas no HEADER: o shell client-only sai com
 # "index, follow" no HTML e o noindex só aparecia depois do JS. Depois do
 # rewrite interno acima o Apache renomeia a variável pra REDIRECT_*, por
 # isso as duas condições.

@@ -3,52 +3,28 @@
 // projeção mínima que a Central manda ao banco do site (acompanhamento_receber);
 // aqui só se lê pelo token (acompanhamento_por_link). Os textos de cada
 // situação ficam aqui: a Central manda só o código.
-const props = defineProps<{ token: string }>()
+// Em /meus-pedidos o pedido já vem da lista (meus_pedidos_listar), em `dados`.
+import type { Entrega, PedidoAcompanhamento } from '~/types/acompanhamento'
 
-interface Publicacao { canal: string | null, url: string, publicado_em: string }
-interface Entrega {
-  tipo: string
-  quantidade: number
-  situacao: string
-  previsto_para: string | null
-  com_horario: boolean
-  material_recebido_em: string | null
-  gravacao_para: string | null
-  gravacao_com_horario: boolean
-  publicado_em: string | null
-  publicacoes: Publicacao[]
-  aprovacao_link: string | null
-}
-interface Item { produto: string, quantidade: number, a_agendar: number, entregas: Entrega[] }
-interface Resposta {
-  encontrado: boolean
-  disponivel?: boolean
-  expirado?: boolean
-  numero?: number
-  data?: string
-  empresa?: string
-  cancelado?: boolean
-  em_aberto?: boolean
-  itens?: Item[]
-  atualizado_em?: string
-  // pedido feito no site: pago, ainda sem a venda registrada na Central
-  aguardando_registro?: boolean
-  // pedido feito no site: pagamento estornado/cancelado no Mercado Pago
-  pagamento_estornado?: boolean
-}
+const props = defineProps<{ token?: string, dados?: PedidoAcompanhamento }>()
 
 const config = useRuntimeConfig()
 const { $supabase } = useNuxtApp()
 const carregando = ref(true)
 const falhou = ref(false)
-const pedido = ref<Resposta | null>(null)
+const pedido = ref<PedidoAcompanhamento | null>(null)
 
 async function carregar() {
+  if (props.dados) {
+    pedido.value = { ...props.dados, encontrado: true, disponivel: !props.dados.expirado }
+    carregando.value = false
+    return
+  }
   carregando.value = true
   falhou.value = false
   const { data, error } = await $supabase.rpc('acompanhamento_por_link', { p_token: props.token })
   if (error) falhou.value = true
-  else pedido.value = data as Resposta
+  else pedido.value = data as PedidoAcompanhamento
   carregando.value = false
 }
 onMounted(carregar)
@@ -244,6 +220,16 @@ const linkWhatsapp = computed(() => {
           Falar no WhatsApp
         </a>
       </div>
+
+      <p v-if="token" class="mt-6 text-center">
+        <NuxtLink
+          to="/meus-pedidos"
+          class="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-orange-800 underline underline-offset-4 hover:text-orange-700"
+        >
+          Ver todos os seus pedidos
+          <Icon name="lucide:arrow-right" class="h-4 w-4" />
+        </NuxtLink>
+      </p>
     </template>
   </div>
 </template>

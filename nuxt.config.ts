@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     '/pedido/**': { prerender: false, robots: false },
     '/admin/**': { prerender: false, robots: false },
     '/carrinho': { prerender: false, robots: false },
+    '/meus-pedidos': { prerender: false, robots: false },
     // /noticias/pagina/N é indexável desde 06/out (antes "noindex,
     // nofollow" -- o nofollow impedia o robô de seguir até as notícias
     // mais antigas). Mesmo tratamento de /empresas/pagina/N: canonical

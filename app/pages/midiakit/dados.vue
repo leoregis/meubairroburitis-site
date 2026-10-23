@@ -6,7 +6,7 @@ useSeoMeta({
 
 const numeros = [
   { valor: '150 mil+', legenda: 'membros no maior grupo de bairros de BH, no Facebook' },
-  { valor: 'mais de 55 mil', legenda: 'seguidores no perfil comercial do Instagram' },
+  { valor: '55 mil+', legenda: 'seguidores no perfil comercial do Instagram' },
   { valor: 'desde 2012', legenda: 'site no ar, com design responsivo' },
 ]
 </script>

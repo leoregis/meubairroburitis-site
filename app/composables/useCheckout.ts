@@ -72,7 +72,10 @@ export function useCheckout() {
       }
 
       if (import.meta.client) {
-        sessionStorage.setItem(`mbb-pedido-${resposta.pedido_id}`, JSON.stringify(resposta))
+        // slugs dos produtos: o próximo passo da tela de pagamento confirmado
+        // varia pelo que foi comprado (o carrinho é limpo logo depois)
+        const slugs = [...new Set(itens.value.map((i) => i.slug))]
+        sessionStorage.setItem(`mbb-pedido-${resposta.pedido_id}`, JSON.stringify({ ...resposta, slugs }))
       }
 
       return resposta

@@ -12,9 +12,15 @@ export const PRODUTOS_SEED: Produto[] = [
     id: 'seed-mbb-basic',
     slug: 'mbb-basic',
     nome: 'MBB Basic',
-    descricao_curta: '4 aparições mensais (mix de Stories + Colab) — 1 por semana.',
+    descricao_curta: '5 aparições por mês: 1 Story por semana + 1 Colab. Sua marca sempre lembrada no bairro.',
     descricao:
-      'Recomendado para negócios que desejam presença contínua no bairro com investimento acessível. Entrega distribuída em 1 Story por semana e 1 Colab por mês.',
+      'Quem é visto toda semana é lembrado na hora da compra. Com o MBB Basic, sua empresa aparece de forma constante para os moradores do Buritis e do Estoril, sem pesar no orçamento.
+
+Inclui, por mês:
+- 4 Stories no nosso Instagram, 1 por semana, nas datas e horários que você escolher
+- 1 Colab: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores
+
+Ideal para quem quer construir presença no bairro com investimento acessível. O conteúdo é enviado por você, pronto para publicar.',
     preco_centavos: 24900,
     imagem_url: '/produtos/mbb-basic.jpeg',
     ordem: 1,
@@ -23,9 +29,15 @@ export const PRODUTOS_SEED: Produto[] = [
     id: 'seed-mbb-premium',
     slug: 'mbb-premium',
     nome: 'MBB Premium',
-    descricao_curta: '8 aparições mensais (Stories + Colabs) — 2 por semana.',
+    descricao_curta: '10 aparições por mês: 2 Stories por semana + 2 Colabs. Presença forte para ser a referência do bairro.',
     descricao:
-      'Indicado para negócios que desejam presença forte e competitiva no bairro, mantendo lembrança, preferência e referência local. Entrega distribuída em 2 Stories por semana e 1 Colab a cada 15 dias.',
+      'Para quem quer ser a primeira lembrança do morador quando ele precisa do que você oferece. O MBB Premium dobra a frequência do Basic e coloca sua marca no dia a dia de quem vive o Buritis e o Estoril.
+
+Inclui, por mês:
+- 8 Stories no nosso Instagram, 2 por semana, nas datas e horários que você escolher
+- 2 Colabs, 1 a cada 15 dias: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores
+
+Ideal para lançamentos, negócios em crescimento e mercados disputados, que precisam de presença constante. O conteúdo é enviado por você, pronto para publicar.',
     preco_centavos: 54900,
     imagem_url: '/produtos/mbb-premium.jpeg',
     ordem: 2,
@@ -36,7 +48,7 @@ export const PRODUTOS_SEED: Produto[] = [
     nome: 'Produção de vídeo Reels',
     descricao_curta: 'Vídeo comercial de até 1 minuto, produzido pela nossa equipe.',
     descricao:
-      'Produção de um vídeo comercial de até 1 minuto por conta da equipe Meu Bairro Buritis. Garante 1 post Reels no Instagram, TikTok, Twitter e grupos do Facebook e Telegram. Inclui apresentadora, captação profissional e edição de alta qualidade. Entrega em até 7 dias úteis após a gravação.',
+      'Produção de um vídeo comercial de até 1 minuto por conta da equipe Meu Bairro Buritis. Garante 1 post Reels no Instagram, TikTok e grupos do Facebook, WhatsApp e Telegram. Inclui apresentadora, captação profissional e edição de alta qualidade. Entrega em até 7 dias após a gravação.',
     preco_centavos: 54900,
     imagem_url: '/produtos/producao-de-video-reels.jpg',
     ordem: 3,

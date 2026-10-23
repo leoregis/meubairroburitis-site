@@ -13,7 +13,7 @@ const faq = [
   {
     pergunta: 'Vocês criam o anúncio?',
     resposta:
-      'Na Produção de Vídeo, sim. Nos outros formatos, o conteúdo (texto, imagens e/ou vídeos) deve ser enviado pronto, com data e horário de publicação definidos.',
+      'Na Produção de Vídeo e no Conteúdo Publicitário Especial, sim: a produção é feita pela nossa equipe. Nos Stories, Colabs e pacotes mensais, o conteúdo (texto, imagens e/ou vídeos) deve ser enviado pronto, com data e horário de publicação definidos.',
   },
   {
     pergunta: 'Posso pagar depois que meu anúncio for publicado?',
@@ -26,7 +26,7 @@ const faq = [
   {
     pergunta: 'Quero anunciar mas não entendo nada dessas coisas. Como faço?',
     resposta:
-      'Nesse caso o melhor é optar pela Produção de Vídeo ou procurar um profissional de social media. Podemos indicar profissionais parceiros — fale conosco pelo WhatsApp.',
+      'Nesse caso, as melhores opções são a Produção de Vídeo e o Conteúdo Publicitário Especial: nelas a nossa equipe faz tudo, você só nos passa as informações. Se preferir, também podemos indicar profissionais de social media parceiros — fale conosco pelo WhatsApp.',
   },
   {
     pergunta: 'Minha loja fica em outro bairro. Posso anunciar?',

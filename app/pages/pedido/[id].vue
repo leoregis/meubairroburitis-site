@@ -26,6 +26,7 @@ interface PedidoSalvo {
   status: string
   qr_code?: string
   qr_code_base64?: string
+  slugs?: string[]
 }
 
 const pedidoSalvo = ref<PedidoSalvo | null>(null)
@@ -118,12 +119,57 @@ async function verificarPagamento() {
   verificando.value = false
 }
 
-const mensagemWhatsapp = computed(() =>
-  encodeURIComponent(
-    `Olá! Meu pedido #${pedidoId.slice(0, 8)} foi confirmado. Segue o material do anúncio (imagem/vídeo/texto):`,
-  ),
+// próximo passo pelo tipo de produto comprado. Os slugs vêm do sessionStorage
+// gravado no checkout; sem eles (outro aparelho, aba nova) ou com tipos
+// diferentes no mesmo pedido, vale o passo genérico.
+const numeroPedido = `#${pedidoId.slice(0, 8)}`
+const PASSOS = {
+  material: {
+    titulo: 'Próximo passo: envie o seu material.',
+    texto: 'Mande no nosso WhatsApp a imagem, o vídeo ou o texto que você quer publicar, com as datas e horários desejados.',
+    botao: 'Enviar material no WhatsApp',
+    mensagem: `Olá! Meu pedido ${numeroPedido} foi confirmado. Segue o material do anúncio, com as datas e horários desejados:`,
+  },
+  colab: {
+    titulo: 'Próximo passo: vamos combinar a data do seu Colab.',
+    texto: 'Quando publicar o Reels no seu perfil, convide o @meubairroburitis como colaborador.',
+    botao: 'Combinar no WhatsApp',
+    mensagem: `Olá! Meu pedido ${numeroPedido} foi confirmado. Quero combinar a data do meu Colab.`,
+  },
+  gravacao: {
+    titulo: 'Próximo passo: vamos agendar a gravação.',
+    texto: 'Fale com a gente no WhatsApp para escolher o dia e alinhar a ideia do seu vídeo.',
+    botao: 'Agendar gravação no WhatsApp',
+    mensagem: `Olá! Meu pedido ${numeroPedido} foi confirmado. Quero agendar a gravação do meu vídeo.`,
+  },
+  informacoes: {
+    titulo: 'Próximo passo: conte pra gente sobre a sua empresa.',
+    texto: 'Mande no WhatsApp o que você quer divulgar, com fotos, logotipo e o link de destino. Nossa equipe produz a matéria e você aprova antes da publicação.',
+    botao: 'Enviar informações no WhatsApp',
+    mensagem: `Olá! Meu pedido ${numeroPedido} foi confirmado. Seguem as informações para o Conteúdo Publicitário Especial:`,
+  },
+  misto: {
+    titulo: 'Próximo passo: fale com a gente no WhatsApp para combinarmos o material e as datas de cada item do seu pedido.',
+    texto: '',
+    botao: 'Falar no WhatsApp',
+    mensagem: `Olá! Meu pedido ${numeroPedido} foi confirmado. Quero combinar o material e as datas de cada item.`,
+  },
+} as const
+const TIPO_POR_SLUG: Record<string, keyof typeof PASSOS> = {
+  'stories-no-instagram': 'material',
+  'mbb-basic': 'material',
+  'mbb-premium': 'material',
+  'colab-insta': 'colab',
+  'producao-de-video-reels': 'gravacao',
+  'conteudo-publicitario-especial': 'informacoes',
+}
+const proximoPasso = computed(() => {
+  const tipos = new Set((pedidoSalvo.value?.slugs ?? []).map((s) => TIPO_POR_SLUG[s] ?? 'misto'))
+  return PASSOS[tipos.size === 1 ? [...tipos][0]! : 'misto']
+})
+const linkWhatsapp = computed(
+  () => `https://wa.me/${config.public.whatsappNumero}?text=${encodeURIComponent(proximoPasso.value.mensagem)}`,
 )
-const linkWhatsapp = computed(() => `https://wa.me/${config.public.whatsappNumero}?text=${mensagemWhatsapp.value}`)
 </script>
 
 <template>
@@ -137,18 +183,15 @@ const linkWhatsapp = computed(() => `https://wa.me/${config.public.whatsappNumer
       </p>
 
       <div class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 text-left">
-        <p class="font-semibold text-stone-900">Próximo passo: envie o material do seu anúncio</p>
-        <p class="mt-2 text-sm text-stone-600">
-          Nos mande a imagem, vídeo ou texto que você quer publicar, junto com a data/horário desejados,
-          direto no nosso WhatsApp.
-        </p>
+        <p class="font-semibold text-stone-900">{{ proximoPasso.titulo }}</p>
+        <p v-if="proximoPasso.texto" class="mt-2 text-sm text-stone-600">{{ proximoPasso.texto }}</p>
         <a
           :href="linkWhatsapp"
           target="_blank"
           rel="noopener noreferrer"
           class="mt-4 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white hover:bg-orange-700"
         >
-          Enviar material no WhatsApp
+          {{ proximoPasso.botao }}
         </a>
       </div>
 

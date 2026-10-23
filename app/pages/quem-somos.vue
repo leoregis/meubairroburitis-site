@@ -130,7 +130,7 @@ const marcos = [
     ano: '2026',
     titulo: 'Uma comunidade com mais de 150 mil membros',
     texto:
-      'Mais de uma década depois de sua criação, o Meu Bairro Buritis reúne uma comunidade que ultrapassa 150 mil pessoas no Facebook e mais de 56 mil seguidores no Instagram, além de presença ativa no WhatsApp, Telegram, YouTube e TikTok — consolidando-se como um dos principais canais digitais de informação e interação comunitária do Buritis e do Estoril.',
+      'Mais de uma década depois de sua criação, o Meu Bairro Buritis reúne uma comunidade que ultrapassa 150 mil pessoas no Facebook e mais de 55 mil seguidores no Instagram, além de presença ativa no WhatsApp, Telegram, YouTube e TikTok — consolidando-se como um dos principais canais digitais de informação e interação comunitária do Buritis e do Estoril.',
     link: null,
   },
   {

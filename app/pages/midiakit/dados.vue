@@ -1,12 +1,12 @@
 <script setup lang="ts">
 useSeoMeta({
   title: 'Dados de alcance — Midiakit Meu Bairro Buritis',
-  description: 'Mais de 150 mil membros no Facebook e 55 mil seguidores no Instagram. Veja o alcance real do Meu Bairro Buritis.',
+  description: 'Mais de 150 mil membros no Facebook e mais de 55 mil seguidores no Instagram. Veja o alcance real do Meu Bairro Buritis.',
 })
 
 const numeros = [
   { valor: '150 mil+', legenda: 'membros no maior grupo de bairros de BH, no Facebook' },
-  { valor: '~55 mil', legenda: 'seguidores no perfil comercial do Instagram' },
+  { valor: 'mais de 55 mil', legenda: 'seguidores no perfil comercial do Instagram' },
   { valor: 'desde 2012', legenda: 'site no ar, com design responsivo' },
 ]
 </script>
@@ -35,7 +35,7 @@ const numeros = [
       </p>
       <p>
         Também estamos presentes com um perfil comercial no Instagram, além de grupo no Telegram,
-        perfis no TikTok, Threads e X (antigo Twitter), grupos no WhatsApp e um canal no YouTube.
+        perfis no TikTok e no Threads, grupos no WhatsApp e um canal no YouTube.
       </p>
       <p>
         Além da vida online, participamos da vida offline da região — já apoiamos feiras

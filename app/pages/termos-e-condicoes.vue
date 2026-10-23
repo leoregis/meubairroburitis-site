@@ -23,15 +23,15 @@ useSeoMeta({
 
     <div class="mx-auto max-w-2xl px-4 py-16">
       <div class="prose prose-stone max-w-none">
-        <p class="text-sm text-stone-500">Última atualização: setembro de 2026</p>
+        <p class="text-sm text-stone-500">Última atualização: outubro de 2026</p>
 
         <h2>1. Sobre o Meu Bairro Buritis</h2>
         <p>
           O Meu Bairro Buritis (<a href="https://meubairroburitis.com.br">meubairroburitis.com.br</a>)
           é um portal de comunicação hiperlocal dos bairros Buritis e Estoril, em Belo Horizonte.
           Reunimos um diretório de empresas e prestadores de serviços da região, conteúdo
-          jornalístico e informativo sobre o bairro, e o aplicativo Guia Buritis. Ao acessar e usar
-          este site, você concorda com os termos descritos abaixo.
+          jornalístico e informativo sobre o bairro, o aplicativo Guia Buritis e a venda de pacotes de
+          anúncio nos nossos canais. Ao acessar e usar este site, você concorda com os termos descritos abaixo.
         </p>
 
         <h2>2. Natureza do conteúdo</h2>
@@ -68,22 +68,57 @@ useSeoMeta({
           prestadores cadastrados permanecem de titularidade dos respectivos responsáveis.
         </p>
 
-        <h2>6. Alterações nestes termos</h2>
+        <h2>6. Compra de pacotes de anúncio</h2>
+        <p>
+          <strong>Pagamento.</strong> Os pacotes são pagos antecipadamente, por Pix ou cartão de
+          crédito, com processamento pelo Mercado Pago. No cartão, o parcelamento segue as condições
+          exibidas no pagamento, com juros da operadora. O Meu Bairro Buritis não armazena dados de
+          cartão.
+        </p>
+        <p>
+          <strong>Agendamento e publicação.</strong> Após a confirmação do pagamento, entramos em
+          contato pelo WhatsApp para combinar datas e materiais. As publicações seguem as regras de
+          cada formato descritas na página do produto e no Midiakit, e dependem da disponibilidade da
+          agenda. Os pacotes mensais correspondem a um mês de publicações.
+        </p>
+        <p>
+          <strong>Conteúdo do anunciante.</strong> Nos formatos em que o material é enviado pelo
+          anunciante, ele é responsável pelo conteúdo e pelos direitos sobre textos, imagens, vídeos e
+          marcas. Não publicamos anúncios de empresas fora do Buritis e bairros vizinhos, conteúdo
+          sexual, armas, conteúdo religioso, concorrentes diretos, drogas ou substâncias ilícitas, nem
+          conteúdo que viole a lei ou direitos de terceiros. Se o material não puder ser publicado, o
+          anunciante poderá ajustá-lo ou pedir o reembolso dos itens não realizados.
+        </p>
+        <p>
+          <strong>Resultados.</strong> Vendemos espaço, frequência e produção de conteúdo. Alcance,
+          visualizações e vendas dependem do conteúdo e do interesse do público, e não são garantidos.
+        </p>
+        <p>
+          <strong>Desistência.</strong> O comprador pode desistir da compra em até 7 dias corridos a
+          partir da confirmação do pagamento, com reembolso integral pelo mesmo meio de pagamento,
+          bastando avisar pelo WhatsApp ou e-mail. Depois desse prazo, pedidos de cancelamento são
+          analisados caso a caso, e publicações ainda não realizadas podem ser remarcadas.
+        </p>
+        <p>
+          <strong>Estorno.</strong> Se o pagamento for contestado ou estornado no Mercado Pago, as
+          publicações pendentes ficam suspensas até a regularização.
+        </p>
+        <p>
+          <strong>Acompanhamento.</strong> Cada pedido tem um link de acompanhamento, enviado por
+          e-mail, e todos os pedidos podem ser consultados em
+          <NuxtLink to="/meus-pedidos">Meus pedidos</NuxtLink>, com um código enviado pelo WhatsApp.
+        </p>
+
+        <h2>7. Alterações nestes termos</h2>
         <p>
           Este documento pode ser atualizado periodicamente para refletir mudanças no site ou na
           legislação aplicável. Recomendamos consultar esta página regularmente.
         </p>
 
-        <h2>7. Contato</h2>
+        <h2>8. Contato</h2>
         <p>
           Dúvidas, solicitações de remoção de conteúdo ou correções podem ser enviadas através dos
           nossos canais oficiais, disponíveis na página <NuxtLink to="/quem-somos">Quem Somos</NuxtLink>.
-        </p>
-
-        <p class="mt-10 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          <strong>Aviso:</strong> este texto é um modelo genérico de termos de uso e não substitui
-          orientação jurídica. Antes de considerá-lo suficiente para qualquer obrigação legal real,
-          é necessário que seja revisado e ajustado por um advogado.
         </p>
       </div>
     </div>

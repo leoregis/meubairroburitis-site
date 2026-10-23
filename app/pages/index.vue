@@ -3,7 +3,7 @@ import { ORGANIZACAO_SCHEMA } from '~/constants/institucional'
 
 const tituloHome = 'Meu Bairro Buritis — Anuncie no Buritis e Estoril'
 const descricaoHome =
-  'A maior comunidade online do Buritis e Estoril desde 2012. Mais de 150 mil pessoas no Facebook e 55 mil no Instagram. Anuncie sua empresa com quem realmente vive o bairro.'
+  'A maior comunidade online do Buritis e Estoril desde 2012. Mais de 150 mil pessoas no Facebook e mais de 55 mil no Instagram. Anuncie sua empresa com quem realmente vive o bairro.'
 
 // og:image precisa ser URL absoluta -- WhatsApp/Facebook não resolvem
 // caminho relativo, e a home saía sem preview nenhum ao ser compartilhada.

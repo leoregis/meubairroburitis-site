@@ -14,13 +14,7 @@ export const PRODUTOS_SEED: Produto[] = [
     nome: 'MBB Basic',
     descricao_curta: '5 aparições por mês: 1 Story por semana + 1 Colab. Sua marca sempre lembrada no bairro.',
     descricao:
-      'Quem é visto toda semana é lembrado na hora da compra. Com o MBB Basic, sua empresa aparece de forma constante para os moradores do Buritis e do Estoril, sem pesar no orçamento.
-
-Inclui, por mês:
-- 4 Stories no nosso Instagram, 1 por semana, nas datas e horários que você escolher
-- 1 Colab: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores
-
-Ideal para quem quer construir presença no bairro com investimento acessível. O conteúdo é enviado por você, pronto para publicar.',
+      'Quem é visto toda semana é lembrado na hora da compra. Com o MBB Basic, sua empresa aparece de forma constante para os moradores do Buritis e do Estoril, sem pesar no orçamento.\n\nInclui, por mês:\n- 4 Stories no nosso Instagram, 1 por semana, nas datas e horários que você escolher\n- 1 Colab: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores\n\nIdeal para quem quer construir presença no bairro com investimento acessível. O conteúdo é enviado por você, pronto para publicar.',
     preco_centavos: 24900,
     imagem_url: '/produtos/mbb-basic.jpeg',
     ordem: 1,
@@ -31,13 +25,7 @@ Ideal para quem quer construir presença no bairro com investimento acessível. 
     nome: 'MBB Premium',
     descricao_curta: '10 aparições por mês: 2 Stories por semana + 2 Colabs. Presença forte para ser a referência do bairro.',
     descricao:
-      'Para quem quer ser a primeira lembrança do morador quando ele precisa do que você oferece. O MBB Premium dobra a frequência do Basic e coloca sua marca no dia a dia de quem vive o Buritis e o Estoril.
-
-Inclui, por mês:
-- 8 Stories no nosso Instagram, 2 por semana, nas datas e horários que você escolher
-- 2 Colabs, 1 a cada 15 dias: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores
-
-Ideal para lançamentos, negócios em crescimento e mercados disputados, que precisam de presença constante. O conteúdo é enviado por você, pronto para publicar.',
+      'Para quem quer ser a primeira lembrança do morador quando ele precisa do que você oferece. O MBB Premium dobra a frequência do Basic e coloca sua marca no dia a dia de quem vive o Buritis e o Estoril.\n\nInclui, por mês:\n- 8 Stories no nosso Instagram, 2 por semana, nas datas e horários que você escolher\n- 2 Colabs, 1 a cada 15 dias: seu Reels publicado em parceria com o @meubairroburitis e exibido também para os nossos seguidores\n\nIdeal para lançamentos, negócios em crescimento e mercados disputados, que precisam de presença constante. O conteúdo é enviado por você, pronto para publicar.',
     preco_centavos: 54900,
     imagem_url: '/produtos/mbb-premium.jpeg',
     ordem: 2,

@@ -15,8 +15,8 @@ const { data: produtos } = await useProdutos()
         Pacotes de anúncio
       </h1>
       <p class="mx-auto mt-3 max-w-lg text-stone-600">
-        Sem processamento de cartão por aqui — monte seu pedido e finalize a contratação direto no
-        WhatsApp.
+        Escolha seu pacote e pague com Pix ou cartão aqui mesmo. Prefere conversar antes? Fale com a
+        gente pelo WhatsApp.
       </p>
     </div>
 

@@ -26,7 +26,7 @@ vitrine — meta tags e Schema.org já embutidos no HTML, sem depender de JS no 
 ## Estrutura
 
 Ver o plano de arquitetura em
-`C:\Users\leore\.claude\plans\rippling-jumping-dongarra.md` para o racional completo
+`%USERPROFILE%\.claude\plans\rippling-jumping-dongarra.md` para o racional completo
 (stack, rotas, modelo de dados, deploy).
 
 ## Deploy

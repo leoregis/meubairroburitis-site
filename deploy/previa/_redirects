@@ -1,0 +1,7 @@
+# Prévia do redesign.
+# O app Guia não é deste build: manda para a produção.
+/guia https://meubairroburitis.com.br/guia/ 302
+/guia/* https://meubairroburitis.com.br/guia/:splat 302
+# Admin nunca roda na prévia (login usaria o Auth da produção).
+/admin / 302
+/admin/* / 302

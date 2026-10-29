@@ -72,6 +72,13 @@ export default defineNuxtConfig({
 
   icon: {
     serverBundle: false,
+    // redesign: os ícones usados nos componentes vão no JS do cliente. Sem
+    // isso, um ícone que só aparece no navegador (ex.: o X do menu do
+    // celular, montado ao abrir) era buscado na API do Iconify em tempo de
+    // execução -- chegava tarde, e a CSP da prévia só libera a API por isso.
+    clientBundle: {
+      scan: true,
+    },
   },
 
   // Storage do Supabase do site (upload de capas pelo admin) liberado no
@@ -86,7 +93,17 @@ export default defineNuxtConfig({
   // instala o @nuxtjs/tailwindcss, que injeta o próprio tailwind.css (com
   // @tailwind base/components/utilities). O main.css repetia as mesmas 3
   // diretivas -- o Tailwind inteiro saía DUAS vezes inline no <head> de
-  // toda página (~220KB antes das tags og:*).
+  // toda página (~220KB antes das tags og:*). O fonte.css (redesign) só tem
+  // @font-face, sem nenhuma diretiva @tailwind.
+  css: ['~/assets/css/fonte.css'],
+
+  // tokens da marca. Dentro de app/ (e não na raiz, onde o módulo procura
+  // por padrão) para entrar no hash do MBB_BUILD_ID do deploy.yml, que só
+  // olha app/, nuxt.config.ts e package*.json: CSS novo com buildId antigo
+  // misturaria estilos num build incremental.
+  tailwindcss: {
+    configPath: '~/tailwind.config',
+  },
 
   app: {
     head: {
@@ -155,8 +172,10 @@ export default defineNuxtConfig({
     name: 'Meu Bairro Buritis',
     defaultLocale: 'pt-BR',
     // MBB_STAGING=1 (deploy-staging.yml): o build de teste em /_staging_test/
-    // sai com noindex, nofollow em toda página.
-    ...(process.env.MBB_STAGING === '1' ? { indexable: false } : {}),
+    // sai com noindex, nofollow em toda página. MBB_PREVIA=1 (prévia do
+    // redesign, deploy/previa/): idem, e o robots.txt da prévia sai com
+    // Disallow: / -- o canonical continua apontando pra produção (site.url).
+    ...(process.env.MBB_STAGING === '1' || process.env.MBB_PREVIA === '1' ? { indexable: false } : {}),
   },
 
   // geração automática de OG image via satori está quebrando no build
@@ -181,6 +200,10 @@ export default defineNuxtConfig({
       // NUXT_PUBLIC_SUPABASE_URL acima (que é o do site).
       meubairroAppSupabaseUrl: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL || '',
       meubairroAppSupabaseAnonKey: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY || '',
+      // prévia do redesign (deploy/previa/): lê o banco de produção, mas não
+      // pode gravar nada nele -- ver usePrevia() e as travas no carrinho,
+      // em /meus-pedidos e em /links.
+      previa: process.env.MBB_PREVIA === '1',
     },
   },
 

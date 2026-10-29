@@ -1,88 +1,80 @@
 <script setup lang="ts">
-import { LINKS_MENU_PRINCIPAL, LINKS_INSTITUCIONAIS, LINK_APP_GUIA, LINK_MEUS_PEDIDOS } from '~/constants/navegacao'
+// Rodapé escuro (redesign, fase 1). Leva todos os links que saíram do
+// cabeçalho (Quem Somos, Midiakit, Canais) -- ver constants/navegacao.ts.
+import { LINKS_RODAPE_NAVEGACAO, LINKS_INSTITUCIONAIS, LINK_APP_GUIA, LINK_MEUS_PEDIDOS, redesOficiais } from '~/constants/navegacao'
 import { DADOS_INSTITUCIONAIS } from '~/constants/institucional'
 
 const config = useRuntimeConfig()
+const redes = redesOficiais(config.public.whatsappNumero)
 
-// Quem Somos já está na coluna Navegação (menu principal) -- não repete aqui.
-const linksInstitucionais = LINKS_INSTITUCIONAIS.filter(
-  (link) => !LINKS_MENU_PRINCIPAL.some((menu) => menu.to === link.to),
-)
-
-const canais = [
-  { label: 'Instagram', href: 'https://www.instagram.com/meubairroburitis/', icon: 'lucide:instagram' },
-  { label: 'Facebook', href: 'https://www.facebook.com/MeuBairroBuritis/', icon: 'lucide:facebook' },
-  { label: 'Grupo Facebook', href: 'https://www.facebook.com/groups/MeuBairroBuritisGrupo', icon: 'lucide:users' },
-  { label: 'WhatsApp', href: `https://wa.me/${config.public.whatsappNumero}`, icon: 'lucide:message-circle' },
-  { label: 'E-mail', href: `mailto:${DADOS_INSTITUCIONAIS.emailContato}`, icon: 'lucide:mail' },
-  { label: 'TikTok', href: 'https://www.tiktok.com/@meubairroburitis', icon: 'lucide:music-2' },
-]
+const link = 'inline-flex min-h-[32px] items-center text-white underline-offset-2 hover:text-brand-soft hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+const titulo = 'm-0 mb-2 text-sm font-bold text-brand-soft'
 </script>
 
 <template>
-  <footer class="bg-stone-900">
-    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
-      <div>
-        <NuxtPicture
-          src="/logo/logo-mbb-registrada-branca.png"
-          alt="Meu Bairro Buritis e Região"
-          format="webp"
-          :width="140"
-          :height="72"
-          sizes="140px"
-          :img-attrs="{ class: 'mb-3 h-9 w-auto' }"
-        />
-        <p class="text-sm text-stone-300">A maior comunidade online do Buritis e Estoril, desde 2012.</p>
+  <!-- pb maior no celular: o botão flutuante do WhatsApp não cobre a última linha -->
+  <footer class="bg-ink text-white">
+    <div class="mx-auto max-w-site px-4 pb-28 pt-12 md:px-6 md:pb-8">
+      <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.3fr_1fr]">
+        <div class="flex flex-col gap-3.5">
+          <NuxtPicture
+            src="/logo/logo-mbb-registrada-branca.png"
+            alt="Meu Bairro Buritis e Região BH"
+            format="webp"
+            :width="124"
+            :height="64"
+            sizes="124px"
+            loading="lazy"
+            :img-attrs="{ class: 'block h-16 w-auto' }"
+          />
+          <p class="m-0 max-w-xs text-sm leading-[21px]">
+            A maior comunidade online do Buritis e do Estoril, desde {{ DADOS_INSTITUCIONAIS.anoCriacao }}.
+          </p>
+        </div>
+
+        <nav aria-labelledby="rodape-navegacao">
+          <p id="rodape-navegacao" :class="titulo">Navegação</p>
+          <ul class="list-none p-0 text-sm">
+            <li v-for="item in LINKS_RODAPE_NAVEGACAO" :key="item.to">
+              <NuxtLink :to="item.to" :class="link">{{ item.label }}</NuxtLink>
+            </li>
+            <li><NuxtLink :to="LINK_MEUS_PEDIDOS.to" :class="link">{{ LINK_MEUS_PEDIDOS.label }}</NuxtLink></li>
+            <li>
+              <a :href="LINK_APP_GUIA.href" target="_blank" rel="noopener noreferrer" :class="link">
+                App {{ LINK_APP_GUIA.label }}<span class="sr-only"> (abre em nova aba)</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <nav aria-labelledby="rodape-institucional">
+          <p id="rodape-institucional" :class="titulo">Institucional</p>
+          <ul class="list-none p-0 text-sm">
+            <li v-for="item in LINKS_INSTITUCIONAIS" :key="item.to">
+              <NuxtLink :to="item.to" :class="link">{{ item.label }}</NuxtLink>
+            </li>
+            <li><NuxtLink to="/o-bairro-buritis" :class="link">O Bairro Buritis</NuxtLink></li>
+          </ul>
+        </nav>
+
+        <nav aria-labelledby="rodape-redes">
+          <p id="rodape-redes" :class="titulo">Redes</p>
+          <ul class="list-none p-0 text-sm">
+            <li v-for="rede in redes" :key="rede.label">
+              <a :href="rede.href" target="_blank" rel="noopener noreferrer" :class="link">
+                {{ rede.label }}<span class="sr-only"> (abre em nova aba)</span>
+              </a>
+            </li>
+            <li><a :href="`mailto:${DADOS_INSTITUCIONAIS.emailContato}`" :class="link">E-mail</a></li>
+            <li><NuxtLink to="/canais" :class="link">Todos os canais</NuxtLink></li>
+          </ul>
+        </nav>
       </div>
 
-      <div>
-        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">Navegação</p>
-        <ul class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-white">
-          <li v-for="link in LINKS_MENU_PRINCIPAL" :key="link.to">
-            <NuxtLink :to="link.to" class="hover:text-orange-400">{{ link.label }}</NuxtLink>
-          </li>
-          <li>
-            <NuxtLink :to="LINK_MEUS_PEDIDOS.to" class="hover:text-orange-400">{{ LINK_MEUS_PEDIDOS.label }}</NuxtLink>
-          </li>
-          <li>
-            <a :href="LINK_APP_GUIA.href" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 hover:text-orange-400">
-              <Icon name="lucide:smartphone" class="h-4 w-4" />
-              {{ LINK_APP_GUIA.label }} (app)
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">Institucional</p>
-        <ul class="space-y-2 text-sm text-white">
-          <li v-for="link in linksInstitucionais" :key="link.to">
-            <NuxtLink :to="link.to" class="hover:text-orange-400">{{ link.label }}</NuxtLink>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400">Redes sociais</p>
-        <ul class="flex flex-wrap gap-3">
-          <li v-for="canal in canais" :key="canal.href">
-            <a
-              :href="canal.href"
-              target="_blank"
-              rel="noopener noreferrer"
-              :aria-label="canal.label"
-              class="flex h-9 w-9 items-center justify-center rounded-full bg-stone-800 text-white shadow-sm hover:bg-orange-600"
-            >
-              <Icon :name="canal.icon" class="h-5 w-5" />
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="border-t border-stone-800 px-4 py-4 text-center text-xs text-stone-400">
-      © {{ new Date().getFullYear() }} Meu Bairro Buritis. Todos os direitos reservados.
-      <span class="mt-1 block">Meu Bairro Buritis® é marca registrada.</span>
+      <p class="m-0 mt-10 border-t border-white/20 pt-5 text-xs leading-5">
+        © {{ new Date().getFullYear() }} Meu Bairro Buritis. Todos os direitos reservados.
+        Meu Bairro Buritis® é marca registrada.
+      </p>
     </div>
   </footer>
 </template>

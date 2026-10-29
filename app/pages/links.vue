@@ -8,6 +8,7 @@ useSeoMeta({
 
 const config = useRuntimeConfig()
 const { $supabase } = useNuxtApp()
+const { ehPrevia } = usePrevia()
 
 // links internos usam NuxtLink (mesma aba, sem custo de reload) -- só os
 // realmente externos (app separado em /guia, ou fora do domínio) abrem em
@@ -41,7 +42,7 @@ const redes = [
 // por qualquer motivo -- é só telemetria, não pode ser o que decide se o
 // visitante consegue sair da página.
 function registrarClique(slug: string) {
-  if (!$supabase) return
+  if (!$supabase || ehPrevia) return
   $supabase
     .from('links_bio_cliques')
     .insert({ link_slug: slug, user_agent: navigator.userAgent })

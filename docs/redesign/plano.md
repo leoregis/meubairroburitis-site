@@ -95,7 +95,7 @@ Layouts: `default` (Header, Footer, WhatsappFloat, ToastCarrinho), `bio` (sem mo
 
 ### 1.4 Tokens (proposta técnica)
 
-São os tokens do Guia, em `tailwind.config.ts` (novo) como cores nomeadas e em `app.config.ts`. O `primary` passa a ser uma paleta `marca`, de 50 a 950, gerada em torno de `#D92B2B`, para o caso de algum componente do Nuxt UI entrar depois.
+São os tokens do Guia, em `app/tailwind.config.ts` (novo; dentro de `app/` para entrar no hash `MBB_BUILD_ID` do deploy) como cores nomeadas e em `app.config.ts`. O `primary` passa a ser uma paleta `marca`, de 50 a 950, gerada em torno de `#D92B2B`, para o caso de algum componente do Nuxt UI entrar depois.
 
 | Token | Valor | Uso | Contraste conferido |
 |---|---|---|---|
@@ -114,7 +114,9 @@ São os tokens do Guia, em `tailwind.config.ts` (novo) como cores nomeadas e em 
 | `star` | `#F5A524` | só a estrela, nunca texto | |
 | `success` / `success-ink` | `#1F8A4C` / `#1A6E3E` | "Aberto", WhatsApp | |
 
-- **Fonte:** Plus Jakarta Sans servida pelo próprio site com `@fontsource-variable/plus-jakarta-sans`, subconjunto latino e `woff2` pré-carregado. Nada de Google Fonts em tempo de execução: é mais rápido e não envia o IP do visitante ao Google (LGPD). É a única dependência nova prevista e muda o `package-lock`.
+- **Fonte:** Plus Jakarta Sans servida pelo próprio site. Nada de Google Fonts em tempo de execução: é mais rápido e não envia o IP do visitante ao Google (LGPD).
+  - Na fase 1, os dois `woff2` variáveis (latin e latin-ext, ~49 KB no total) foram copiados do `@fontsource-variable` 5.3.0 para `app/assets/fontes/`, com a licença OFL. Assim **nenhuma dependência nova** entra no `package.json`.
+  - O fallback é uma Arial ajustada às métricas da fonte (`size-adjust` 106,89%, calculado da largura média de texto em português), para o texto não pular quando a fonte chega.
 - **Ícones:** Lucide, como já é hoje. Nenhum emoji, inclusive nos comentários do código de navegação.
 
 ---
@@ -273,8 +275,8 @@ Regras para todas as fases:
 ### Fase 1: tokens, tema, Header/Footer, layout base e prévia no ar
 
 - **Arquivos:**
-  - novos: `tailwind.config.ts` (tokens) e `assets/css/fonte.css` (só `@font-face`, sem `@tailwind`);
-  - alterados: `app.config.ts`, `nuxt.config.ts` (fonte, flag `MBB_PREVIA`), `package.json` e lock (`@fontsource-variable/plus-jakarta-sans`), `layouts/default.vue`, `error.vue`, `constants/navegacao.ts`;
+  - novos: `app/tailwind.config.ts` (tokens), `assets/css/fonte.css` (só `@font-face`, sem `@tailwind`) e `assets/fontes/*`;
+  - alterados: `app.config.ts`, `nuxt.config.ts` (fonte, `configPath` do Tailwind, flag `MBB_PREVIA`), `layouts/default.vue`, `error.vue`, `constants/navegacao.ts`;
   - componentes: `components/layout/Header.vue` e `Footer.vue`, mais os novos `TopBar.vue` e `MenuCelular.vue`, e a base (`Eyebrow`, `SectionHeader`, `Chip`, `Botao`, `Nota`);
   - prévia: `deploy/previa/*`, mais as travas de 3.3 em `carrinho.vue`, `meus-pedidos.vue` e `links.vue`.
 - **Detalhes:**
@@ -387,6 +389,12 @@ Regras para todas as fases:
    - uma compra real **não** é feita: o checkout não muda de lógica.
 7. Desligar a prévia (ou mantê-la para os próximos trabalhos, você decide) e apagar o domínio `previa.` se não for ficar.
 
+**Janela de publicação** (decisão 17):
+
+- **Fora da semana de 01/12**, abertura da votação dos Melhores do Ano. Nem de 30/11 a 06/12.
+- Fora do horário do deploy agendado do `deploy.yml` (conferir o `cron` no dia) e sem publicação de notícia em andamento.
+- Dia útil de manhã, com o Leo disponível para olhar o site logo depois da troca.
+
 **Rollback:**
 
 - O swap guarda a release anterior como `_old_<timestamp>`.
@@ -420,6 +428,27 @@ Regras para todas as fases:
 | 19 | **Página `/links` (bio)** | Hoje é dourado/vinho, um visual à parte. Recomendo passar para a marca (fundo `ink`, botões vermelho/branco) e manter só as cores de cada rede nos ícones. |
 | 20 | **Cadastros duplicados** (alphaville, Raquel Bittencourt, Confiber) | Fora do redesign. Recomendo resolver no Guia: desativar o cadastro duplicado, com o 301 que o fluxo atual já gera. Não por noindex no site. |
 
+### Respostas do Leo (29/10/2026)
+
+As 20 recomendações foram aprovadas, com estes ajustes:
+
+- **6:** `/guia/` na mesma aba no celular e em nova aba no computador. No código, o botão do cabeçalho do computador abre em nova aba e o item do menu do celular abre na mesma.
+- **8:** "Anuncie" em vermelho no cabeçalho do celular. Cabe em 360 px ao lado do botão do menu e do carrinho, conferido na prévia. Também aparece no menu do celular e no bloco "Para empresas".
+- **9:** `/busca` entra na fase 2 com a home. Se atrasar a home, a home sai sem o campo e a busca entra depois. **Na fase 1 o cabeçalho ainda não tem o botão de busca**, porque a página não existe.
+- **10:** Newsletter fora do redesign. É o **próximo projeto depois do redesign** (seção 7).
+- **14:** Cloudflare Web Analytics na produção atual já na fase 1. O login do `wrangler` não tem a permissão de Web Analytics (a API respondeu "Authentication error"), então a ativação é um clique do Leo no painel.
+- **16:** Sem Cloudflare Access. A prévia fica aberta, com noindex, canonical para a produção, CSP e travas.
+- **17:** Publicação de uma vez, com a janela e o rollback descritos na fase 7.
+- **18, Melhores do Ano:**
+  - destino `/guia/melhores-do-ano`;
+  - o texto muda pela data, calculada **no navegador** a partir de uma constante com as datas, em `app/constants/melhores-do-ano.ts` (nasce na fase 2, com a home):
+    - antes de 01/12: "Indicações abertas · votação dos finalistas a partir de 1º/12";
+    - de 01/12 até o fim da votação: "Votação aberta";
+    - depois do fim: o atalho some.
+  - O HTML do build sai sem o atalho e ele aparece depois de montar a página, para não mostrar texto vencido no HTML estático.
+  - **Falta a data de fim da votação.** Enquanto ela não estiver na constante, depois de 01/12 o atalho mostra "Votação aberta" sem prazo.
+- **20:** Cadastros duplicados como **pendência do Guia** (seção 7).
+
 ### Pontos em que o redesign pode reduzir a conversão
 
 1. **O funil sai do topo da home.** Quem chega à home para anunciar vê notícias primeiro. Mitigação: "Anuncie" fixo na barra superior, o bloco "Para empresas" com números e preço e o espaço publicitário levando à `/loja`. Medida: decisão 14.
@@ -427,3 +456,38 @@ Regras para todas as fases:
 3. **O comparativo de pacotes e os depoimentos saem da home.** Mitigação: vão para a `/loja`, e o bloco "Para empresas" leva direto a ela.
 4. **O botão de WhatsApp do hero atual** ("fale com a gente") some. Mitigação: o WhatsApp flutuante continua (decisão 13).
 5. **A mudança no title da home** pode reduzir tráfego de busca para "anunciar" por algumas semanas (decisão 1).
+
+---
+
+## 7. Depois do redesign e pendências fora dele
+
+- **Próximo projeto: newsletter** (decisão 10). Precisa de:
+  - tabela de inscrições no Supabase do site, com o consentimento registrado (texto aceito, data, origem);
+  - duplo opt-in e descadastro em um clique;
+  - ferramenta de envio com domínio autenticado (SPF/DKIM): Brevo ou Resend;
+  - política de privacidade atualizada, no `meubairro-app`.
+
+  Quando existir, o bloco escuro da home volta a ser o da newsletter.
+- **Pendência do Guia: cadastros duplicados** (decisão 20). Resolver no `meubairro-app`, desativando o duplicado (o fluxo atual já gera o 301), e não com noindex no site:
+  - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
+  - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;
+  - Confiber Telecom: `/prestadores/confiber-telecom-168` e `-482`.
+- **Pendência do Guia: `/guia/` sem noindex.** A raiz do app responde sem `X-Robots-Tag`, enquanto `/guia/explorar` sai com `noindex, follow`. Conferir no `meubairro-app` se é proposital.
+- **CSP do `/guia/`:** com o Web Analytics ligado, o beacon envia para `cloudflareinsights.com`, que não está no `connect-src` da CSP *report-only* do app. Nada é bloqueado (é só relatório), mas o endpoint `csp_report` vai receber esses avisos. Acrescentar `https://cloudflareinsights.com` no `connect-src` do `meubairro-app`.
+
+---
+
+## 8. Andamento
+
+| Fase | Situação |
+|---|---|
+| 0: investigação e plano | Feita em 29/10/2026 (`2c8cd4c`) |
+| 1: tokens, layout base, prévia, analytics | Feita em 29/10/2026. Prévia em `https://previa.meubairroburitis.com.br`, publicada por `node deploy/previa/publicar.mjs`. Web Analytics depende de um clique do Leo no painel. |
+
+Notas da fase 1:
+
+- **Cabeçalho:** a versão de computador (barra superior, botão Guia Buritis, editorias numa linha) entra a partir de **1024 px** (`lg`). Abaixo disso fica o cabeçalho do celular, com as editorias rolando na horizontal. Em 768 px as 9 editorias quebravam em duas linhas.
+- **Ícones:** `icon.clientBundle.scan` põe no JS os ícones usados nos componentes. Antes, um ícone que só aparece no navegador (o X do menu) vinha da API do Iconify em tempo de execução e chegava tarde.
+- **Build da prévia no Windows:** os `og:image` 1200×630 das matérias com capa no Storage dão `ENOENT` no log (o IPX tenta criar uma pasta `https:`). Não afeta nada: o `og:image` aponta para a produção, e o build da produção roda no Linux.
+- **Barra final na prévia:** `/canais/` responde 307 (padrão do Cloudflare). Na produção continua 301 pelo `.htaccess`, que não mudou.
+- **Lighthouse "antes":** em `lighthouse-antes.md`.

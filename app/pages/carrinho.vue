@@ -13,6 +13,7 @@ useSeoMeta({ title: 'Carrinho — Meu Bairro Buritis', robots: 'noindex' })
 const { itens, total, atualizarQuantidade, remover, limpar } = useCarrinho()
 const { carregando, erro, pagar } = useCheckout()
 const router = useRouter()
+const { ehPrevia } = usePrevia()
 
 const CHAVE_COMPRADOR_SALVO = 'mbb-comprador-dados'
 
@@ -57,6 +58,7 @@ function comecarCheckout() {
 }
 
 async function pagarComPix() {
+  if (ehPrevia) { erro.value = AVISO_PREVIA; return }
   const resposta = await pagar(comprador.value, 'pix')
   if (!resposta) return
   if (resposta.qr_code_base64 && resposta.qr_code) {
@@ -78,6 +80,7 @@ async function pagarComCartao(dadosCartao: {
   device_id?: string
   identification?: { type: string; number: string }
 }) {
+  if (ehPrevia) { erro.value = AVISO_PREVIA; return }
   const resposta = await pagar(comprador.value, 'cartao', dadosCartao)
   if (!resposta) return
 

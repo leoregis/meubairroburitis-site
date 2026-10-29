@@ -1,0 +1,10 @@
+# Prévia do redesign: nunca indexar, e o navegador só pode LER do Supabase.
+# connect-src libera só /rest/v1/ dos dois projetos (leitura pública com a
+# chave anon) e a API de ícones; functions/v1 (pagamento, código do
+# WhatsApp, deploy) e auth/v1 ficam bloqueados mesmo se uma trava do código
+# falhar. As outras diretivas ficam abertas de propósito (imagens e embeds
+# das matérias vêm de vários domínios): a CSP aqui é só a trava de escrita.
+/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: connect-src 'self' https://peusailkyxqbhgdgmqyk.supabase.co/rest/v1/ https://xtmwatregednbuupfdbl.supabase.co/rest/v1/ https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  Referrer-Policy: strict-origin-when-cross-origin

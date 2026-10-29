@@ -76,6 +76,10 @@ onBeforeUnmount(() => { if (relogio) clearInterval(relogio) })
 async function enviarCodigo() {
   erro.value = null
   aviso.value = null
+  if (usePrevia().ehPrevia) {
+    erro.value = AVISO_PREVIA
+    return
+  }
   if (telefone.value.replace(/\D/g, '').length < 10) {
     erro.value = 'Digite o celular com DDD.'
     return

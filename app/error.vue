@@ -12,21 +12,20 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col">
+  <div class="flex min-h-screen flex-col bg-white text-ink">
+    <LayoutTopBar />
     <LayoutHeader />
 
     <main class="flex flex-1 items-center justify-center px-4 py-16">
       <div class="mx-auto max-w-lg text-center">
-        <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">
-          Erro {{ error?.statusCode }}
-        </p>
+        <BaseEyebrow>Erro {{ error?.statusCode }}</BaseEyebrow>
 
-        <h1 class="mt-2 text-balance font-serif text-3xl font-bold text-stone-900 sm:text-4xl">
+        <h1 class="mt-2 text-balance text-3xl font-extrabold tracking-[-0.02em] text-ink sm:text-4xl">
           <template v-if="ehNaoEncontrado">Página não encontrada</template>
           <template v-else>Algo deu errado</template>
         </h1>
 
-        <p class="mt-4 text-stone-600">
+        <p class="mt-4 text-ink-muted">
           <template v-if="ehNaoEncontrado">
             O endereço que você tentou acessar não existe ou o cadastro pode ter sido removido. Se
             era um link salvo de algum tempo atrás, é bem possível que a empresa ou o prestador
@@ -38,24 +37,9 @@ useSeoMeta({
         </p>
 
         <div class="mt-8 flex flex-wrap justify-center gap-3">
-          <NuxtLink
-            to="/"
-            class="rounded-full bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700"
-          >
-            Voltar para o início
-          </NuxtLink>
-          <NuxtLink
-            to="/empresas"
-            class="rounded-full border border-stone-300 px-6 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
-          >
-            Ver empresas
-          </NuxtLink>
-          <NuxtLink
-            to="/prestadores"
-            class="rounded-full border border-stone-300 px-6 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
-          >
-            Ver prestadores
-          </NuxtLink>
+          <BaseBotao to="/">Voltar para o início</BaseBotao>
+          <BaseBotao to="/empresas" variante="contorno">Ver empresas</BaseBotao>
+          <BaseBotao to="/prestadores" variante="contorno">Ver prestadores</BaseBotao>
         </div>
       </div>
     </main>

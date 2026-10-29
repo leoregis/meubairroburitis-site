@@ -188,6 +188,44 @@ export function usePrestadoresDestaqueHome() {
   })
 }
 
+// Home (redesign, fase 2) -- totais de empresas e prestadores e as
+// categorias com mais cadastros de cada tipo, para os chips. Só as colunas
+// de categoria: o payload leva apenas o resumo, não as ~800 linhas.
+export interface CategoriaComTotal { nome: string; slug: string; total: number; tipo: 'empresas' | 'prestadores' }
+
+export function useResumoDiretorioHome(categoriasPorTipo = 4) {
+  const { $meubairroApp } = useNuxtApp()
+
+  return useAsyncData('diretorio-resumo-home', async () => {
+    const vazio = { totalEmpresas: 0, totalPrestadores: 0, categorias: [] as CategoriaComTotal[] }
+    if (!$meubairroApp) return vazio
+
+    const [empresas, prestadores] = await Promise.all([
+      $meubairroApp.from('vw_empresas_publico_listagem').select('categoria_nome, categoria_slug', { count: 'exact' }).range(0, 4999),
+      $meubairroApp.from('vw_prestadores_publico_listagem').select('categoria_nome, categoria_slug', { count: 'exact' }).range(0, 4999),
+    ])
+    if (empresas.error) throw empresas.error
+    if (prestadores.error) throw prestadores.error
+
+    function maisFrequentes(linhas: { categoria_nome: string | null; categoria_slug: string | null }[], tipo: CategoriaComTotal['tipo']) {
+      const contagem = new Map<string, CategoriaComTotal>()
+      for (const l of linhas) {
+        if (!l.categoria_slug || !l.categoria_nome) continue
+        const c = contagem.get(l.categoria_slug) || { nome: l.categoria_nome, slug: l.categoria_slug, total: 0, tipo }
+        c.total++
+        contagem.set(l.categoria_slug, c)
+      }
+      return [...contagem.values()].sort((a, b) => b.total - a.total).slice(0, categoriasPorTipo)
+    }
+
+    return {
+      totalEmpresas: empresas.count ?? empresas.data?.length ?? 0,
+      totalPrestadores: prestadores.count ?? prestadores.data?.length ?? 0,
+      categorias: [...maisFrequentes(empresas.data ?? [], 'empresas'), ...maisFrequentes(prestadores.data ?? [], 'prestadores')],
+    }
+  })
+}
+
 export function useCategoriasEmpresa() {
   const { $meubairroApp } = useNuxtApp()
 

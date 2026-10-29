@@ -280,5 +280,7 @@ const marcos = [
         </section>
       </div>
     </div>
+    <!-- veio da home no redesign (fase 2, decisão 12); visual novo na fase 6 -->
+    <HomeTimeSection />
   </article>
 </template>

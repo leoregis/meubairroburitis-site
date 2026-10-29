@@ -20,22 +20,26 @@ const canais = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-16">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Canais</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Onde nos encontrar</h1>
+  <div>
+    <div class="mx-auto max-w-2xl px-4 py-16">
+      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Canais</p>
+      <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Onde nos encontrar</h1>
 
-    <ul class="mt-8 divide-y divide-stone-200 rounded-xl border border-stone-200">
-      <li v-for="canal in canais" :key="canal.href">
-        <a
-          :href="canal.href"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center gap-3 px-4 py-4 hover:bg-stone-50"
-        >
-          <Icon :name="canal.icon" class="h-5 w-5 text-orange-700" />
-          <span class="font-medium text-stone-800">{{ canal.label }}</span>
-        </a>
-      </li>
-    </ul>
+      <ul class="mt-8 divide-y divide-stone-200 rounded-xl border border-stone-200">
+        <li v-for="canal in canais" :key="canal.href">
+          <a
+            :href="canal.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3 px-4 py-4 hover:bg-stone-50"
+          >
+            <Icon :name="canal.icon" class="h-5 w-5 text-orange-700" />
+            <span class="font-medium text-stone-800">{{ canal.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <!-- veio da home no redesign (fase 2, decisão 12); visual novo na fase 6 -->
+    <HomeInstagramEmbed />
   </div>
 </template>

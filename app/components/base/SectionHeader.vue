@@ -6,6 +6,9 @@ defineProps<{
   id?: string
   linkTo?: string
   linkLabel?: string
+  // texto curto do link no celular (ex.: "Ver tudo"): o longo pode quebrar
+  // linha quando a fonte carrega e empurrar a seção (CLS)
+  linkLabelCelular?: string
   subtitulo?: string
 }>()
 </script>
@@ -23,7 +26,11 @@ defineProps<{
       :to="linkTo"
       class="inline-flex min-h-[44px] items-center text-sm font-bold text-brand-ink hover:text-brand-deep hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
     >
-      {{ linkLabel || 'Ver tudo' }}
+      <template v-if="linkLabelCelular">
+        <span class="sm:hidden">{{ linkLabelCelular }}</span>
+        <span class="hidden sm:inline">{{ linkLabel || 'Ver tudo' }}</span>
+      </template>
+      <template v-else>{{ linkLabel || 'Ver tudo' }}</template>
     </NuxtLink>
   </div>
 </template>

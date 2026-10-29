@@ -23,6 +23,19 @@ Serve de "antes" para a fase 7. A comparação final roda o mesmo script, nas me
 | `/loja` | celular | 82 | 93 | 81 | 100 | 3,1 s | 0 | 320 ms |
 | `/loja` | computador | 84 | 93 | 81 | 100 | 2,1 s | 0 | 50 ms |
 
+## Fase 2: home nova na prévia × produção (29/10/2026, noite)
+
+Mesma ferramenta e mesmos perfis. Foram três rodadas, alternando produção e prévia na mesma sessão para as duas pegarem as mesmas condições de rede. A tabela traz a mediana do LCP e a faixa das três rodadas.
+
+| Home | LCP (mediana) | LCP (rodadas) | Perf. | Acess. | Boas práticas | SEO | CLS | TBT |
+|---|---|---|---|---|---|---|---|---|
+| Produção, celular | 4,62 s | 4,6 / 4,6 / 4,7 | 57–58 | 100 | 81 | 100 | 0 | 740–760 ms |
+| **Prévia, celular** | **3,80 s** | 3,5 / 3,8 / 4,7 | 62–69 | 100 | 77 | 69 | 0 | 470–700 ms |
+| Produção, computador | 1,01 s | 1,0 / 1,0 / 1,7 | 88–98 | 95 | 77–81 | 100 | 0,011 | 80–110 ms |
+| **Prévia, computador** | **1,54 s** | 1,0 / 1,5 / 1,6 | 90–97 | 100 | 77 | 69 | 0,002 | 80–90 ms |
+
+Na prévia, o SEO 69 vem do noindex, e as boas práticas 77 vêm do Cloudflare, que recusa o prefetch de arquivos em Workers. As duas coisas só existem na prévia.
+
 Observações para as próximas fases:
 
 - **LCP no celular** é o ponto fraco: de 7 a 11 s em `/empresas`, na empresa e na matéria. As capas vêm direto do Storage do Supabase, sem redimensionar (PNG de 1,6 a 2,3 MB, ver o comentário do `og:image` no `nuxt.config.ts`).

@@ -83,6 +83,12 @@ async function fotografar(urlPublica, base) {
   for (let tentativa = 1; ; tentativa++) {
     try {
       const r = await fetch(alvo, { redirect: 'manual', headers: { 'user-agent': 'mbb-seo-snapshot/1.0 (+redesign)' } })
+      // a prévia (Worker) devolve um 500 momentâneo de vez em quando sob
+      // carga; repete até 2x -- um erro de verdade continua aparecendo
+      if (r.status >= 500 && tentativa < 3) {
+        await new Promise((ok) => setTimeout(ok, 1500 * tentativa))
+        continue
+      }
       const html = (r.headers.get('content-type') || '').includes('html') ? await r.text() : ''
       const titulo = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
       const canonical = (html.match(/<link\b[^>]*rel=["']canonical["'][^>]*>/i) || [''])[0]

@@ -482,7 +482,8 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | Fase | Situação |
 |---|---|
 | 0: investigação e plano | Feita em 29/10/2026 (`2c8cd4c`) |
-| 1: tokens, layout base, prévia, analytics | Feita em 29/10/2026. Prévia em `https://previa.meubairroburitis.com.br`, publicada por `node deploy/previa/publicar.mjs`. Web Analytics depende de um clique do Leo no painel. |
+| 1: tokens, layout base, prévia, analytics | Feita em 29/10/2026. Prévia em `https://previa.meubairroburitis.com.br`, publicada por `node deploy/previa/publicar.mjs`. Web Analytics ligado pelo Leo em 29/10. O beacon aparece no site e no `/guia/` (injetado só em pedidos de HTML) e não gera aviso na CSP do Guia. |
+| 2: home + busca | Feita em 29/10/2026 (notas abaixo) |
 
 Notas da fase 1:
 
@@ -491,3 +492,24 @@ Notas da fase 1:
 - **Build da prévia no Windows:** os `og:image` 1200×630 das matérias com capa no Storage dão `ENOENT` no log (o IPX tenta criar uma pasta `https:`). Não afeta nada: o `og:image` aponta para a produção, e o build da produção roda no Linux.
 - **Barra final na prévia:** `/canais/` responde 307 (padrão do Cloudflare). Na produção continua 301 pelo `.htaccess`, que não mudou.
 - **Lighthouse "antes":** em `lighthouse-antes.md`.
+
+Notas da fase 2 (home + busca), 29/10/2026:
+
+- **Home:** `pages/index.vue` + `components/home/{Hero,Ultimas,AtalhoMelhoresDoAno,Canais,Guia,EspacoPublicitario,ParaEmpresas}.vue`. Title, description, og e JSON-LD (`Organization` + `WebSite` num `@graph`) conforme as decisões 1 e 2.
+- **Hero:** `srcset` montado com `useImage()` (480 a 1200 px; o original tem 1200×800), `fetchpriority="high"`, preload com `imagesrcset` e dimensões declaradas. O `sizes` do `<NuxtImg>` não aceita "150vw" e ampliava a foto até 2400 px.
+- **Fonte:** preload só do woff2 latin, que é variável (todos os pesos num arquivo de ~27 KB).
+- **Capas de notícia na home:** saem pela transformação de imagem do Storage do Supabase (`utils/imagemStorage.ts`). Uma capa de 1,4 MB vira ~56 KB.
+  - **Decisão pendente:** o Supabase cobra por imagem *original* transformada no mês. Estender isso às listagens e matérias (fase 3) cobre ~100 capas e entra na cota do plano. É decisão do Leo antes da fase 3.
+- **Busca:** página `/busca` (`pages/busca.vue`, `utils/busca.ts`, `composables/useIndiceBusca.ts`).
+  - O índice vai no `_payload.json` da página, montado no build: 81 KB, ~35 KB comprimido.
+  - A busca roda no navegador, sem chamar o Supabase, e normaliza acentos e maiúsculas.
+  - `robots: false` no `routeRules`: tem `noindex` e fica fora do sitemap (conferido num build de produção local: 1.012 URLs, nenhuma `/busca`).
+  - No build incremental, `rotas-afetadas.mjs` regera a `/busca` sempre que regera a home.
+- **Melhores do Ano:** `app/constants/melhores-do-ano.ts` (datas com -03:00, avaliadas no navegador). O espaço do atalho fica reservado no build até o fim da votação, sem salto de layout.
+- **Conteúdo que saiu da home:**
+  - comparativo de pacotes e depoimentos foram para a `/loja`;
+  - o Instagram foi para `/canais`;
+  - o time foi para `/quem-somos`.
+
+  Todos ainda com o visual antigo, até as fases 5 e 6.
+- **Texto do protótipo corrigido:** o bloco "Para empresas" não fala em "plano para imobiliárias", porque esse produto não existe na loja.

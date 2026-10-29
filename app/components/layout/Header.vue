@@ -29,7 +29,7 @@ const foco = 'focus-visible:outline focus-visible:outline-2 focus-visible:outlin
 </script>
 
 <template>
-  <div class="sticky top-0 z-40 border-b border-line bg-white lg:static lg:border-b-0">
+  <header class="sticky top-0 z-40 border-b border-line bg-white lg:static lg:border-b-0">
     <div class="mx-auto flex max-w-site items-center justify-between gap-3 px-4 py-2 lg:px-6 lg:py-4">
       <NuxtLink to="/" aria-label="Meu Bairro Buritis, página inicial" class="flex-none rounded-sm" :class="foco">
         <NuxtPicture
@@ -53,6 +53,16 @@ const foco = 'focus-visible:outline focus-visible:outline-2 focus-visible:outlin
           :class="foco"
         >
           {{ LINK_ANUNCIE.label }}
+        </NuxtLink>
+
+        <!-- busca (fase 2): leva à /busca, que roda no navegador -->
+        <NuxtLink
+          to="/busca"
+          aria-label="Buscar no site"
+          class="flex h-11 w-11 items-center justify-center rounded-mbb-md border border-line text-ink hover:bg-ground"
+          :class="foco"
+        >
+          <Icon name="lucide:search" class="h-5 w-5" aria-hidden="true" />
         </NuxtLink>
 
         <!-- carrinho só aparece com item (decisão 7) -->
@@ -92,7 +102,7 @@ const foco = 'focus-visible:outline focus-visible:outline-2 focus-visible:outlin
         </button>
       </div>
     </div>
-  </div>
+  </header>
 
   <nav aria-label="Editorias" class="border-b-3 border-brand bg-white">
     <ul class="mx-auto m-0 flex max-w-site list-none gap-1 overflow-x-auto px-3 py-0 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-3.5 [&::-webkit-scrollbar]:hidden">

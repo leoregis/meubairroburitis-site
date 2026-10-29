@@ -20,7 +20,7 @@ const linkClasses = 'inline-flex min-h-[32px] items-center rounded-sm focus-visi
 </script>
 
 <template>
-  <div class="hidden border-b border-line bg-ground px-6 lg:block">
+  <nav aria-label="Atalhos e redes" class="hidden border-b border-line bg-ground px-6 lg:block">
     <div class="mx-auto flex min-h-10 max-w-site flex-wrap items-center justify-between gap-x-5 gap-y-1 text-xs text-ink-muted">
       <p class="m-0 font-semibold">
         <span v-if="hoje">{{ hoje }} · </span>Belo Horizonte
@@ -43,5 +43,5 @@ const linkClasses = 'inline-flex min-h-[32px] items-center rounded-sm focus-visi
         </li>
       </ul>
     </div>
-  </div>
+  </nav>
 </template>

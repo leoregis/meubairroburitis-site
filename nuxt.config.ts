@@ -22,7 +22,9 @@ export default defineNuxtConfig({
       // /termos-e-condicoes (Fase 7d) tem o mesmo problema -- só existe
       // pra receber o redirect da URL antiga do WordPress, sem link em
       // nenhuma página navegável ainda.
-      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes'],
+      // /busca (redesign, fase 2) também entra direto: o índice dela é
+      // montado no build e o botão do cabeçalho é o único link até ela.
+      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes', '/busca'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.
@@ -53,6 +55,9 @@ export default defineNuxtConfig({
     // .htaccess) -- existe só pra ser servida como erro, nunca deve
     // aparecer no sitemap nem ser indexada como se fosse conteúdo.
     '/pagina-nao-encontrada': { robots: false },
+    // busca do site (redesign, fase 2): página de resultados, nunca indexada
+    // nem no sitemap -- o conteúdo dela são links para páginas que já estão lá.
+    '/busca': { robots: false },
   },
 
   // combinado com routeRules acima, o manifesto client-side de route-rules

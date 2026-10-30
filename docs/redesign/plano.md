@@ -481,7 +481,16 @@ As 20 recomendações foram aprovadas, com estes ajustes:
   - **Asaas**, já usado nos contratos das imobiliárias (Plano Imobiliário): boleto, Pix e cartão recorrentes, nota fiscal e régua de cobrança.
   - A decidir: provedor, o que acontece quando a cobrança falha (pausa das publicações, aviso), cancelamento pelo cliente, e como a assinatura aparece na Central e em Meus pedidos.
   - Até lá, a página Anuncie não fala em "cobrança automática" (texto do protótipo retirado na fase 5).
-- **Pendência do site: permissões (GRANT) da produção fora das migrations** (achado no teste do item 1, 30/10/2026). Um branch de dev criado só pelas migrations sai sem os GRANTs de tabela para `anon`/`authenticated`/`service_role` (a própria chave anon lê `noticias` com "permission denied") e sem o EXECUTE de várias funções para `service_role` (por exemplo `novo_token_acompanhamento`, chamada pelo gatilho de pedido pago). Na produção eles existem, mas não estão em nenhum arquivo. No teste, copiei as permissões da produção para o branch (só leitura na produção). Proposta: uma migration que registre os GRANTs atuais da produção, sem mudar nada nela (aplicar e conferir que a lista de permissões fica idêntica), para os próximos branches nascerem iguais.
+- **Permissões (GRANT) do site: resolvido em 30/10/2026** (migration `20261030200000_permissoes_documentadas`, aprovada pelo Leo).
+  - **Causa:** projetos e branches novos do Supabase vêm com permissões padrão mais restritas. Tabela nova criada por `postgres` dá a `anon`/`authenticated`/`service_role` só `Dxtm` (sem SELECT/INSERT/UPDATE/DELETE); sequência e função novas, nada. A produção, mais antiga, ainda tem o padrão antigo (tudo), e as migrations contavam com ele.
+  - **O que a migration faz:** declara o estado exato das ACLs dos 69 objetos do `public` (tabelas, sequências e funções) para `anon`, `authenticated`, `service_role` e PUBLIC. É idempotente e pula objeto ausente.
+  - **Conferido:** na produção, as ACLs ficaram idênticas antes e depois (teste com ROLLBACK e de novo na aplicação; fotografia no arquivo de volta). Num branch criado só das migrations (`dev-permissoes`, apagado), as 69 ACLs ficaram iguais às da produção, e a chave anon lê `noticias` e `produtos` sem cópia manual.
+  - **Regra para a frente:** tabela, sequência ou função nova precisa dos próprios GRANTs na migration que a cria. O padrão do projeto não cobre mais um branch novo.
+- **Guia (`xtmwatregednbuupfdbl`): mesma divergência, maior** (diagnóstico de 30/10/2026, nada criado). Fica para uma sessão no `meubairro-app`, se o Leo quiser.
+  - **Esquema:** a produção tem 228 tabelas, 119 views e 3 views materializadas no `public`, mas as migrations só criam ~49 tabelas. Boa parte do esquema não está em migration.
+  - **Permissões:** `anon` lê 329 relações e executa 650 funções. As migrations têm GRANT explícito para ~10 tabelas e `grant execute` para 89 funções; o resto depende do padrão antigo de permissões.
+  - **Histórico:** 18 das 279 migrations estão sem o SQL salvo (`statements` vazio).
+  - **Consequência:** um branch do Guia criado das migrations não reproduziria nem o esquema nem as permissões. A Central já usa um projeto de dev próprio por isso.
 - **Pendência do Guia: cadastros duplicados** (decisão 20). Resolver no `meubairro-app`, desativando o duplicado (o fluxo atual já gera o 301), e não com noindex no site:
   - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
   - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;

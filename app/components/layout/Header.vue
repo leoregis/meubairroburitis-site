@@ -105,7 +105,7 @@ const foco = 'focus-visible:outline focus-visible:outline-2 focus-visible:outlin
   </header>
 
   <nav aria-label="Editorias" class="border-b-3 border-brand bg-white">
-    <ul class="mx-auto m-0 flex max-w-site list-none gap-1 overflow-x-auto px-3 py-0 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-3.5 [&::-webkit-scrollbar]:hidden">
+    <ul class="mx-auto m-0 flex max-w-site list-none gap-1 overflow-x-auto px-3 py-0 [scrollbar-width:none] lg:px-3.5 [&::-webkit-scrollbar]:hidden">
       <template v-for="link in LINKS_CABECALHO" :key="link.to">
         <li v-if="link.to === primeiroDoDiretorio" aria-hidden="true" class="mx-1 hidden w-px flex-none self-center bg-line lg:block lg:h-5" />
         <li class="flex-none">

@@ -21,11 +21,11 @@ const linkClasses = 'inline-flex min-h-[32px] items-center rounded-sm focus-visi
 
 <template>
   <nav aria-label="Atalhos e redes" class="hidden border-b border-line bg-ground px-6 lg:block">
-    <div class="mx-auto flex min-h-10 max-w-site flex-wrap items-center justify-between gap-x-5 gap-y-1 text-xs text-ink-muted">
+    <div class="mx-auto flex min-h-10 max-w-site items-center justify-between gap-x-5 whitespace-nowrap text-xs text-ink-muted">
       <p class="m-0 font-semibold">
         <span v-if="hoje">{{ hoje }} · </span>Belo Horizonte
       </p>
-      <ul class="m-0 flex list-none flex-wrap items-center gap-x-[18px] p-0">
+      <ul class="m-0 flex list-none items-center gap-x-[18px] p-0">
         <li v-for="rede in redes" :key="rede.label">
           <a :href="rede.href" target="_blank" rel="noopener noreferrer" class="font-semibold hover:text-ink hover:underline" :class="linkClasses">
             {{ rede.label }}<span class="sr-only"> (abre em nova aba)</span>

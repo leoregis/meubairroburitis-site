@@ -219,3 +219,22 @@ O `supabase-js` saiu do JS inicial de todas as páginas: é baixado só quando u
 | `/pagina-nao-encontrada` | 0,60 s | **0,52 s** |
 
 Diferenças de até ~30 ms ficam dentro da variação entre rodadas (ver as rodadas no `lcp-final-f6.json` do scratchpad da sessão).
+
+**Efeito colateral da retirada da fonte de fallback: CLS no computador** (30/10, depois do commit da fase 6)
+- **Onde:** sem a Arial ajustada às métricas da Plus Jakarta Sans, o texto pula quando a fonte da marca chega (`font-display: swap`).
+- **Medido na prévia:**
+  - `/noticias` a 1024-1440 px: CLS de 0,06 a 0,11 (os chips de editoria mudam de posição);
+  - `/publicidade-e-conteudo-patrocinado` a 390 px: 0,10.
+- **Nas outras páginas:** abaixo de 0,05.
+- **No Android não muda nada:** lá não há Arial, e o fallback antigo já não tinha efeito.
+- **Opções**, medidas lado a lado (mesmo servidor local, navegador real com celular emulado; LCP com 7 rodadas, mediana; CLS com 3 rodadas):
+
+  | Opção | LCP `/loja` | LCP `/quem-somos` | LCP publicidade | CLS publicidade 390 | Fonte da marca na 1ª página |
+  |---|---|---|---|---|---|
+  | Produção atual (sem fonte própria) | 0,57 s | 0,99 s | 0,69 s | 0 | não usa |
+  | `swap` sem fallback (estado atual da prévia) | 0,88 s | 0,71 s | 0,69 s | 0,10 | sim |
+  | `swap` com fallback só `local('Arial')` | 1,14 s | 0,98 s | 0,80 s | 0,003 | sim |
+  | `optional` sem fallback | 0,86 s | 0,72 s | 0,64 s | 0,001 | só se chegar em ~100 ms; senão, da 2ª página em diante (fica em cache) |
+
+  É uma decisão de produto (identidade visual × estabilidade), levada ao Leo.
+- **Cabeçalho travado em uma linha:** o menu de editorias e a barra superior não quebram mais linha no computador. Medido: cabem nas duas fontes a partir de 1024 px, sem rolagem.

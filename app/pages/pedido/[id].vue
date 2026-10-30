@@ -174,35 +174,35 @@ const linkWhatsapp = computed(
 
 <template>
   <PedidoAcompanhamento v-if="ehAcompanhamento" :token="pedidoId" />
-  <div v-else class="mx-auto max-w-xl px-4 py-16 text-center">
+  <div v-else class="mx-auto max-w-[620px] px-4 pb-16 pt-10 text-center sm:px-6 sm:pb-[72px] sm:pt-14">
     <template v-if="statusAtual === 'pago'">
-      <p class="text-4xl">✅</p>
-      <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Pagamento confirmado!</h1>
-      <p class="mt-3 text-stone-600">
+      <span class="mx-auto flex h-12 w-12 items-center justify-center text-success-ink" aria-hidden="true"><Icon name="lucide:circle-check" class="h-12 w-12" /></span>
+      <h1 class="mt-4 text-balance text-2xl font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[28px] sm:leading-9">Pagamento confirmado!</h1>
+      <p class="mt-3 text-ink-muted">
         Pedido <span class="font-mono">#{{ pedidoId.slice(0, 8) }}</span> pago com sucesso.
       </p>
 
-      <div class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 text-left">
-        <p class="font-semibold text-stone-900">{{ proximoPasso.titulo }}</p>
-        <p v-if="proximoPasso.texto" class="mt-2 text-sm text-stone-600">{{ proximoPasso.texto }}</p>
+      <div class="mt-8 rounded-mbb-xl border border-line bg-white p-6 text-left">
+        <p class="font-semibold text-ink">{{ proximoPasso.titulo }}</p>
+        <p v-if="proximoPasso.texto" class="mt-2 text-sm text-ink-muted">{{ proximoPasso.texto }}</p>
         <a
           :href="linkWhatsapp"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-4 block rounded-full bg-orange-600 px-6 py-3 text-center font-semibold text-white hover:bg-orange-700"
+          class="mt-4 block rounded-mbb-md bg-brand min-h-[48px] px-6 py-3 text-center font-bold text-white hover:bg-brand-deep"
         >
           {{ proximoPasso.botao }}
         </a>
       </div>
 
-      <div v-if="tokenAcompanhamento" class="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-6 text-left">
-        <p class="font-semibold text-stone-900">Acompanhe o seu pedido</p>
-        <p class="mt-2 text-sm text-stone-600">
+      <div v-if="tokenAcompanhamento" class="mt-4 rounded-mbb-xl border border-line bg-ground p-6 text-left">
+        <p class="font-semibold text-ink">Acompanhe o seu pedido</p>
+        <p class="mt-2 text-sm text-ink-muted">
           Guarde este link: nele você vê a situação de cada entrega, as datas e o link de cada publicação.
         </p>
         <NuxtLink
           :to="`/pedido/${tokenAcompanhamento}`"
-          class="mt-4 block rounded-full border border-orange-600 px-6 py-3 text-center font-semibold text-orange-700 hover:bg-orange-50"
+          class="mt-4 block rounded-mbb-md border border-brand min-h-[48px] px-6 py-3 text-center font-semibold text-brand-ink hover:bg-brand-tint"
         >
           Acompanhar meu pedido
         </NuxtLink>
@@ -210,31 +210,31 @@ const linkWhatsapp = computed(
     </template>
 
     <template v-else-if="statusAtual === 'recusado' || statusAtual === 'rejected' || statusAtual === 'cancelado'">
-      <p class="text-4xl">❌</p>
-      <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Pagamento não aprovado</h1>
-      <p class="mt-3 text-stone-600">
+      <span class="mx-auto flex h-12 w-12 items-center justify-center text-brand-ink" aria-hidden="true"><Icon name="lucide:circle-x" class="h-12 w-12" /></span>
+      <h1 class="mt-4 text-balance text-2xl font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[28px] sm:leading-9">Pagamento não aprovado</h1>
+      <p class="mt-3 text-ink-muted">
         Pedido <span class="font-mono">#{{ pedidoId.slice(0, 8) }}</span> não foi aprovado pelo Mercado
         Pago. Volte ao carrinho pra tentar de novo com outro cartão ou PIX.
       </p>
       <NuxtLink
         to="/carrinho"
-        class="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700"
+        class="mt-6 inline-block rounded-mbb-md bg-brand min-h-[48px] px-6 py-3 font-bold text-white hover:bg-brand-deep"
       >
         Voltar ao carrinho
       </NuxtLink>
     </template>
 
     <template v-else>
-      <p class="text-4xl">⏳</p>
-      <h1 class="mt-4 font-serif text-2xl font-bold text-stone-900">Aguardando confirmação do pagamento</h1>
-      <p class="mt-3 text-stone-600">
+      <span class="mx-auto flex h-12 w-12 items-center justify-center text-ink-muted" aria-hidden="true"><Icon name="lucide:hourglass" class="h-12 w-12" /></span>
+      <h1 class="mt-4 text-balance text-2xl font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[28px] sm:leading-9">Aguardando confirmação do pagamento</h1>
+      <p class="mt-3 text-ink-muted">
         Pedido <span class="font-mono">#{{ pedidoId.slice(0, 8) }}</span> — assim que o pagamento for
         aprovado, esta página mostra os próximos passos.
       </p>
       <button
         type="button"
         :disabled="verificando"
-        class="mt-6 rounded-full border border-stone-300 px-6 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+        class="mt-6 min-h-[44px] rounded-mbb-md border border-line px-6 py-2 text-sm font-semibold text-ink hover:bg-ground disabled:opacity-50"
         @click="verificarPagamento"
       >
         {{ verificando ? 'Verificando...' : 'Já paguei, verificar status' }}

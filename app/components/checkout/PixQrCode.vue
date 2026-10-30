@@ -16,16 +16,16 @@ async function copiar() {
     <img
       :src="`data:image/png;base64,${qrCodeBase64}`"
       alt="QR Code do PIX"
-      class="h-56 w-56 rounded-lg border border-stone-200"
+      class="h-56 w-56 rounded-mbb-md border border-line"
     />
     <button
       type="button"
-      class="w-full rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+      class="min-h-[44px] w-full rounded-mbb-md border border-line px-4 py-2 text-sm font-bold text-ink hover:bg-ground"
       @click="copiar"
     >
       {{ copiado ? 'Copiado!' : 'Copiar código PIX (copia e cola)' }}
     </button>
-    <p class="text-xs text-stone-500">
+    <p class="text-xs text-ink-muted">
       Abra o app do seu banco, escolha pagar com PIX e escaneie o QR Code ou cole o código copiado.
     </p>
   </div>

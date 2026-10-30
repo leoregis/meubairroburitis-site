@@ -102,3 +102,28 @@ Observações para as próximas fases:
 - **LCP no celular** é o ponto fraco: de 7 a 11 s em `/empresas`, na empresa e na matéria. As capas vêm direto do Storage do Supabase, sem redimensionar (PNG de 1,6 a 2,3 MB, ver o comentário do `og:image` no `nuxt.config.ts`).
 - **Boas práticas** fica em 81 em todas as páginas, sempre pela mesma falha, "Uses deprecated APIs". A origem é o script de desafio de bots do Cloudflare (`/cdn-cgi/challenge-platform/.../main.js`, injetado pelo Bot Fight Mode / JS Detections da zona), não o código do site. O redesign não muda isso. Para subir esse número, a mudança é na configuração do Cloudflare (decisão de produto).
 - **LCP da home no celular:** o Lighthouse aponta que a imagem do LCP não tem `fetchpriority=high`. Entra na fase 2, no hero novo.
+
+## Fase 5: Anuncie, produto, midiakit e `/links` na prévia × produção (30/10/2026)
+
+Mesma metodologia da fase 4. No celular são 3 rodadas alternadas (mediana); no computador, 1 rodada.
+
+| Página | Celular, produção | **Celular, prévia** | Computador, produção | **Computador, prévia** |
+|---|---|---|---|---|
+| `/loja` | 3,10 s | **4,45 s** (3,1 / 4,6 / 4,5) | 0,76 s | **0,74 s** |
+| produto (`/loja/mbb-premium`) | 2,91 s | **3,51 s** (4,1 / 3,5 / 3,5) | 0,82 s | **0,78 s** |
+| `/midiakit` | 2,82 s | **3,47 s** (3,4 / 3,9 / 3,5) | 0,70 s | **0,83 s** |
+| `/links` | 2,85 s | **2,91 s** (3,1 / 2,9 / 2,8) | 0,62 s | **0,63 s** |
+
+Acessibilidade: 100 na prévia (98 no `/links`, que ganhou o `<main>` depois desta medição) e 90 a 100 na produção. CLS: 0 no celular nos dois lados. TBT no celular: 140 a 517 ms na prévia, 239 a 863 ms na produção.
+
+**Por que o celular da prévia fica atrás da produção nessas páginas:**
+
+- A primeira pintura é igual ou melhor na prévia (FCP de 2,5 a 2,7 s nos dois lados). O que pesa é o atraso de renderização do elemento do LCP (o parágrafo de apresentação, na `/loja`): até 2,2 s, à espera do JavaScript inicial.
+- **Testes de bloqueio na `/loja` (Lighthouse):**
+
+  | Bloqueado | LCP |
+  |---|---|
+  | `_nuxt/*.js` | 2,59 / 2,60 s |
+  | fonte (`*.woff2`) | 4,17 / 4,42 s (sem efeito) |
+
+- As páginas antigas da produção eram mais simples e carregam menos JS (21 arquivos, ~219 KB, contra 28 e ~244 KB na prévia). O peso fixo continua sendo o dos dois clientes do Supabase. A criação sob demanda foi aprovada pelo Leo em 30/10 e espera o token de teste do Mercado Pago para o teste ponta a ponta.

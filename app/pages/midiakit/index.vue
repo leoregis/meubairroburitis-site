@@ -27,49 +27,40 @@ const links = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl px-4 py-16">
-    <p class="text-center text-sm font-semibold uppercase tracking-wide text-orange-700">Midiakit</p>
-    <h1 class="mt-2 text-balance text-center font-serif text-3xl font-bold text-stone-900">
-      Anuncie no Meu Bairro Buritis
-    </h1>
-    <p class="mx-auto mt-4 max-w-xl text-center text-stone-600">
-      Conecte sua marca ao coração do Buritis. Estamos em todos os lugares onde seu público está:
-      Instagram, WhatsApp, Facebook, TikTok, Telegram, site e até nos eventos do bairro.
-    </p>
+  <div class="mx-auto flex max-w-[960px] flex-col gap-8 px-4 pb-16 pt-6 sm:gap-10 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <MidiakitCabecalho
+      titulo="Anuncie no Meu Bairro Buritis"
+      descricao="Conecte sua marca ao coração do Buritis. Estamos em todos os lugares onde seu público está: Instagram, WhatsApp, Facebook, TikTok, Telegram, site e até nos eventos do bairro."
+    />
 
-    <div class="mt-10">
-      <MidiakitTabs />
-    </div>
-
-    <nav class="grid gap-3 sm:grid-cols-2">
+    <nav aria-label="Conteúdo do midiakit" class="grid gap-3 sm:grid-cols-2">
       <NuxtLink
         v-for="link in links"
         :key="link.to"
         :to="link.to"
-        class="rounded-xl border border-stone-200 bg-white px-5 py-4 text-center font-semibold text-stone-800 hover:border-orange-300 hover:text-orange-700"
+        class="flex min-h-[64px] items-center justify-between gap-3 rounded-mbb-lg border border-line bg-white px-5 py-4 text-base font-bold text-ink transition-colors hover:border-ink-muted hover:bg-ground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         {{ link.label }}
+        <Icon name="lucide:arrow-right" class="h-5 w-5 flex-none text-brand-ink" aria-hidden="true" />
       </NuxtLink>
     </nav>
 
-    <div class="mt-16">
-      <p class="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-stone-500">
-        Alguns de nossos anunciantes
-      </p>
-      <div class="grid grid-cols-2 items-center gap-8 sm:grid-cols-3 md:grid-cols-4">
-        <NuxtPicture
-          v-for="a in anunciantes"
-          :key="a.nome"
-          :src="a.logo"
-          :alt="a.nome"
-          format="avif,webp"
-          :width="280"
-          :height="210"
-          sizes="280px"
-          loading="lazy"
-          :img-attrs="{ class: 'h-24 w-full object-contain grayscale transition hover:grayscale-0' }"
-        />
-      </div>
-    </div>
+    <section aria-labelledby="anunciantes-titulo" class="flex flex-col gap-5">
+      <BaseSectionHeader id="anunciantes-titulo" titulo="Alguns de nossos anunciantes" />
+      <ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 md:grid-cols-4">
+        <li v-for="a in anunciantes" :key="a.nome" class="flex items-center justify-center rounded-mbb-lg border border-line bg-white p-4">
+          <NuxtPicture
+            :src="a.logo"
+            :alt="a.nome"
+            format="avif,webp"
+            :width="280"
+            :height="210"
+            sizes="280px"
+            loading="lazy"
+            :img-attrs="{ class: 'h-20 w-full object-contain' }"
+          />
+        </li>
+      </ul>
+    </section>
   </div>
 </template>

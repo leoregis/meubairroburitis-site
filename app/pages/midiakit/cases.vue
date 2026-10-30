@@ -30,23 +30,18 @@ const cases = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-16">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Midiakit</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Cases de sucesso</h1>
+  <div class="mx-auto flex max-w-[960px] flex-col gap-8 px-4 pb-16 pt-6 sm:gap-10 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <MidiakitCabecalho titulo="Cases de sucesso" />
 
-    <div class="mt-8">
-      <MidiakitTabs />
-    </div>
-
-    <div class="space-y-10">
-      <article v-for="c in cases" :key="c.empresa" class="border-l-4 border-orange-600 pl-6">
-        <h2 class="font-serif text-xl font-bold text-stone-900">{{ c.empresa }}</h2>
-        <p class="mt-2 text-stone-600">{{ c.resumo }}</p>
-        <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm tabular-nums text-orange-700">
-          <li v-for="stat in c.stats" :key="stat">{{ stat }}</li>
+    <div class="flex flex-col gap-4">
+      <article v-for="c in cases" :key="c.empresa" class="flex flex-col gap-3 rounded-mbb-xl border border-line bg-white p-5 sm:p-7">
+        <h2 class="m-0 text-xl font-extrabold leading-7 tracking-[-0.015em] text-ink sm:text-2xl">{{ c.empresa }}</h2>
+        <p class="m-0 text-base leading-[26px] text-ink-muted sm:text-[17px] sm:leading-[28px]">{{ c.resumo }}</p>
+        <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+          <li v-for="stat in c.stats" :key="stat" class="rounded-full bg-chip px-3 py-1.5 text-[13px] font-bold tabular-nums text-ink">{{ stat }}</li>
         </ul>
-        <blockquote v-if="c.citacao" class="mt-3 border-l-2 border-stone-300 pl-4 text-sm italic text-stone-500">
-          “{{ c.citacao }}” — {{ c.autor }}
+        <blockquote v-if="c.citacao" class="m-0 border-l-[3px] border-brand pl-4 text-[15px] leading-[24px] text-ink">
+          “{{ c.citacao }}” <span class="text-ink-muted">— {{ c.autor }}</span>
         </blockquote>
       </article>
     </div>

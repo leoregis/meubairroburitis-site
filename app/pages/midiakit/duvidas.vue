@@ -41,20 +41,16 @@ const faq = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-16">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Midiakit</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Dúvidas frequentes</h1>
+  <div class="mx-auto flex max-w-[960px] flex-col gap-8 px-4 pb-16 pt-6 sm:gap-10 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <MidiakitCabecalho titulo="Dúvidas frequentes" />
 
-    <div class="mt-8">
-      <MidiakitTabs />
-    </div>
-
-    <div class="divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
-      <details v-for="item in faq" :key="item.pergunta" class="group p-5">
-        <summary class="cursor-pointer list-none font-semibold text-stone-800 marker:content-none">
+    <div class="flex flex-col border-t border-line">
+      <details v-for="item in faq" :key="item.pergunta" class="group border-b border-line">
+        <summary class="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-bold text-ink marker:content-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:text-[17px] [&::-webkit-details-marker]:hidden">
           {{ item.pergunta }}
+          <Icon name="lucide:plus" class="h-5 w-5 flex-none text-brand-ink transition-transform group-open:rotate-45" aria-hidden="true" />
         </summary>
-        <p class="mt-3 text-sm text-stone-600">{{ item.resposta }}</p>
+        <p class="m-0 max-w-[720px] pb-5 text-[15px] leading-[24px] text-ink-muted sm:text-base sm:leading-[26px]">{{ item.resposta }}</p>
       </details>
     </div>
   </div>

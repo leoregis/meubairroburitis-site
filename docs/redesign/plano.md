@@ -508,6 +508,7 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | 2: home + busca | Feita em 29/10/2026 (notas abaixo) |
 | 3: notícias | Feita em 29/10/2026 (notas abaixo) |
 | 4: empresas e prestadores (+ remoção do @nuxt/ui, CSS externo, crédito de foto) | Feita em 30/10/2026 (notas abaixo) |
+| 5: Anuncie, produto, carrinho/checkout (visual), midiakit e `/links` | Feita em 30/10/2026 (notas abaixo). Clientes do Supabase sob demanda: aprovado, aguardando o token de teste do Mercado Pago |
 
 Notas da fase 1:
 
@@ -612,3 +613,22 @@ Notas da fase 4 (empresas e prestadores) e dos itens anteriores, 29-30/10/2026:
   - **Por que valeu:** os logos originais somavam ~3,8 MB numa página de listagem; o LCP de `/empresas` no celular caiu de 5,8 para 4,2 s.
   - A galeria continua direto do Storage, com carregamento sob demanda e logo abaixo do horário e do endereço. Passá-la pelo IPX daria +1.105 arquivos (+12 min) para pouco ganho no LCP, que foi medido.
 - **Ainda carregados em toda página** (próximo passo de desempenho, precisa de aprovação porque mexe no caminho de login, checkout e Meus pedidos): os **dois clientes completos do Supabase** (site e Guia, com Auth e Realtime), criados na abertura por `plugins/supabase.ts` e `plugins/supabase-meubairro-app.ts`. É o principal peso do LCP que sobra (ver `lighthouse-antes.md`, fase 4). O plugin do Mercado Pago só carrega o SDK na hora do pagamento: custo fixo pequeno.
+  - **Aprovado pelo Leo em 30/10/2026**, com teste ponta a ponta num branch de dev do Supabase do site e o Mercado Pago em modo de teste. Fica para quando ele avisar que o token de teste está salvo (ver fase 5).
+
+Notas da fase 5 (Anuncie, produto, carrinho/checkout, midiakit e `/links`), 30/10/2026:
+
+- **Página Anuncie (`/loja`)**, com a estrutura da prancheta "Anuncie · computador" do protótipo, no cabeçalho branco:
+  - topo com o mesmo `h1` de antes ("Pacotes de anúncio") e a frase do protótipo como linha de apoio;
+  - números de alcance: os mesmos que estavam na home;
+  - planos mensais: MBB Basic e MBB Premium, com o "Inclui, por mês" lido da descrição do produto (linhas com "- "), e o Plano Imobiliário;
+  - formatos avulsos com o selo "Nossa equipe produz" ou "Conteúdo enviado pronto";
+  - aviso de como funciona, comparativo de pacotes, cases (vieram da home) e "Prefere conversar?" com o WhatsApp.
+- **Nada de preço escrito à mão.** Preço, nome, descrição e o que inclui vêm da tabela `produtos`, como antes. Em `app/constants/anuncie.ts` ficam só:
+  - o grupo de cada produto pelo slug (produto novo sem grupo aparece nos avulsos, sem selo);
+  - o **Plano Imobiliário** (R$ 500/mês, cartão sem checkout, com botão de WhatsApp), que não é produto da loja;
+  - os números de alcance e os cases, que estavam na home.
+- **Produto (`/loja/[slug]`):** breadcrumb, selo do grupo, imagem, descrição e caixa de compra (preço, quantidade, "Adicionar ao carrinho"). O script de SEO e o JSON-LD `Product`/`Offer` são os mesmos.
+- **Carrinho, checkout, `/pedido` e Meus pedidos: só template e classes.** O `<script>` de `carrinho.vue`, `pedido/[id].vue`, `meus-pedidos.vue` e `pedido/Acompanhamento.vue` é idêntico ao de antes (conferido no diff). Os textos dos botões não mudaram. O Card Payment Brick do Mercado Pago mantém o estilo próprio, que só muda pela API de customização dele, ou seja, no script.
+- **Midiakit:** as mesmas informações, com cabeçalho e abas novos (`MidiakitCabecalho`, `MidiakitTabs` em chips).
+- **`/links`:** fundo `ink`, botão principal vermelho e os outros brancos; só os ícones das redes mantêm as cores de cada uma.
+- **Saíram** os componentes da home sem uso: HeroConversao, NumerosDestaque, AppDestaque, PacotesComparativo, Depoimentos e MidiakitResumo.

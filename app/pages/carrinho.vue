@@ -106,79 +106,80 @@ function onErroCartao(e: unknown) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-16">
-    <h1 class="font-serif text-3xl font-bold text-stone-900">Seu carrinho</h1>
+  <div class="mx-auto max-w-[760px] px-4 pb-16 pt-8 sm:px-6 sm:pb-[72px] sm:pt-12">
+    <h1 class="m-0 text-[32px] font-extrabold leading-[38px] tracking-[-0.025em] text-ink sm:text-[44px] sm:leading-[50px]">Seu carrinho</h1>
 
     <!-- PIX gerado: mostra QR até o comprador escanear -->
-    <div v-if="resultadoPix" class="mt-8 rounded-2xl border border-stone-200 bg-white p-6">
-      <p class="mb-4 text-center font-semibold text-stone-900">Escaneie o QR Code pra pagar com PIX</p>
+    <div v-if="resultadoPix" class="mt-8 rounded-mbb-xl border border-line bg-white p-6">
+      <p class="mb-4 text-center font-bold text-ink">Escaneie o QR Code pra pagar com PIX</p>
       <CheckoutPixQrCode :qr-code-base64="resultadoPix.qr_code_base64" :copia-e-cola="resultadoPix.qr_code" />
       <NuxtLink
         :to="`/pedido/${resultadoPix.pedido_id}`"
-        class="mt-6 block text-center text-sm font-semibold text-orange-700 hover:underline"
+        class="mt-6 flex min-h-[44px] items-center justify-center text-sm font-bold text-brand-ink hover:underline"
       >
         Já paguei, continuar →
       </NuxtLink>
     </div>
 
     <template v-else>
-      <p v-if="itens.length === 0" class="mt-6 text-stone-500">
+      <p v-if="itens.length === 0" class="mt-6 text-[17px] text-ink-muted">
         Seu carrinho está vazio.
-        <NuxtLink to="/loja" class="font-semibold text-orange-700 hover:underline">Ver pacotes de anúncio</NuxtLink>
+        <NuxtLink to="/loja" class="font-bold text-brand-ink underline underline-offset-2 hover:text-brand-deep">Ver pacotes de anúncio</NuxtLink>
       </p>
 
       <div v-else class="mt-8 space-y-4">
         <div
           v-for="item in itens"
           :key="item.produtoId"
-          class="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-4"
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-mbb-lg border border-line bg-white p-4"
         >
-          <div class="flex-1">
-            <p class="font-semibold text-stone-900">{{ item.nome }}</p>
-            <p class="text-sm tabular-nums text-stone-500">{{ formatarPreco(item.precoCentavos) }} cada</p>
+          <div class="min-w-0 flex-1">
+            <p class="font-bold text-ink">{{ item.nome }}</p>
+            <p class="text-sm tabular-nums text-ink-muted">{{ formatarPreco(item.precoCentavos) }} cada</p>
           </div>
           <input
             type="number"
             min="1"
-            class="w-16 rounded-md border border-stone-300 px-2 py-1 text-center"
+            class="h-11 w-16 rounded-mbb-md border border-line px-2 text-center text-ink focus:border-ink focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink"
+            :aria-label="`Quantidade de ${item.nome}`"
             :value="item.quantidade"
             @change="atualizarQuantidade(item.produtoId, Number(($event.target as HTMLInputElement).value))"
           />
-          <button type="button" class="text-sm text-stone-400 hover:text-red-600" @click="remover(item.produtoId)">
+          <button type="button" class="inline-flex min-h-[44px] items-center px-1 text-sm font-semibold text-ink-muted underline-offset-2 hover:text-brand-ink hover:underline" @click="remover(item.produtoId)">
             Remover
           </button>
         </div>
 
-        <div class="flex items-center justify-between border-t border-stone-200 pt-4">
-          <p class="text-lg font-bold text-stone-900">Total</p>
-          <p class="text-2xl font-bold tabular-nums text-orange-800">{{ formatarPreco(total) }}</p>
+        <div class="flex items-center justify-between border-t border-line pt-4">
+          <p class="m-0 text-lg font-bold text-ink">Total</p>
+          <p class="m-0 text-[28px] font-extrabold tracking-[-0.02em] tabular-nums text-ink">{{ formatarPreco(total) }}</p>
         </div>
 
         <button
           v-if="!mostrarFormulario"
           type="button"
-          class="w-full rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700"
+          class="w-full rounded-mbb-md bg-brand min-h-[48px] px-6 py-3 font-bold text-white hover:bg-brand-deep"
           @click="comecarCheckout"
         >
           Continuar pro pagamento
         </button>
 
-        <div v-else class="space-y-6 border-t border-stone-200 pt-6">
+        <div v-else class="space-y-6 border-t border-line pt-6">
           <CheckoutFormularioComprador v-model="comprador" />
 
           <div class="flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded-lg border px-4 py-2 text-sm font-semibold"
-              :class="metodo === 'pix' ? 'border-orange-600 bg-orange-50 text-orange-800' : 'border-stone-300 text-stone-600'"
+              class="min-h-[44px] flex-1 rounded-mbb-md border px-4 py-2 text-sm font-bold"
+              :class="metodo === 'pix' ? 'border-brand bg-brand-tint text-brand-ink' : 'border-line text-ink-muted'"
               @click="metodo = 'pix'"
             >
               PIX
             </button>
             <button
               type="button"
-              class="flex-1 rounded-lg border px-4 py-2 text-sm font-semibold"
-              :class="metodo === 'cartao' ? 'border-orange-600 bg-orange-50 text-orange-800' : 'border-stone-300 text-stone-600'"
+              class="min-h-[44px] flex-1 rounded-mbb-md border px-4 py-2 text-sm font-bold"
+              :class="metodo === 'cartao' ? 'border-brand bg-brand-tint text-brand-ink' : 'border-line text-ink-muted'"
               @click="metodo = 'cartao'"
             >
               Cartão
@@ -202,7 +203,7 @@ function onErroCartao(e: unknown) {
           >
             <div
               v-if="erro"
-              class="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-sm items-start gap-3 rounded-xl bg-red-600 px-4 py-3 text-white shadow-lg sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
+              class="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-sm items-start gap-3 rounded-mbb-lg bg-red-600 px-4 py-3 text-white shadow-lg sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
             >
               <Icon name="lucide:alert-circle" class="mt-0.5 h-5 w-5 flex-shrink-0" />
               <p class="flex-1 text-sm">{{ erro }}</p>
@@ -216,7 +217,7 @@ function onErroCartao(e: unknown) {
             <button
               type="button"
               :disabled="carregando || !comprador.nome || !comprador.telefone"
-              class="w-full rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+              class="w-full rounded-mbb-md bg-brand min-h-[48px] px-6 py-3 font-bold text-white hover:bg-brand-deep disabled:opacity-50"
               @click="pagarComPix"
             >
               {{ carregando ? 'Gerando PIX...' : 'Gerar QR Code PIX' }}
@@ -230,7 +231,7 @@ function onErroCartao(e: unknown) {
               @submit="pagarComCartao"
               @erro="onErroCartao"
             />
-            <p v-else class="text-sm text-stone-500">Preencha nome e WhatsApp acima pra continuar.</p>
+            <p v-else class="text-sm text-ink-muted">Preencha nome e WhatsApp acima pra continuar.</p>
           </div>
         </div>
       </div>

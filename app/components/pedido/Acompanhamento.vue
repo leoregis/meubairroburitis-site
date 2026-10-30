@@ -86,17 +86,17 @@ const linkWhatsapp = computed(() => {
 <template>
   <div class="mx-auto max-w-xl px-4 py-10 sm:py-14">
     <div v-if="carregando" class="space-y-4" aria-busy="true" aria-label="Carregando o pedido">
-      <div class="h-6 w-40 animate-pulse rounded bg-stone-200" />
-      <div class="h-9 w-64 animate-pulse rounded bg-stone-200" />
-      <div class="h-40 animate-pulse rounded-2xl bg-stone-100" />
+      <div class="h-6 w-40 animate-pulse rounded bg-line" />
+      <div class="h-9 w-64 animate-pulse rounded bg-line" />
+      <div class="h-40 animate-pulse rounded-mbb-xl bg-chip" />
     </div>
 
     <div v-else-if="falhou" class="text-center">
-      <h1 class="font-serif text-2xl font-bold text-stone-900">Não conseguimos abrir o pedido agora</h1>
-      <p class="mt-3 text-stone-600">Confira sua conexão e tente de novo.</p>
+      <h1 class="text-2xl font-bold text-ink">Não conseguimos abrir o pedido agora</h1>
+      <p class="mt-3 text-ink-muted">Confira sua conexão e tente de novo.</p>
       <button
         type="button"
-        class="mt-6 rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700"
+        class="mt-6 rounded-mbb-md bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-deep"
         @click="carregar"
       >
         Tentar de novo
@@ -104,10 +104,10 @@ const linkWhatsapp = computed(() => {
     </div>
 
     <div v-else-if="!pedido?.encontrado || !pedido.disponivel" class="text-center">
-      <h1 class="font-serif text-2xl font-bold text-stone-900">
+      <h1 class="text-2xl font-bold text-ink">
         {{ pedido?.expirado ? 'Este acompanhamento foi encerrado' : 'Link de acompanhamento indisponível' }}
       </h1>
-      <p class="mt-3 text-stone-600">
+      <p class="mt-3 text-ink-muted">
         {{ pedido?.expirado
           ? 'O pedido terminou há mais de 90 dias.'
           : 'O link pode ter sido trocado ou pausado. Fale com a gente para receber o link atualizado.' }}
@@ -116,7 +116,7 @@ const linkWhatsapp = computed(() => {
         :href="linkWhatsapp"
         target="_blank"
         rel="noopener noreferrer"
-        class="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white hover:bg-orange-700"
+        class="mt-6 inline-block rounded-mbb-md bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-deep"
       >
         Falar no WhatsApp
       </a>
@@ -124,31 +124,31 @@ const linkWhatsapp = computed(() => {
 
     <template v-else>
       <header>
-        <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Acompanhe seu pedido</p>
-        <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">{{ pedido.numero ? `Pedido nº ${pedido.numero}` : 'Seu pedido' }}</h1>
-        <p class="mt-2 text-stone-600">
+        <p class="text-sm font-semibold uppercase tracking-wide text-brand-ink">Acompanhe seu pedido</p>
+        <h1 class="mt-2 text-3xl font-bold text-ink">{{ pedido.numero ? `Pedido nº ${pedido.numero}` : 'Seu pedido' }}</h1>
+        <p class="mt-2 text-ink-muted">
           {{ pedido.empresa }}<span v-if="pedido.empresa && pedido.data"> · </span><span v-if="pedido.data">{{ pedido.empresa ? '' : 'Pago em ' }}{{ dataCurta(pedido.data) }}</span>
         </p>
         <p class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <span class="rounded-full px-3 py-1 font-semibold" :class="situacaoGeral.classe">{{ situacaoGeral.rotulo }}</span>
-          <span v-if="pedido.atualizado_em" class="text-stone-500">Atualizado em {{ dataCurta(pedido.atualizado_em) }} às {{ hora(pedido.atualizado_em) }}</span>
+          <span v-if="pedido.atualizado_em" class="text-ink-muted">Atualizado em {{ dataCurta(pedido.atualizado_em) }} às {{ hora(pedido.atualizado_em) }}</span>
         </p>
       </header>
 
-      <p v-if="pedido.pagamento_estornado" class="mt-6 rounded-2xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
+      <p v-if="pedido.pagamento_estornado" class="mt-6 rounded-mbb-xl border border-line bg-ground p-4 text-sm text-ink">
         O pagamento deste pedido foi estornado ou cancelado no Mercado Pago. Se tiver dúvida, fale com a gente pelo WhatsApp.
       </p>
-      <p v-else-if="pedido.aguardando_registro" class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+      <p v-else-if="pedido.aguardando_registro" class="mt-6 rounded-mbb-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
         Recebemos o seu pagamento. Em breve falamos com você para combinar as datas, e cada etapa aparece aqui.
       </p>
 
       <section
         v-for="(item, i) in pedido.itens"
         :key="i"
-        class="mt-8 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
+        class="mt-8 rounded-mbb-xl border border-line bg-white p-5 sm:p-6"
         :aria-label="item.produto"
       >
-        <h2 class="font-serif text-lg font-bold text-stone-900">
+        <h2 class="text-lg font-bold text-ink">
           <span v-if="item.quantidade > 1">{{ item.quantidade }}× </span>{{ item.produto }}
         </h2>
 
@@ -161,22 +161,22 @@ const linkWhatsapp = computed(() => {
           >
             <div class="flex flex-col items-center">
               <span class="mt-1.5 h-3 w-3 flex-none rounded-full" :class="PONTOS[situacao(e.situacao).tom]" />
-              <span v-if="j < item.entregas.length - 1" class="mt-1 w-px flex-1 bg-stone-200" />
+              <span v-if="j < item.entregas.length - 1" class="mt-1 w-px flex-1 bg-line" />
             </div>
             <div class="min-w-0 flex-1">
-              <p class="font-semibold text-stone-900">
-                {{ e.tipo }}<span v-if="e.quantidade > 1" class="font-normal text-stone-500"> ({{ e.quantidade }})</span>
+              <p class="font-semibold text-ink">
+                {{ e.tipo }}<span v-if="e.quantidade > 1" class="font-normal text-ink-muted"> ({{ e.quantidade }})</span>
               </p>
               <p class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 <span class="rounded-full px-2.5 py-0.5 font-semibold" :class="TONS[situacao(e.situacao).tom]">{{ situacao(e.situacao).rotulo }}</span>
-                <span v-if="detalhe(e)" class="text-stone-600">{{ detalhe(e) }}</span>
+                <span v-if="detalhe(e)" class="text-ink-muted">{{ detalhe(e) }}</span>
               </p>
               <a
                 v-if="e.aprovacao_link"
                 :href="e.aprovacao_link"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mt-3 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700"
+                class="mt-3 inline-flex min-h-[44px] items-center gap-1.5 rounded-mbb-md bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-deep"
               >
                 Ver o material para aprovar
                 <Icon name="lucide:arrow-up-right" class="h-4 w-4" />
@@ -187,7 +187,7 @@ const linkWhatsapp = computed(() => {
                     :href="p.url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex min-h-[44px] items-center gap-1 text-sm font-semibold text-orange-800 underline underline-offset-4 hover:text-orange-700"
+                    class="inline-flex min-h-[44px] items-center gap-1 text-sm font-semibold text-brand-ink underline underline-offset-4 hover:text-brand-deep"
                   >
                     {{ p.canal ? `Ver publicação no ${p.canal}` : 'Ver publicação' }}
                     <Icon name="lucide:arrow-up-right" class="h-3.5 w-3.5" />
@@ -200,21 +200,21 @@ const linkWhatsapp = computed(() => {
 
         <p
           v-if="item.a_agendar > 0 && !pedido.cancelado && !pedido.pagamento_estornado"
-          class="text-sm text-stone-600"
-          :class="item.entregas.length ? 'mt-5 border-t border-stone-100 pt-4' : 'mt-3'"
+          class="text-sm text-ink-muted"
+          :class="item.entregas.length ? 'mt-5 border-t border-line pt-4' : 'mt-3'"
         >
-          <span class="font-semibold text-stone-800">Aguardando agendamento:</span>
+          <span class="font-semibold text-ink">Aguardando agendamento:</span>
           {{ item.a_agendar }} {{ item.a_agendar === 1 ? 'entrega' : 'entregas' }}. Vamos combinar as datas com você.
         </p>
       </section>
 
-      <div class="mt-8 rounded-2xl border border-stone-200 bg-stone-50 p-5 text-center sm:p-6">
-        <p class="text-sm text-stone-600">Alguma dúvida sobre o pedido?</p>
+      <div class="mt-8 rounded-mbb-xl border border-line bg-ground p-5 text-center sm:p-6">
+        <p class="text-sm text-ink-muted">Alguma dúvida sobre o pedido?</p>
         <a
           :href="linkWhatsapp"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-full bg-orange-600 px-6 font-semibold text-white hover:bg-orange-700"
+          class="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-mbb-md bg-brand px-6 font-semibold text-white hover:bg-brand-deep"
         >
           <Icon name="lucide:message-circle" class="h-5 w-5" />
           Falar no WhatsApp
@@ -224,7 +224,7 @@ const linkWhatsapp = computed(() => {
       <p v-if="token" class="mt-6 text-center">
         <NuxtLink
           to="/meus-pedidos"
-          class="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-orange-800 underline underline-offset-4 hover:text-orange-700"
+          class="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-brand-ink underline underline-offset-4 hover:text-brand-deep"
         >
           Ver todos os seus pedidos
           <Icon name="lucide:arrow-right" class="h-4 w-4" />

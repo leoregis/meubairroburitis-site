@@ -31,14 +31,14 @@ const time = [
 </script>
 
 <template>
-  <section class="mx-auto max-w-6xl px-4 py-16">
-    <div class="mb-10 text-center">
-      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Nosso time</p>
-      <h2 class="mt-2 text-balance text-2xl font-bold text-stone-900 sm:text-3xl">Influenciadores locais</h2>
+  <section aria-labelledby="time-titulo" class="mx-auto max-w-[1248px] px-4 py-14 sm:px-6 sm:py-16">
+    <div class="flex flex-col gap-2 border-b border-line pb-3">
+      <BaseEyebrow>Nosso time</BaseEyebrow>
+      <h2 id="time-titulo" class="m-0 text-balance text-[26px] font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[34px] sm:leading-[40px]">Influenciadores locais</h2>
     </div>
 
-    <div class="grid grid-cols-2 gap-6 sm:grid-cols-5">
-      <div v-for="pessoa in time" :key="pessoa.nome" class="text-center">
+    <ul class="m-0 mt-8 grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 lg:grid-cols-5">
+      <li v-for="pessoa in time" :key="pessoa.nome" class="flex min-w-0 flex-col gap-2">
         <NuxtPicture
           :src="pessoa.foto"
           :alt="pessoa.nome"
@@ -46,11 +46,11 @@ const time = [
           :width="190"
           :height="260"
           loading="lazy"
-          :img-attrs="{ class: 'mx-auto h-32 w-24 rounded-lg object-cover' }"
+          :img-attrs="{ class: 'aspect-[3/4] w-full rounded-mbb-lg border border-line object-cover' }"
         />
-        <p class="mt-3 font-semibold text-stone-900">{{ pessoa.nome }}</p>
-        <p class="mt-1 text-xs text-stone-500">{{ pessoa.descricao }}</p>
-      </div>
-    </div>
+        <p class="m-0 mt-1 text-base font-extrabold leading-5 text-ink">{{ pessoa.nome }}</p>
+        <p class="m-0 text-[13px] leading-5 text-ink-muted">{{ pessoa.descricao }}</p>
+      </li>
+    </ul>
   </section>
 </template>

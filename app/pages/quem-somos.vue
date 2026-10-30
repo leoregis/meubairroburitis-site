@@ -150,72 +150,71 @@ const marcos = [
 
 <template>
   <article>
-    <div
-      class="bg-cover bg-center py-24"
-      :style="{ backgroundImage: `linear-gradient(rgba(20, 20, 18, 0.75), rgba(20, 20, 18, 0.75)), url(${fundoOtimizado})` }"
+    <header
+      class="bg-ink bg-cover bg-center"
+      :style="{ backgroundImage: `linear-gradient(rgba(29, 21, 23, 0.82), rgba(29, 21, 23, 0.82)), url(${fundoOtimizado})` }"
     >
-      <div class="mx-auto max-w-2xl px-4 text-center text-white">
-        <p class="text-sm font-semibold uppercase tracking-wide text-orange-300">Quem Somos</p>
-        <h1 class="mt-2 text-balance font-serif text-3xl font-bold">
+      <div class="mx-auto flex max-w-[760px] flex-col gap-2 px-4 py-14 text-white sm:px-6 sm:py-20">
+        <BaseEyebrow tom="escuro">Quem Somos</BaseEyebrow>
+        <h1 class="m-0 text-balance text-[34px] font-extrabold leading-10 tracking-[-0.03em] sm:text-[48px] sm:leading-[54px]">
           Conectando vidas, contando histórias
         </h1>
       </div>
-    </div>
+    </header>
 
-    <div class="mx-auto max-w-2xl px-4 py-16">
-
-    <div class="prose prose-stone mt-8 max-w-none">
-      <p>
-        Tudo começou com uma ideia simples: conectar os moradores do Buritis e do Estoril em um
-        espaço acolhedor, onde informação de qualidade e espírito de comunidade andassem lado a
-        lado. Em 2012, muito antes das redes sociais dominarem a comunicação local, nascia o
-        projeto Meu Bairro Buritis — criado por Leonardo Régis Orrico, publicitário, especialista
-        em marketing digital e morador apaixonado pelo bairro.
-      </p>
-      <p>
-        O objetivo era claro: dar voz à vizinhança, apoiar o comércio local e fortalecer os laços
-        entre os moradores. O que começou como um pequeno grupo no Facebook cresceu e se
-        transformou em uma verdadeira rede de apoio, informação e oportunidades. Ao longo dos anos,
-        fomos palco de campanhas solidárias, promovemos eventos gratuitos, valorizamos histórias
-        inspiradoras, denunciamos problemas urbanos e celebramos conquistas da nossa região.
-      </p>
-      <p>
-        Nosso projeto é feito por quem vive o bairro todos os dias. Gente que acredita no poder da
-        união e da informação local. Hoje, com mais de uma década de atuação, o Meu Bairro Buritis
-        está presente no Instagram, Facebook, WhatsApp, Telegram, TikTok e YouTube — além de manter
-        este portal completo, moderno e cheio de novidades para você.
-      </p>
-      <p>
-        A mente por trás dessa jornada é Leonardo Régis Orrico. Nascido em Brasília, mas criado em
-        BH, ele enfrentou desde jovem uma deficiência física progressiva que afeta sua coordenação
-        motora e audição. Mesmo diante dos desafios, Leonardo nunca deixou de acreditar no impacto
-        que a comunicação pode ter na vida das pessoas. Seu olhar sensível, seu perfeccionismo e sua
-        dedicação diária ao projeto são os pilares que sustentam tudo isso. Em 2024, pela primeira
-        vez, ele decidiu mostrar seu rosto em um vídeo para a comunidade, revelando sua história e a
-        trajetória por trás do projeto. O vídeo viralizou e trouxe ainda mais reconhecimento e afeto
-        por parte dos seguidores.
-      </p>
-      <p>
-        O Meu Bairro Buritis é mais do que um site ou um perfil nas redes: é uma ponte. Um canal
-        direto entre quem quer divulgar, quem quer descobrir e quem quer transformar o bairro num
-        lugar ainda melhor. Se você também acredita nisso, junte-se a nós.
-      </p>
-      <p class="font-semibold text-stone-900">
-        Juntos, somos mais fortes. Juntos, somos Meu Bairro Buritis.
-      </p>
+    <div class="mx-auto max-w-[760px] px-4 pb-14 pt-10 sm:px-6 sm:pt-12">
+      <div class="prose prose-lg max-w-none text-ink prose-p:text-ink">
+        <p>
+          Tudo começou com uma ideia simples: conectar os moradores do Buritis e do Estoril em um
+          espaço acolhedor, onde informação de qualidade e espírito de comunidade andassem lado a
+          lado. Em 2012, muito antes das redes sociais dominarem a comunicação local, nascia o
+          projeto Meu Bairro Buritis — criado por Leonardo Régis Orrico, publicitário, especialista
+          em marketing digital e morador apaixonado pelo bairro.
+        </p>
+        <p>
+          O objetivo era claro: dar voz à vizinhança, apoiar o comércio local e fortalecer os laços
+          entre os moradores. O que começou como um pequeno grupo no Facebook cresceu e se
+          transformou em uma verdadeira rede de apoio, informação e oportunidades. Ao longo dos anos,
+          fomos palco de campanhas solidárias, promovemos eventos gratuitos, valorizamos histórias
+          inspiradoras, denunciamos problemas urbanos e celebramos conquistas da nossa região.
+        </p>
+        <p>
+          Nosso projeto é feito por quem vive o bairro todos os dias. Gente que acredita no poder da
+          união e da informação local. Hoje, com mais de uma década de atuação, o Meu Bairro Buritis
+          está presente no Instagram, Facebook, WhatsApp, Telegram, TikTok e YouTube — além de manter
+          este portal completo, moderno e cheio de novidades para você.
+        </p>
+        <p>
+          A mente por trás dessa jornada é Leonardo Régis Orrico. Nascido em Brasília, mas criado em
+          BH, ele enfrentou desde jovem uma deficiência física progressiva que afeta sua coordenação
+          motora e audição. Mesmo diante dos desafios, Leonardo nunca deixou de acreditar no impacto
+          que a comunicação pode ter na vida das pessoas. Seu olhar sensível, seu perfeccionismo e sua
+          dedicação diária ao projeto são os pilares que sustentam tudo isso. Em 2024, pela primeira
+          vez, ele decidiu mostrar seu rosto em um vídeo para a comunidade, revelando sua história e a
+          trajetória por trás do projeto. O vídeo viralizou e trouxe ainda mais reconhecimento e afeto
+          por parte dos seguidores.
+        </p>
+        <p>
+          O Meu Bairro Buritis é mais do que um site ou um perfil nas redes: é uma ponte. Um canal
+          direto entre quem quer divulgar, quem quer descobrir e quem quer transformar o bairro num
+          lugar ainda melhor. Se você também acredita nisso, junte-se a nós.
+        </p>
+        <p class="font-semibold text-ink">
+          Juntos, somos mais fortes. Juntos, somos Meu Bairro Buritis.
+        </p>
       </div>
 
-      <aside aria-labelledby="estrutura-editorial-titulo" class="mt-12 rounded-2xl border border-stone-200 bg-stone-50 p-5 sm:p-6">
-        <h2 id="estrutura-editorial-titulo" class="font-serif text-lg font-bold text-stone-900">Nossa estrutura editorial</h2>
-        <p class="mt-2 text-sm leading-relaxed text-stone-600">
+      <aside aria-labelledby="estrutura-editorial-titulo" class="mt-12 rounded-mbb-xl border border-line bg-ground p-5 sm:p-6">
+        <h2 id="estrutura-editorial-titulo" class="m-0 text-lg font-extrabold text-ink">Nossa estrutura editorial</h2>
+        <p class="m-0 mt-2 text-[15px] leading-6 text-ink-muted">
           Para conhecer os responsáveis pelo veículo, nossos princípios editoriais e os procedimentos para
           correções e direito de resposta, consulte nosso Expediente e nossa Política Editorial.
         </p>
-        <ul class="mt-3 flex flex-wrap gap-x-6 text-[15px]">
+        <ul class="m-0 mt-3 flex list-none flex-wrap gap-x-6 p-0 text-[15px]">
           <li v-for="link in linksEstruturaEditorial" :key="link.to">
             <NuxtLink
               :to="link.to"
-              class="inline-flex min-h-[44px] items-center font-semibold text-orange-800 underline underline-offset-4 hover:text-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-700"
+              class="inline-flex min-h-[44px] items-center font-bold text-brand-ink underline underline-offset-4 hover:text-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-ink"
             >
               {{ link.label }}
             </NuxtLink>
@@ -224,35 +223,33 @@ const marcos = [
       </aside>
     </div>
 
-    <div class="border-t border-stone-200 bg-stone-50 py-16">
-      <div class="mx-auto max-w-2xl px-4">
-        <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Histórico</p>
-        <h2 class="mt-2 text-balance font-serif text-2xl font-bold text-stone-900 sm:text-3xl">
+    <section aria-labelledby="historico-titulo" class="border-t border-line bg-ground">
+      <div class="mx-auto max-w-[760px] px-4 py-14 sm:px-6 sm:py-16">
+        <BaseEyebrow>Histórico</BaseEyebrow>
+        <h2 id="historico-titulo" class="m-0 mt-2 text-balance text-[26px] font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[34px] sm:leading-[40px]">
           Uma trajetória de mais de uma década
         </h2>
 
-        <ol class="mt-10">
+        <ol class="m-0 mt-10 list-none p-0">
           <li
             v-for="(marco, i) in marcos"
             :key="`${marco.ano}-${marco.titulo}`"
             class="relative flex gap-4 sm:gap-6"
             :class="marco.agrupadoComProximo ? 'pb-5' : 'pb-9'"
           >
-            <div class="flex flex-col items-center">
-              <span
-                class="mt-1.5 h-3 w-3 flex-none rounded-full bg-orange-500 ring-4 ring-orange-100"
-              />
-              <span v-if="i < marcos.length - 1" class="w-px flex-1 bg-stone-300" />
+            <div class="flex flex-col items-center" aria-hidden="true">
+              <span class="mt-1.5 h-3.5 w-3.5 flex-none rounded-full border-[3px] border-brand bg-white" />
+              <span v-if="i < marcos.length - 1" class="w-0.5 flex-1 bg-line" />
             </div>
 
-            <div class="flex-1 pb-1">
-              <p class="text-xs font-semibold uppercase tracking-wide text-orange-700">
+            <div class="min-w-0 flex-1 pb-1">
+              <p class="m-0 inline-flex rounded-full bg-white px-2.5 py-0.5 text-xs font-bold tabular-nums text-brand-ink ring-1 ring-line">
                 {{ marco.ano }}
               </p>
-              <h3 class="mt-1 text-balance font-serif text-base font-bold text-stone-900 sm:text-lg">
+              <h3 class="m-0 mt-2 text-balance text-[17px] font-extrabold leading-6 text-ink sm:text-lg">
                 {{ marco.titulo }}
               </h3>
-              <p v-if="marco.texto" class="mt-1.5 text-sm leading-relaxed text-stone-600">
+              <p v-if="marco.texto" class="m-0 mt-1.5 text-[15px] leading-6 text-ink-muted sm:text-base sm:leading-[26px]">
                 {{ marco.texto }}
               </p>
               <a
@@ -260,18 +257,19 @@ const marcos = [
                 :href="marco.link"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-orange-700 hover:underline"
+                class="mt-1 inline-flex min-h-[44px] items-center gap-1 text-sm font-bold text-brand-ink hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
               >
                 Ver fonte
-                <Icon name="lucide:arrow-up-right" class="h-3.5 w-3.5" />
+                <span class="sr-only">: {{ marco.titulo }} (abre em nova aba)</span>
+                <Icon name="lucide:arrow-up-right" class="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             </div>
           </li>
         </ol>
 
-        <section aria-labelledby="marca-registrada-titulo" class="mt-4 border-t border-stone-200 pt-8">
-          <h2 id="marca-registrada-titulo" class="font-serif text-lg font-bold text-stone-900">Marca registrada</h2>
-          <p class="mt-2 text-sm leading-relaxed text-stone-600">
+        <section aria-labelledby="marca-registrada-titulo" class="mt-4 border-t border-line pt-8">
+          <h2 id="marca-registrada-titulo" class="m-0 text-lg font-extrabold text-ink">Marca registrada</h2>
+          <p class="m-0 mt-2 text-[15px] leading-6 text-ink-muted">
             Meu Bairro Buritis® é marca registrada no Instituto Nacional da Propriedade Industrial
             (INPI), processo nº 938862022, de titularidade de Leonardo Regis Orrico. O uso do nome, do
             logotipo e dos demais elementos da marca sem autorização prévia é proibido e está sujeito
@@ -279,7 +277,7 @@ const marcos = [
           </p>
         </section>
       </div>
-    </div>
+    </section>
     <!-- veio da home no redesign (fase 2, decisão 12); visual novo na fase 6 -->
     <HomeTimeSection />
   </article>

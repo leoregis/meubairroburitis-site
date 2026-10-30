@@ -100,6 +100,12 @@ if (falhas.length) {
 }
 console.log('conferências ok')
 
+// 404 como na produção: lá o Apache responde endereço inexistente com a página
+// real de "não encontrada" (ErrorDocument 404 em deploy/htaccess-producao), não
+// com a casca 404.html do Nuxt (sem título). O Worker usa o 404.html
+// (not_found_handling), então ele recebe o conteúdo dessa página.
+cpSync(join(saida, 'pagina-nao-encontrada', 'index.html'), join(saida, '404.html'))
+
 // 4. publica
 if (!soBuild) {
   console.log('\n== publicando')

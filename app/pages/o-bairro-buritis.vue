@@ -132,26 +132,26 @@ const recentes = computed(() => {
 })
 
 const classeLinkBotao =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700'
+  'inline-flex min-h-[44px] items-center justify-center rounded-mbb-md px-4 text-sm font-bold no-underline transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
 </script>
 
 <template>
-  <article class="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-    <header>
-      <nav aria-label="Breadcrumb" class="text-sm text-stone-500">
-        <ol class="flex flex-wrap items-center gap-1">
-          <li><NuxtLink to="/" class="hover:text-orange-700 hover:underline">Início</NuxtLink></li>
+  <article class="mx-auto max-w-[760px] px-4 pb-16 pt-6 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <header class="flex flex-col gap-2">
+      <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+        <ol class="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
+          <li><NuxtLink to="/" class="inline-flex min-h-[44px] items-center font-bold text-brand-ink hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink">Início</NuxtLink></li>
           <li aria-hidden="true">/</li>
-          <li><span aria-current="page" class="text-stone-700">O Bairro Buritis</span></li>
+          <li><span aria-current="page" class="text-ink">O Bairro Buritis</span></li>
         </ol>
       </nav>
 
-      <p class="mt-6 text-sm font-semibold uppercase tracking-wide text-orange-700">O Bairro Buritis</p>
-      <h1 class="mt-2 text-balance font-serif text-3xl font-bold leading-tight text-stone-900 sm:text-4xl">
+      <BaseEyebrow class="mt-2">O Bairro Buritis</BaseEyebrow>
+      <h1 class="m-0 text-balance text-[32px] font-extrabold leading-[38px] tracking-[-0.025em] text-ink sm:text-[44px] sm:leading-[50px]">
         Conheça o Buritis: história, vida e informações sobre o bairro
       </h1>
 
-      <div class="mt-5 space-y-4 text-[17px] leading-relaxed text-stone-700">
+      <div class="mt-4 space-y-4 text-[17px] leading-[28px] text-ink">
         <p>
           Localizado na Região Oeste de Belo Horizonte, o Buritis é um dos bairros mais conhecidos da capital
           mineira. Sua paisagem reúne edifícios residenciais, áreas comerciais, importantes vias de circulação e
@@ -179,26 +179,26 @@ const classeLinkBotao =
         sizes="100vw sm:720px"
         loading="eager"
         fetchpriority="high"
-        :img-attrs="{ class: 'mt-8 aspect-[3/2] w-full rounded-2xl object-cover' }"
+        :img-attrs="{ class: 'mt-8 aspect-[3/2] w-full rounded-mbb-xl object-cover' }"
       />
     </header>
 
-    <nav aria-labelledby="sumario-titulo" class="mt-10 rounded-2xl border border-stone-200 bg-stone-50 p-5 sm:p-6">
-      <p id="sumario-titulo" class="font-serif text-lg font-bold text-stone-900">Nesta página</p>
-      <ol class="mt-3 grid gap-x-6 gap-y-1 text-[15px] sm:grid-cols-2">
+    <nav aria-labelledby="sumario-titulo" class="mt-10 rounded-mbb-xl border border-line bg-ground p-5 sm:p-6">
+      <p id="sumario-titulo" class="m-0 text-lg font-extrabold text-ink">Nesta página</p>
+      <ol class="m-0 mt-3 grid list-none gap-x-6 gap-y-1 p-0 text-[15px] sm:grid-cols-2">
         <li v-for="(item, i) in sumario" :key="item.id">
           <a
             :href="`#${item.id}`"
-            class="inline-flex min-h-[44px] items-center gap-2 text-stone-800 underline decoration-stone-300 underline-offset-4 hover:text-orange-700 hover:decoration-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-700"
+            class="inline-flex min-h-[44px] items-center gap-2 text-ink underline decoration-line underline-offset-4 hover:text-brand-deep hover:decoration-brand-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-ink"
           >
-            <span class="w-5 shrink-0 text-right text-sm font-semibold text-orange-800">{{ i + 1 }}.</span>
+            <span class="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-brand-ink">{{ i + 1 }}.</span>
             {{ item.titulo }}
           </a>
         </li>
       </ol>
     </nav>
 
-    <div class="texto-bairro prose prose-stone mt-12 max-w-none sm:prose-lg prose-headings:font-serif prose-headings:text-stone-900 prose-a:text-orange-800 prose-a:underline-offset-2 hover:prose-a:text-orange-700">
+    <div class="texto-bairro prose mt-12 max-w-none text-ink sm:prose-lg prose-p:text-ink prose-li:text-ink prose-headings:font-extrabold prose-headings:tracking-[-0.015em] prose-headings:text-ink prose-strong:text-ink prose-a:font-semibold prose-a:text-brand-ink prose-a:underline-offset-2 hover:prose-a:text-brand-deep">
       <!-- 1 -->
       <section id="onde-fica" aria-labelledby="onde-fica-titulo">
         <h2 id="onde-fica-titulo">Onde fica o bairro Buritis?</h2>
@@ -347,42 +347,42 @@ const classeLinkBotao =
           a partir dos dados do Censo 2022 por setor censitário.
         </p>
 
-        <div class="not-prose my-8 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-          <p class="font-serif text-lg font-bold text-stone-900">O Buritis em números</p>
+        <div class="not-prose my-8 rounded-mbb-xl border border-line bg-white p-5 shadow-sm sm:p-6">
+          <p class="text-lg font-bold text-ink">O Buritis em números</p>
           <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <div>
-              <dt class="text-sm text-stone-600">População</dt>
-              <dd class="font-serif text-2xl font-bold text-orange-800">{{ DADOS_BAIRRO.populacao }}</dd>
+              <dt class="text-sm text-ink-muted">População</dt>
+              <dd class="text-2xl font-bold text-brand-ink">{{ DADOS_BAIRRO.populacao }}</dd>
             </div>
             <div>
-              <dt class="text-sm text-stone-600">Domicílios</dt>
-              <dd class="font-serif text-2xl font-bold text-orange-800">{{ DADOS_BAIRRO.domicilios }}</dd>
+              <dt class="text-sm text-ink-muted">Domicílios</dt>
+              <dd class="text-2xl font-bold text-brand-ink">{{ DADOS_BAIRRO.domicilios }}</dd>
             </div>
             <div>
-              <dt class="text-sm text-stone-600">Área</dt>
-              <dd class="font-serif text-2xl font-bold text-orange-800">{{ DADOS_BAIRRO.areaKm2 }} km²</dd>
+              <dt class="text-sm text-ink-muted">Área</dt>
+              <dd class="text-2xl font-bold text-brand-ink">{{ DADOS_BAIRRO.areaKm2 }} km²</dd>
             </div>
             <div>
-              <dt class="text-sm text-stone-600">Densidade</dt>
-              <dd class="font-serif text-2xl font-bold text-orange-800">{{ DADOS_BAIRRO.densidade }} <span class="text-base font-semibold">hab./km²</span></dd>
+              <dt class="text-sm text-ink-muted">Densidade</dt>
+              <dd class="text-2xl font-bold text-brand-ink">{{ DADOS_BAIRRO.densidade }} <span class="text-base font-semibold">hab./km²</span></dd>
             </div>
           </dl>
-          <div class="mt-5 space-y-2 border-t border-stone-100 pt-4 text-sm leading-relaxed text-stone-600">
+          <div class="mt-5 space-y-2 border-t border-line pt-4 text-sm leading-relaxed text-ink-muted">
             <p>
-              <strong class="text-stone-800">Referência:</strong> Censo Demográfico 2022 (IBGE), com dados por setor
+              <strong class="text-ink">Referência:</strong> Censo Demográfico 2022 (IBGE), com dados por setor
               censitário distribuídos pela Prefeitura de Belo Horizonte entre os bairros do município.
             </p>
             <p>
-              <strong class="text-stone-800">Recorte territorial:</strong> bairro popular Buritis (código 623) na
+              <strong class="text-ink">Recorte territorial:</strong> bairro popular Buritis (código 623) na
               base de bairros da Prefeitura, o mesmo limite do mapa desta página.
             </p>
             <p>
-              <strong class="text-stone-800">Domicílios:</strong> a fonte informa a quantidade de domicílios por
+              <strong class="text-ink">Domicílios:</strong> a fonte informa a quantidade de domicílios por
               bairro, sem especificar se são domicílios ocupados ou o total de domicílios.
             </p>
             <p>
-              <strong class="text-stone-800">Fonte:</strong>
-              <a :href="FONTES.dadosPbh" target="_blank" rel="noopener noreferrer" class="font-medium text-orange-800 underline hover:no-underline">
+              <strong class="text-ink">Fonte:</strong>
+              <a :href="FONTES.dadosPbh" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-ink underline hover:no-underline">
                 Prefeitura de Belo Horizonte, População e Domicílio por Bairro 2022</a>.
               Dados consultados em 30 de setembro de 2026.
             </p>
@@ -432,20 +432,20 @@ const classeLinkBotao =
         <p>Acesse o Guia Buritis para pesquisar empresas e profissionais da região.</p>
 
         <div class="not-prose my-6 flex flex-wrap gap-3">
-          <a href="/guia/" :class="[classeLinkBotao, 'bg-orange-700 text-white hover:bg-orange-800']">Explorar o Guia Buritis</a>
-          <NuxtLink to="/empresas" :class="[classeLinkBotao, 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50']">Ver todas as empresas</NuxtLink>
-          <NuxtLink to="/prestadores" :class="[classeLinkBotao, 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50']">Ver todos os prestadores</NuxtLink>
+          <a href="/guia/" :class="[classeLinkBotao, 'bg-brand text-white hover:bg-brand-deep']">Explorar o Guia Buritis</a>
+          <NuxtLink to="/empresas" :class="[classeLinkBotao, 'border border-line bg-white text-ink hover:bg-ground']">Ver todas as empresas</NuxtLink>
+          <NuxtLink to="/prestadores" :class="[classeLinkBotao, 'border border-line bg-white text-ink hover:bg-ground']">Ver todos os prestadores</NuxtLink>
         </div>
 
         <div v-if="empresas.length" class="not-prose mt-8">
-          <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-orange-800">Algumas empresas do Guia</p>
+          <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-ink">Algumas empresas do Guia</p>
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
             <EmpresasCard v-for="empresa in empresas" :key="empresa.unidade_id" :empresa="empresa" ocultar-avaliacoes />
           </div>
         </div>
 
         <div v-if="prestadores.length" class="not-prose mt-8">
-          <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-orange-800">Alguns prestadores de serviço</p>
+          <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-ink">Alguns prestadores de serviço</p>
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
             <PrestadoresCard v-for="prestador in prestadores" :key="prestador.id" :prestador="prestador" />
           </div>
@@ -453,12 +453,12 @@ const classeLinkBotao =
 
         <div v-if="categoriasEmpresa?.length || categoriasPrestador?.length" class="not-prose mt-8 space-y-5">
           <div v-if="categoriasEmpresa?.length">
-            <p class="mb-2 text-sm font-semibold text-stone-800">Empresas por categoria</p>
+            <p class="mb-2 text-sm font-semibold text-ink">Empresas por categoria</p>
             <ul class="flex flex-wrap gap-2">
               <li v-for="c in categoriasEmpresa" :key="c.id">
                 <NuxtLink
                   :to="`/empresas/categoria/${c.slug}`"
-                  class="inline-flex min-h-[44px] items-center rounded-full border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
+                  class="inline-flex min-h-[44px] items-center rounded-full border border-line bg-white px-4 text-sm font-medium text-ink hover:border-brand-soft hover:bg-brand-tint hover:text-brand-deep"
                 >
                   {{ c.nome }}
                 </NuxtLink>
@@ -466,12 +466,12 @@ const classeLinkBotao =
             </ul>
           </div>
           <div v-if="categoriasPrestador?.length">
-            <p class="mb-2 text-sm font-semibold text-stone-800">Prestadores por categoria</p>
+            <p class="mb-2 text-sm font-semibold text-ink">Prestadores por categoria</p>
             <ul class="flex flex-wrap gap-2">
               <li v-for="c in categoriasPrestador" :key="c.id">
                 <NuxtLink
                   :to="`/prestadores/categoria/${c.slug}`"
-                  class="inline-flex min-h-[44px] items-center rounded-full border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
+                  class="inline-flex min-h-[44px] items-center rounded-full border border-line bg-white px-4 text-sm font-medium text-ink hover:border-brand-soft hover:bg-brand-tint hover:text-brand-deep"
                 >
                   {{ c.nome }}
                 </NuxtLink>
@@ -540,10 +540,10 @@ const classeLinkBotao =
           regras de uso e eventuais alterações.
         </p>
         <div class="not-prose my-6 flex flex-wrap gap-3">
-          <a :href="FONTES.parque" target="_blank" rel="noopener noreferrer" :class="[classeLinkBotao, 'bg-orange-700 text-white hover:bg-orange-800']">
+          <a :href="FONTES.parque" target="_blank" rel="noopener noreferrer" :class="[classeLinkBotao, 'bg-brand text-white hover:bg-brand-deep']">
             Consultar informações oficiais do Parque Aggeo Pio Sobrinho
           </a>
-          <a :href="FONTES.parqueHorarios" target="_blank" rel="noopener noreferrer" :class="[classeLinkBotao, 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50']">
+          <a :href="FONTES.parqueHorarios" target="_blank" rel="noopener noreferrer" :class="[classeLinkBotao, 'border border-line bg-white text-ink hover:bg-ground']">
             Horários dos parques municipais
           </a>
         </div>
@@ -660,7 +660,7 @@ const classeLinkBotao =
           <NoticiasNoticiaCard v-for="n in recentes" :key="n.id" :noticia="n" />
         </div>
         <div class="not-prose mt-6">
-          <NuxtLink to="/noticias" :class="[classeLinkBotao, 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-50']">
+          <NuxtLink to="/noticias" :class="[classeLinkBotao, 'border border-line bg-white text-ink hover:bg-ground']">
             Ver todas as notícias
           </NuxtLink>
         </div>

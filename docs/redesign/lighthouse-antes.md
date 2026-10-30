@@ -171,3 +171,51 @@ O `supabase-js` saiu do JS inicial de todas as páginas: é baixado só quando u
   - prioridade alta na foto do produto;
   - juntar chunks pequenos do JS com `experimentalMinChunkSize`. Esse piorou tudo para ~3,5 s, porque o Rollup pôs o `supabase-js` de volta no JS inicial.
 - **Mudança mantida:** no produto, a foto passou para a caixa de compra. No celular ela vem depois da descrição, e o LCP volta a ser o texto, como na página antiga.
+
+## Fase 6: critério novo de LCP (30/10/2026)
+
+**Critério do Leo, revisado em 30/10:** comparar o LCP com as duas versões servidas do mesmo jeito ou em navegador real com celular emulado. A prova definitiva é o Core Web Vitals real, depois da publicação (ver `fase-7.md`).
+
+**Método usado (os dois juntos):**
+- **Builds:** o código da `main` (produção atual) e o da `redesign`, gerados com as mesmas 13 rotas e servidos pelo mesmo servidor local com gzip.
+- **Navegador real (Chromium) com celular emulado:** 412×823, DPR 1,75, 4G lento (150 ms, 1,6 Mbps), CPU 4×, cache vazio a cada carga.
+- **Rodadas:** 3, alternando as duas versões; a tabela traz a mediana.
+
+**Achado:**
+- **O CSS externo e a fonte própria atrasavam a 1ª pintura das páginas de texto.** O LCP dessas páginas é sempre a 1ª pintura.
+  - Com o CSS externo, a página esperava o arquivo de CSS, que disputava a banda com o JS.
+  - O preload da fonte e a fonte de fallback com `local()` também atrasavam (testado com variantes, 5 a 7 rodadas).
+- **Os testes anteriores com o Lighthouse simulado** (item 1, acima) não pegaram isso. O Lighthouse simula a rede a partir de uma carga sem limite, e nela o CSS chega antes de tudo.
+
+**Mudanças aplicadas:**
+- CSS embutido de novo (`features.inlineStyles: true`), revertendo a escolha da fase 4;
+- sem o preload da fonte (`app.vue`);
+- sem a "Plus Jakarta Sans Fallback" (`fonte.css` e `tailwind.config.ts`).
+
+**Teste de variantes, 7 rodadas, mediana:**
+
+| Página | Produção | Prévia antes | Prévia com as 3 mudanças |
+|---|---|---|---|
+| `/loja` | 0,73 s | 2,19 s | 1,26 s |
+| `/quem-somos` | 1,17 s | 2,13 s | 1,28 s |
+| `/expediente` | 1,38 s | 1,77 s | 1,11 s |
+
+**Resultado com o código final** (build real, 3 rodadas, mediana):
+
+| Página | Produção | Prévia |
+|---|---|---|
+| `/` | 1,23 s | **1,13 s** |
+| `/loja` | 0,61 s | 0,79 s (+0,18 s, ponto de atenção) |
+| produto (`/loja/mbb-premium`) | 0,71 s | **0,62 s** |
+| `/midiakit` | 0,58 s | 0,59 s |
+| `/quem-somos` | 0,98 s | **0,68 s** |
+| `/o-bairro-buritis` | 0,78 s | 0,91 s (+0,13 s, ponto de atenção) |
+| `/canais` | 0,64 s | 0,65 s |
+| `/expediente` | 0,67 s | 0,70 s |
+| `/politica-editorial` | 0,69 s | 0,72 s |
+| `/correcoes-e-direito-de-resposta` | 0,66 s | 0,67 s |
+| `/publicidade-e-conteudo-patrocinado` | 0,67 s | 0,75 s |
+| `/termos-e-condicoes` | 0,68 s | **0,59 s** |
+| `/pagina-nao-encontrada` | 0,60 s | **0,52 s** |
+
+Diferenças de até ~30 ms ficam dentro da variação entre rodadas (ver as rodadas no `lcp-final-f6.json` do scratchpad da sessão).

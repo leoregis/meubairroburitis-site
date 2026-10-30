@@ -38,7 +38,7 @@ export default <Partial<Config>>{
       },
       fontFamily: {
         // fallback com as métricas da Plus Jakarta Sans (ver assets/css/fonte.css)
-        sans: ['"Plus Jakarta Sans"', '"Plus Jakarta Sans Fallback"', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
       },
       borderRadius: {
         'mbb-sm': '11px',

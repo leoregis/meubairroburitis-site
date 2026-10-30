@@ -524,7 +524,8 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | 3: notícias | Feita em 29/10/2026 (notas abaixo) |
 | 4: empresas e prestadores (+ remoção do @nuxt/ui, CSS externo, crédito de foto) | Feita em 30/10/2026 (notas abaixo) |
 | 5: Anuncie, produto, carrinho/checkout (visual), midiakit e `/links` | Feita em 30/10/2026 (notas abaixo). Item 1 (clientes do Supabase sob demanda) feito em 30/10, testado ponta a ponta; 3 páginas ainda acima da produção no LCP simulado (ver `lighthouse-antes.md`) |
-| 6: institucionais | Não iniciada: espera a decisão do Leo sobre o critério de LCP |
+| 6: institucionais | Feita em 30/10/2026 (notas abaixo). CSS embutido de novo, sem preload da fonte e sem fonte de fallback (critério novo de LCP, ver `lighthouse-antes.md`) |
+| 7: QA final e publicação | Plano pronto em `fase-7.md` (não executado) |
 
 Notas da fase 1:
 
@@ -667,3 +668,20 @@ Item 1 da fase 5 (clientes do Supabase sob demanda), 30/10/2026:
     - admin: login real no branch, lista e edição de notícia e de produto.
   - Nenhuma requisição saiu para a API do site de produção.
   - **Achado:** o branch nasce sem os GRANTs de tabelas e funções que a produção tem (ver seção 7). Copiei os da produção para o branch, só lendo a produção.
+
+Notas da fase 6 (institucionais), 30/10/2026:
+
+- **Páginas:** `/quem-somos` (com o Time), `/o-bairro-buritis`, `/canais` (com o Instagram), `/expediente`, `/politica-editorial`, `/correcoes-e-direito-de-resposta`, `/publicidade-e-conteudo-patrocinado`, `/termos-e-condicoes`, `/pagina-nao-encontrada` e a página de erro (`error.vue`).
+- **Conteúdo igual ao da produção**, conferido pelo texto do `<main>` palavra por palavra:
+  - nas 5 páginas institucionais em prosa, as palavras são idênticas;
+  - no Quem Somos e nos canais, não falta nenhuma; sobram só o aviso "(abre em nova aba)" para leitor de tela e os blocos que agora ficam dentro do `<main>`;
+  - no O Bairro Buritis, muda só o formato da data nos cards de notícia (card da fase 3).
+- **SEO:** title, description, canonical, og e JSON-LD sem diferença.
+- **Moldura comum:** `InstitucionalPagina` com breadcrumb, chapéu, h1 e texto nos tokens da marca. Os Termos passaram a usar o mesmo cabeçalho claro (antes era um bloco escuro próprio).
+- **Linha do tempo do Quem Somos:** os 19 marcos de sempre (a produção também tem 19, não 23).
+  - No celular: ano num selo, título com 17 px, texto com 15 px.
+  - Os 14 links "Ver fonte" com área de toque de 44 px e aviso de nova aba.
+  - O O Bairro Buritis não tem linha do tempo. Tem o sumário de 13 seções, que continua completo.
+- **Time e Instagram:** os mesmos textos e fotos, no padrão editorial (cabeçalho com linha e grade).
+- **404:** na prévia, endereço inexistente passou a responder com a página "não encontrada", como o `ErrorDocument` da produção (`deploy/previa/publicar.mjs`). Antes, a prévia mostrava uma casca sem título.
+- **Desempenho:** CSS embutido de novo, sem preload da fonte e sem a fonte de fallback (ver `lighthouse-antes.md`, "Fase 6: critério novo de LCP").

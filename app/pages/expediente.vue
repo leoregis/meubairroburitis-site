@@ -66,10 +66,10 @@ const contatos = [
     </p>
 
     <h2>Dados do veículo</h2>
-    <dl class="not-prose divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white text-[15px] sm:text-base">
+    <dl class="not-prose divide-y divide-line rounded-mbb-xl border border-line bg-white text-[15px] sm:text-base">
       <div v-for="item in dadosVeiculo" :key="item.termo" class="grid gap-1 px-5 py-3 sm:grid-cols-[12rem_1fr] sm:gap-4">
-        <dt class="font-semibold text-stone-900">{{ item.termo }}</dt>
-        <dd class="text-stone-700">{{ item.valor }}</dd>
+        <dt class="font-semibold text-ink">{{ item.termo }}</dt>
+        <dd class="text-ink">{{ item.valor }}</dd>
       </div>
     </dl>
     <p>
@@ -83,18 +83,18 @@ const contatos = [
         v-for="contato in contatos"
         :key="contato.titulo"
         :aria-labelledby="contato.id"
-        class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm"
+        class="rounded-mbb-xl border border-line bg-white p-5 shadow-sm"
       >
-        <h3 :id="contato.id" class="font-serif text-lg font-bold text-stone-900">{{ contato.titulo }}</h3>
+        <h3 :id="contato.id" class="text-lg font-bold text-ink">{{ contato.titulo }}</h3>
         <a
           :href="`mailto:${contato.email}`"
-          class="mt-2 inline-flex min-h-[44px] items-center gap-2 break-all font-semibold text-orange-800 underline underline-offset-2 hover:text-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-700"
+          class="mt-2 inline-flex min-h-[44px] items-center gap-2 break-all font-semibold text-brand-ink underline underline-offset-2 hover:text-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-ink"
         >
           <Icon name="lucide:mail" class="h-4 w-4 flex-none" aria-hidden="true" />
           {{ contato.email }}
         </a>
-        <p class="mt-2 text-sm leading-relaxed text-stone-600">
-          <span class="font-semibold text-stone-700">Uso:</span> {{ contato.uso }}
+        <p class="mt-2 text-sm leading-relaxed text-ink-muted">
+          <span class="font-semibold text-ink">Uso:</span> {{ contato.uso }}
         </p>
       </section>
     </div>

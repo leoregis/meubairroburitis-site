@@ -120,14 +120,16 @@ export default defineNuxtConfig({
   // @font-face, sem nenhuma diretiva @tailwind.
   css: ['~/assets/css/fonte.css'],
 
-  // CSS em arquivo externo (/_nuxt/entry.*.css, cache de 6 meses pelo
-  // .htaccess), não embutido em cada HTML. Medido na fase 4 do redesign
-  // (celular, 4G lento, CPU 4x, mediana de 5): LCP da 1ª visita 2,27 s ->
-  // 1,87 s na home e 1,98 -> 1,53 s em /noticias; 2ª página 0,97 -> 0,87 s
-  // (matéria) e 2,26 -> 1,46 s (empresa). O HTML da home cai de 114 para
-  // 50 KB. Detalhes em docs/redesign/lighthouse-antes.md.
+  // CSS embutido em cada HTML (o padrão do Nuxt). Na fase 4 o CSS externo
+  // tinha vencido, medido na prévia em páginas com imagem como LCP. Na fase 6
+  // (30/10), com as duas versões servidas do mesmo jeito e navegador real com
+  // celular emulado, o CSS externo atrasava a 1ª pintura das páginas de texto:
+  // ela esperava o arquivo de CSS, que disputava a banda com o JS. Junto com
+  // tirar o preload da fonte e a fonte de fallback com local(), o LCP da /loja
+  // caiu de 2,19 para 1,26 s, o do /quem-somos de 2,13 para 1,28 s e o do
+  // /expediente de 1,77 para 1,11 s. Detalhes em docs/redesign/lighthouse-antes.md.
   features: {
-    inlineStyles: false,
+    inlineStyles: true,
   },
 
   // tokens da marca. Dentro de app/ (e não na raiz, onde o módulo procura

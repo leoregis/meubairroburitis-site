@@ -21,20 +21,26 @@ const canais = [
 
 <template>
   <div>
-    <div class="mx-auto max-w-2xl px-4 py-16">
-      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Canais</p>
-      <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Onde nos encontrar</h1>
+    <div class="mx-auto flex max-w-[760px] flex-col gap-6 px-4 pb-6 pt-6 sm:px-6 sm:pt-10">
+      <header class="flex flex-col gap-2">
+        <BaseEyebrow>Canais</BaseEyebrow>
+        <h1 class="m-0 text-balance text-[32px] font-extrabold leading-[38px] tracking-[-0.025em] text-ink sm:text-[44px] sm:leading-[50px]">Onde nos encontrar</h1>
+      </header>
 
-      <ul class="mt-8 divide-y divide-stone-200 rounded-xl border border-stone-200">
+      <ul class="m-0 list-none divide-y divide-line overflow-hidden rounded-mbb-xl border border-line p-0">
         <li v-for="canal in canais" :key="canal.href">
           <a
             :href="canal.href"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex items-center gap-3 px-4 py-4 hover:bg-stone-50"
+            class="flex min-h-[56px] items-center gap-3 px-4 py-3 transition-colors hover:bg-ground focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink sm:px-5"
           >
-            <Icon :name="canal.icon" class="h-5 w-5 text-orange-700" />
-            <span class="font-medium text-stone-800">{{ canal.label }}</span>
+            <span class="flex h-9 w-9 flex-none items-center justify-center rounded-mbb-md bg-brand-tint text-brand-ink" aria-hidden="true">
+              <Icon :name="canal.icon" class="h-5 w-5" />
+            </span>
+            <span class="flex-1 font-bold text-ink">{{ canal.label }}</span>
+            <Icon name="lucide:arrow-up-right" class="h-4 w-4 flex-none text-ink-muted" aria-hidden="true" />
+            <span class="sr-only">(abre em nova aba)</span>
           </a>
         </li>
       </ul>

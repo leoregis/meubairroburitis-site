@@ -14,16 +14,14 @@ useSeoMeta({
 -->
 <template>
   <article>
-    <div class="bg-stone-900 py-16">
-      <div class="mx-auto max-w-2xl px-4 text-center text-white">
-        <p class="text-sm font-semibold uppercase tracking-wide text-orange-300">Informações Legais</p>
-        <h1 class="mt-2 text-balance font-serif text-3xl font-bold">Termos e Condições de Uso</h1>
-      </div>
-    </div>
+    <header class="mx-auto flex max-w-[760px] flex-col gap-2 px-4 pt-6 sm:px-6 sm:pt-10">
+      <BaseEyebrow>Informações Legais</BaseEyebrow>
+      <h1 class="m-0 text-balance text-[32px] font-extrabold leading-[38px] tracking-[-0.025em] text-ink sm:text-[44px] sm:leading-[50px]">Termos e Condições de Uso</h1>
+    </header>
 
-    <div class="mx-auto max-w-2xl px-4 py-16">
-      <div class="prose prose-stone max-w-none">
-        <p class="text-sm text-stone-500">Última atualização: outubro de 2026</p>
+    <div class="mx-auto max-w-[760px] px-4 pb-16 pt-8 sm:px-6 sm:pb-[72px]">
+      <div class="prose prose-lg max-w-none text-ink prose-p:text-ink prose-li:text-ink prose-headings:font-extrabold prose-headings:tracking-[-0.015em] prose-headings:text-ink prose-strong:text-ink prose-a:font-semibold prose-a:text-brand-ink prose-a:underline-offset-2 hover:prose-a:text-brand-deep">
+        <p class="text-sm text-ink-muted">Última atualização: outubro de 2026</p>
 
         <h2>1. Sobre o Meu Bairro Buritis</h2>
         <p>

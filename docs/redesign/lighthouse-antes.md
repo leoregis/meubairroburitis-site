@@ -58,6 +58,45 @@ Performance no celular: a prévia fica entre 67 e 81; a produção, entre 51 e 8
 - A matéria curta piora em relação à produção porque lá a página não tem fonte própria nem preloads e a capa local já era pequena (AVIF 700 px). Na prévia ela fica em 4,0 s.
 - **Proposta para a fase 7:** tirar o `@nuxt/ui`. O site não usa nenhum componente dele; ficariam só o `@nuxtjs/tailwindcss`, o `@nuxt/icon` e o plugin de tipografia. Isso corta o CSS das cores, o color-mode e JS do cliente, e vale para todas as páginas. É mudança de dependência e precisa de aprovação.
 
+## CSS embutido × externo (fase 4, item 2), 30/10/2026
+
+Medição em Playwright, celular simulado (412×823, 4G lento do Lighthouse: 150 ms de latência e 1,6 Mbps; CPU 4× mais lenta), mediana de 5 rodadas. A "2ª página" é outra página aberta logo depois, com o cache do navegador cheio. Na prévia, o `_headers` reproduz o cache de 6 meses do `.htaccess` da produção para `/_nuxt/` e `/_ipx/`.
+
+| Situação | CSS embutido (LCP) | **CSS externo (LCP)** | FCP embutido | FCP externo |
+|---|---|---|---|---|
+| 1ª visita, `/` | 2.268 ms | **1.868 ms** | 1.324 ms | 1.868 ms |
+| 1ª visita, `/noticias` | 1.976 ms | **1.528 ms** | 1.092 ms | 1.528 ms |
+| 2ª página, matéria (depois da home) | 972 ms | **872 ms** | 600 ms | 540 ms |
+| 2ª página, empresa (depois de `/noticias`) | 2.264 ms | **1.456 ms** | 628 ms | 692 ms |
+
+O CSS externo vence em todos os LCPs. O HTML da home cai de 114 para 50 KB, e o CSS (64 KB, 13 KB comprimido) fica em cache. O primeiro conteúdo pintado da 1ª visita piora um pouco, porque o CSS bloqueia a primeira pintura, mas a página completa chega antes. **Aplicado:** `features.inlineStyles: false`.
+
+## Fase 4: empresas e prestadores na prévia × produção (30/10/2026)
+
+Mesma metodologia do Lighthouse. No celular são 3 rodadas alternadas (mediana); no computador, 1 rodada.
+
+| Página | Celular, produção | **Celular, prévia** | Computador, produção | **Computador, prévia** |
+|---|---|---|---|---|
+| `/empresas` | 7,99 s | **4,23 s** (4,2 / 3,4 / 4,3) | 2,09 s | **0,87 s** |
+| empresa com muitas fotos (`codice-digital-582`) | 5,75 s | **5,24 s** (5,2 / 5,2 / 5,7) | 1,20 s | **0,77 s** |
+| empresa sem logo (`janet-felippetto-cabeleireira-686`) | 5,06 s | **4,60 s** (4,4 / 4,6 / 4,6) | 1,53 s | **0,85 s** |
+| prestador (`bene-ditta-centro-auditivo-710`) | 3,41 s | **3,44 s** (3,6 / 3,4 / 3,4) | 0,64 s | **0,84 s** |
+
+Acessibilidade: 100 na prévia e 95 a 96 na produção. CLS: 0 no celular nos dois lados.
+
+**Por que três páginas ainda passam de 4 s no celular:**
+
+- **Testes de bloqueio na empresa (Lighthouse):**
+
+  | Bloqueado | LCP |
+  |---|---|
+  | `_nuxt/*.js` | 2,1 a 3,3 s |
+  | imagens do Storage do Guia | 3,9 a 4,7 s |
+
+  O peso está no JavaScript inicial: ~170 KB comprimido em toda página, igual em toda a rota.
+- **De onde vem esse JS:** o runtime do Nuxt e **dois clientes completos do Supabase**, o do site e o do Guia, com Auth e Realtime, criados já na abertura por `plugins/supabase.ts` e `plugins/supabase-meubairro-app.ts`. Nas páginas públicas eles quase nunca são usados no navegador, porque os dados vêm do payload do build.
+- **Proposta (precisa de aprovação, porque mexe no caminho de login, checkout e Meus pedidos):** criar os clientes do Supabase sob demanda, na primeira vez que alguma tela precisar. Pelo teste com o JS bloqueado, isso pode tirar de 1 a 2 s do LCP no celular.
+
 Observações para as próximas fases:
 
 - **LCP no celular** é o ponto fraco: de 7 a 11 s em `/empresas`, na empresa e na matéria. As capas vêm direto do Storage do Supabase, sem redimensionar (PNG de 1,6 a 2,3 MB, ver o comentário do `og:image` no `nuxt.config.ts`).

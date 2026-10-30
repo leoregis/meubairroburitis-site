@@ -111,9 +111,9 @@ if (capa?.srcset) {
     link: [{ rel: 'preload', as: 'image', imagesrcset: capa.srcset, imagesizes: TAMANHOS_CAPA, fetchpriority: 'high', key: 'capa-materia' }],
   })
 }
-// crédito da foto: ainda não existe no banco (ver docs/redesign/plano.md);
-// quando a coluna imagem_destaque_credito existir, ele aparece sozinho
-const creditoFoto = computed(() => (noticia.value as { imagem_destaque_credito?: string | null } | null)?.imagem_destaque_credito || '')
+// crédito da foto (coluna opcional desde 29/10/2026, campo no admin):
+// "Foto: <crédito>" só quando preenchido
+const creditoFoto = computed(() => noticia.value?.imagem_destaque_credito?.trim() || '')
 
 const linkCategoria = computed(() => {
   const id = noticia.value?.categoria_info?.id

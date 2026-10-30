@@ -480,7 +480,10 @@ As 20 recomendações foram aprovadas, com estes ajustes:
   - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
   - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;
   - Confiber Telecom: `/prestadores/confiber-telecom-168` e `-482`.
-- **PENDÊNCIA URGENTE DO GUIA (`meubairro-app`): nota das empresas sem moderação** (registrada em 29/10/2026; o Leo resolve em sessão separada, o redesign não mexe nisso).
+- **DECISÃO DE PRODUTO DO GUIA (`meubairro-app`): moderação de avaliações de empresas** (registrada em 29/10/2026, revista pelo Leo em 29/10).
+  - **Não é vazamento de moderação:** a tabela `empresas_avaliacoes` **nunca teve** moderação. Os prestadores têm (`avaliacoes.aprovado`).
+  - A decisão a tomar é **criar moderação para as avaliações de empresas**. Fica para uma sessão separada no Guia, fora do redesign.
+  - O levantamento abaixo mostra onde a nota é calculada hoje e o que mudaria.
   - **Evidência:**
     - A tabela `empresas_avaliacoes` (projeto do Guia, `xtmwatregednbuupfdbl`) **não tem coluna de moderação**. As colunas são `id`, `empresa_unidade_id`, `cliente_id`, `prestador_id`, `nota`, `comentario`, `criado_em`.
     - Já a `avaliacoes`, dos prestadores, tem `aprovado`: 132 de 136 aprovadas.
@@ -504,6 +507,7 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | 1: tokens, layout base, prévia, analytics | Feita em 29/10/2026. Prévia em `https://previa.meubairroburitis.com.br`, publicada por `node deploy/previa/publicar.mjs`. Web Analytics ligado pelo Leo em 29/10. O beacon aparece no site e no `/guia/` (injetado só em pedidos de HTML) e não gera aviso na CSP do Guia. |
 | 2: home + busca | Feita em 29/10/2026 (notas abaixo) |
 | 3: notícias | Feita em 29/10/2026 (notas abaixo) |
+| 4: empresas e prestadores (+ remoção do @nuxt/ui, CSS externo, crédito de foto) | Feita em 30/10/2026 (notas abaixo) |
 
 Notas da fase 1:
 
@@ -558,5 +562,53 @@ Notas da fase 3 (notícias), 29/10/2026:
   - O que não existe: tabela, `iframe`, `figure`, embed e `style` inline.
   - O CSS cobre todos esses elementos, inclusive os que ainda não aparecem.
 - **Hidratação adiada** (`hydrate-on-visible` / `hydrate-never`): rodapé, WhatsApp flutuante, "Leia também" e o bloco dos canais na matéria. O preload da fonte passou a ser só no servidor, porque a hidratação o duplicava.
-- **Decisão pendente: crédito de foto.** Não existe coluna para isso em `noticias`. A matéria já mostra "Foto: …" se a coluna `imagem_destaque_credito` for criada no banco do site, com o campo correspondente no admin. Isso é mudança de banco e de admin, fora do redesign.
-- **Problema de conteúdo:** `/noticias/chalezinho-fecha-para-reforma-e-ainda-nao-tem-data-para-reabrir` tem no corpo `<img src="URL-DA-IMAGEM">`, um marcador esquecido. A imagem aparece quebrada também na produção. Corrigir pelo admin.
+- **Crédito de foto:** resolvido na fase 4 (abaixo).
+- **Marcador na matéria do Chalezinho:** resolvido na fase 4 (abaixo).
+
+Notas da fase 4 (empresas e prestadores) e dos itens anteriores, 29-30/10/2026:
+
+- **`@nuxt/ui` removido.**
+  - O site não usava nenhum componente nem composable dele: nenhum `U*`, nenhum `dark:`, nem `form-*`, color-mode, `useToast` ou `useModal`. O admin também não.
+  - Ele fornecia o registro do `@nuxtjs/tailwindcss` (agora direto em `modules`) e o plugin de tipografia (`prose`, agora `@tailwindcss/typography` como dependência própria, no `app/tailwind.config.ts`).
+  - Trazia também, sem uso: color-mode, Headless UI, os plugins forms (estratégia `class`, sem efeito), aspect-ratio e container-queries, e a escala `primary`/`gray`. Saíram junto o `app.config.ts` e a escala `marca`.
+  - **Peso por página:**
+
+    | Medida | Antes | Depois |
+    |---|---|---|
+    | CSS embutido | ~132 KB (20,7 KB comprimido) | ~66 KB (12,1 KB) |
+    | JS inicial | ~536-551 KB | ~511-526 KB (-25 KB, color-mode e Headless UI) |
+
+  - **Admin testado localmente** sem gravar nada: o build foi servido na máquina, o login foi simulado e as leituras usaram a chave anon. Login, lista de notícias (98), edição, nova notícia (com o editor), lista de produtos (6) e edição passaram. As duas tentativas de salvar foram abortadas no navegador antes de sair.
+- **CSS externo em vez de embutido** (`features.inlineStyles: false`). A medição está em `lighthouse-antes.md`. O LCP melhorou em todas as situações medidas, e o HTML da home caiu de 114 para 50 KB.
+- **Crédito de foto:**
+  - Migration `20261029200000_noticias_credito_foto`: coluna opcional `imagem_destaque_credito`. O rollback em `manutencao/` é `DROP COLUMN`; perguntar antes de rodar.
+  - O campo entrou no admin (criar e editar). A matéria mostra "Foto: …" só quando o campo está preenchido. Nenhum valor foi preenchido.
+- **Chalezinho:**
+  - Migration `20261029201000_noticia_chalezinho_marcador_imagem`, com backup em `noticias_bkp_20261029` e rollback em `manutencao/`.
+  - Só o `<img src="URL-DA-IMAGEM" …>` saiu: o texto caiu de 6.123 para 6.009 caracteres (os 114 da tag).
+  - O hash das outras colunas é o mesmo de antes.
+  - A matéria entrou na fila de deploy ('editada') pelo gatilho normal.
+- **Listagens de empresas e prestadores:**
+  - `DiretorioCabecalho` (o h1 é o mesmo de antes), chips de categoria `DiretorioCategorias` (os mesmos links) e busca da página como antes.
+  - Lista limpa com linhas (`DiretorioLinha`): logo ou monograma, nome, selo de verificado, categoria, a linha de apoio de antes (endereço da empresa ou descrição curta do prestador) e nota com o total, ou "Sem avaliações ainda".
+  - Paginação da marca (`DiretorioPaginacao`). Os `FiltroCategorias` antigos saíram.
+- **Detalhe de empresa e de prestador:**
+  - O script de SEO não mudou: title, description, og, JSON-LD e breadcrumb são os de sempre.
+  - Identidade: logo ou monograma, categoria, nome (com "Unidade X" em filial), nota, "Aberto 24 horas" quando for o caso, e Verificado e Destaque no prestador.
+  - Contatos só quando há o dado:
+    - na empresa: WhatsApp em destaque, Ligar, Rota, Instagram, Site e iFood;
+    - no prestador: WhatsApp só com `exibir_whatsapp` e Ligar só com `exibir_telefone`, como antes.
+  - Descrição, fotos e horário. O dia de hoje e "Aberto/Fechado agora" são calculados no navegador, no fuso de BH, com a mesma regra da RPC e espaço reservado.
+  - Endereço com "Ver no mapa": o iframe do Google só carrega no clique.
+  - Bloco vermelho do app (`DiretorioAppGuia`), levando ao perfil no Guia (`/guia/empresa|prestador/<slug>`).
+  - Rodapé "É dono deste cadastro?" (`DiretorioDono`). A reivindicação existe só para empresa, no perfil do Guia, e exige login; o prestador atualiza o próprio perfil pelo app.
+  - O "aberto agora" calculado no build (RPC `aberto_agora`) não aparece mais, porque ficava vencido no HTML estático.
+- **Fotos do diretório pelo IPX no build:**
+  - Apelido `/guia-fotos` → Storage do Guia (`useFotoGuia`). Saem:
+    - a foto de destaque da empresa (a 1ª da galeria), 960×540: 486 arquivos;
+    - logos de empresa e fotos de prestador, num tamanho único de 192×192 que serve à listagem, ao detalhe e à home: 714 arquivos.
+  - **Total: 1.200 arquivos (~22,9 MB).** Somam **~13 min** a cada envio completo por FTP (~0,65 s por arquivo).
+  - Somando as capas das notícias (fase 3), o IPX acrescenta **~1.480 arquivos, cerca de 16 min** a cada deploy completo, que hoje leva ~35 min.
+  - **Por que valeu:** os logos originais somavam ~3,8 MB numa página de listagem; o LCP de `/empresas` no celular caiu de 5,8 para 4,2 s.
+  - A galeria continua direto do Storage, com carregamento sob demanda e logo abaixo do horário e do endereço. Passá-la pelo IPX daria +1.105 arquivos (+12 min) para pouco ganho no LCP, que foi medido.
+- **Ainda carregados em toda página** (próximo passo de desempenho, precisa de aprovação porque mexe no caminho de login, checkout e Meus pedidos): os **dois clientes completos do Supabase** (site e Guia, com Auth e Realtime), criados na abertura por `plugins/supabase.ts` e `plugins/supabase-meubairro-app.ts`. É o principal peso do LCP que sobra (ver `lighthouse-antes.md`, fase 4). O plugin do Mercado Pago só carrega o SDK na hora do pagamento: custo fixo pequeno.

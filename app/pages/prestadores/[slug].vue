@@ -56,94 +56,97 @@ useJsonLd({
     { '@type': 'ListItem', position: 3, name: prestador.value.nome, item: canonicalUrl.value },
   ],
 })
+// --- redesign (fase 4) ---------------------------------------------------
+// foto do perfil pelo IPX no build, o mesmo arquivo de 192x192 da listagem;
+// as originais chegam a ~100 KB e disputam o LCP
+const foto = computed(() => useFotoGuia()(prestador.value?.foto_url, MINIATURA_GUIA, MINIATURA_GUIA))
+const iniciais = computed(() => (prestador.value?.nome ?? '').split(/\s+/).filter((p) => /\p{L}/u.test(p[0] ?? '')).slice(0, 2).map((p) => p[0]!.toUpperCase()).join(''))
 </script>
 
 <template>
-  <div v-if="prestador" class="mx-auto max-w-2xl px-4 py-16">
-    <nav class="flex flex-wrap items-center gap-1 text-sm text-stone-500" aria-label="Breadcrumb">
-      <NuxtLink to="/" class="hover:text-orange-700">Início</NuxtLink>
-      <span aria-hidden="true">/</span>
-      <NuxtLink to="/prestadores" class="hover:text-orange-700">Prestadores</NuxtLink>
-      <span aria-hidden="true">/</span>
-      <span class="text-stone-700">{{ prestador.nome }}</span>
+  <div v-if="prestador" class="mx-auto flex max-w-[1080px] flex-col gap-6 px-4 pb-16 pt-5 sm:gap-8 sm:px-6 sm:pb-[72px] sm:pt-8">
+    <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+      <ol class="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
+        <li><NuxtLink to="/" class="hover:text-ink hover:underline">Início</NuxtLink></li>
+        <li aria-hidden="true">›</li>
+        <li><NuxtLink to="/prestadores" class="hover:text-ink hover:underline">Prestadores</NuxtLink></li>
+        <li aria-hidden="true">›</li>
+        <li class="truncate text-ink" aria-current="page">{{ prestador.nome }}</li>
+      </ol>
     </nav>
 
-    <div class="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm sm:flex-row sm:items-start sm:text-left">
-      <NuxtPicture
-        v-if="prestador.foto_url"
-        :src="prestador.foto_url"
-        :alt="prestador.nome"
-        format="avif,webp"
-        :width="200"
-        :height="200"
+    <header class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+      <img
+        v-if="foto"
+        :src="foto"
+        :alt="`Foto de ${prestador.nome}`"
+        width="112"
+        height="112"
         loading="eager"
-        :img-attrs="{ class: 'h-28 w-28 shrink-0 rounded-full object-cover shadow-sm' }"
-      />
-      <div v-else class="flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-stone-100 text-4xl">🙋</div>
-
-      <div>
-        <h1 class="text-balance font-serif text-3xl font-bold text-stone-900">
-          {{ prestador.nome }}
-          <span v-if="prestador.verificado" title="Verificado" class="ml-1 align-middle text-lg text-emerald-600">✔</span>
-          <span v-if="prestador.destaque" class="ml-2 inline-block rounded-full bg-orange-100 px-2.5 py-0.5 align-middle text-xs font-semibold text-orange-700">Destaque</span>
-        </h1>
-
+        fetchpriority="high"
+        class="h-24 w-24 flex-none rounded-full border border-line bg-ground object-cover sm:h-28 sm:w-28"
+      >
+      <span v-else class="flex h-24 w-24 flex-none items-center justify-center rounded-full border border-line bg-ground text-3xl font-extrabold text-ink-muted sm:h-28 sm:w-28" aria-hidden="true">{{ iniciais }}</span>
+      <div class="flex min-w-0 flex-col gap-1.5">
         <NuxtLink
           v-if="prestador.categoria_slug"
           :to="`/prestadores/categoria/${prestador.categoria_slug}`"
-          class="mt-2 inline-block text-sm font-semibold uppercase tracking-wide text-orange-700 hover:underline"
+          class="self-start text-xs font-bold uppercase tracking-[0.1em] text-brand-ink hover:underline"
         >
           {{ prestador.categoria_nome }}<template v-if="prestador.subcategoria_nome"> · {{ prestador.subcategoria_nome }}</template>
         </NuxtLink>
-        <p v-else-if="prestador.categoria_nome" class="mt-2 text-sm font-semibold uppercase tracking-wide text-orange-700">
+        <p v-else-if="prestador.categoria_nome" class="m-0 text-xs font-bold uppercase tracking-[0.1em] text-brand-ink">
           {{ prestador.categoria_nome }}<template v-if="prestador.subcategoria_nome"> · {{ prestador.subcategoria_nome }}</template>
         </p>
+        <h1 class="m-0 flex flex-wrap items-center gap-x-2 text-balance text-[28px] font-extrabold leading-[34px] tracking-[-0.025em] text-ink sm:text-[40px] sm:leading-[46px]">
+          {{ prestador.nome }}
+          <DiretorioSeloVerificado v-if="prestador.verificado" class="[&_svg]:h-6 [&_svg]:w-6" />
+        </h1>
+        <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-ink-muted">
+          <BaseNota v-if="prestador.total_avaliacoes > 0" :nota="Number(prestador.nota_media)" :total="prestador.total_avaliacoes" />
+          <span v-else>Ainda sem avaliações</span>
+          <span v-if="prestador.bairro_nome" class="inline-flex items-center gap-1">
+            <Icon name="lucide:map-pin" class="h-4 w-4 text-brand-ink" aria-hidden="true" />{{ prestador.bairro_nome }}
+          </span>
+          <span v-if="prestador.destaque" class="rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-bold text-brand-deep">Destaque</span>
+        </p>
+      </div>
+    </header>
 
-        <p v-if="prestador.bairro_nome" class="mt-1 text-sm text-stone-500">📍 {{ prestador.bairro_nome }}</p>
+    <!-- contato: o telefone só vem da RPC se o prestador permitiu
+    (exibir_telefone/exibir_whatsapp), e cada botão segue a sua permissão -->
+    <div v-if="prestador.telefone && (prestador.exibir_whatsapp || prestador.exibir_telefone)" class="flex flex-wrap gap-2">
+      <a
+        v-if="prestador.exibir_whatsapp"
+        :href="linkWhatsappPrestador(prestador.telefone)"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex min-h-[48px] flex-[1_1_100%] items-center justify-center gap-2 rounded-mbb-md bg-success-ink px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#145530] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none"
+      >
+        <Icon name="simple-icons:whatsapp" class="h-5 w-5" aria-hidden="true" />
+        Chamar no WhatsApp<span class="sr-only"> (abre em nova aba)</span>
+      </a>
+      <BaseBotao v-if="prestador.exibir_telefone" :href="linkTelefonePrestador(prestador.telefone)" variante="contorno" class="flex-1 sm:flex-none">
+        <Icon name="lucide:phone" class="h-[18px] w-[18px]" aria-hidden="true" />
+        Ligar
+      </BaseBotao>
+    </div>
+    <p v-else class="m-0 rounded-mbb-lg bg-ground p-4 text-[15px] text-ink">
+      Contato disponível pelo Guia Buritis.
+    </p>
+
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+      <div class="flex min-w-0 flex-col gap-8">
+        <section v-if="prestador.descricao_curta" aria-labelledby="sobre-titulo" class="flex flex-col gap-3">
+          <h2 id="sobre-titulo" class="m-0 border-b border-line pb-3 text-xl font-extrabold tracking-[-0.015em] text-ink">Sobre</h2>
+          <p class="m-0 text-[16px] leading-[26px] text-ink">{{ prestador.descricao_curta }}</p>
+        </section>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <DiretorioAppGuia :link="linkGuia" :nome="prestador.nome" />
+        <DiretorioDono tipo="prestador" :link="linkGuia" />
       </div>
     </div>
-
-    <p v-if="prestador.descricao_curta" class="mt-8 text-stone-600">{{ prestador.descricao_curta }}</p>
-
-    <section class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-      <h2 class="mb-4 font-serif text-lg font-bold text-stone-900">Contato</h2>
-      <div v-if="prestador.telefone" class="flex flex-wrap gap-3">
-        <a
-          v-if="prestador.exibir_whatsapp"
-          :href="linkWhatsappPrestador(prestador.telefone)"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#20bd5a]"
-        >
-          WhatsApp
-        </a>
-        <a
-          v-if="prestador.exibir_telefone"
-          :href="linkTelefonePrestador(prestador.telefone)"
-          class="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
-        >
-          Ligar
-        </a>
-      </div>
-      <p v-else class="text-sm text-stone-500">
-        Contato disponível pelo Guia Buritis.
-      </p>
-    </section>
-
-    <p class="mt-8 text-sm text-stone-500">
-      <template v-if="prestador.total_avaliacoes > 0">
-        ⭐ <span class="font-semibold text-stone-700">{{ prestador.nota_media.toFixed(1) }}</span> · {{ prestador.total_avaliacoes }} avaliaç{{ prestador.total_avaliacoes === 1 ? 'ão' : 'ões' }}
-      </template>
-      <template v-else>Ainda sem avaliações</template>
-    </p>
-
-    <p class="my-10 rounded-2xl bg-stone-50 p-5 text-sm text-stone-600">
-      Veja avaliações completas e fale direto com {{ prestador.nome }} pelo
-      <!-- /guia/ é o app separado (meubairro-app), fora do router deste
-      site -- <a> comum, não NuxtLink (mesmo padrão de CtaGuiaBuritis.vue). -->
-      <a :href="linkGuia" target="_blank" rel="noopener noreferrer" class="font-semibold text-orange-700 hover:underline">
-        Guia Buritis
-      </a>.
-    </p>
   </div>
 </template>

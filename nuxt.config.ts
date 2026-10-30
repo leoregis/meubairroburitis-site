@@ -68,8 +68,13 @@ export default defineNuxtConfig({
     appManifest: false,
   },
 
+  // Redesign (29/10/2026): sem @nuxt/ui. O site não usava nenhum componente
+  // dele -- só o Tailwind que ele registrava (agora direto, abaixo) e o plugin
+  // de tipografia (agora no tailwind.config). O resto que ele trazia (color-
+  // mode, Headless UI, forms/aspect-ratio/container-queries e a escala de cor
+  // "primary") pesava CSS e JS em toda página sem uso.
   modules: [
-    '@nuxt/ui',
+    '@nuxtjs/tailwindcss',
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxtjs/seo',
@@ -91,25 +96,39 @@ export default defineNuxtConfig({
   // 1200x630 (ver noticias/[slug].vue), em vez de apontar pro PNG original
   // de 1.6-2.3MB que o WhatsApp não usa como thumbnail.
   image: {
-    domains: ['peusailkyxqbhgdgmqyk.supabase.co'],
+    // site (capas) e Guia (fotos de empresas, fase 4 do redesign)
+    domains: ['peusailkyxqbhgdgmqyk.supabase.co', 'xtmwatregednbuupfdbl.supabase.co'],
     // redesign (fase 3): capas das notícias redimensionadas pelo IPX NO
     // BUILD (arquivos estáticos em _ipx/, sem custo e sem depender do
     // Supabase em tempo de execução) -- ver composables/useCapaNoticia.ts.
     // O apelido deixa a URL sem "https:" no caminho: /_ipx/<mods>/capas/...
     // (no Windows a pasta "https:" não pode ser criada e o arquivo sumia).
     // O og:image das notícias continua com a URL completa de sempre.
+    // /guia-fotos: a foto de destaque da página da empresa (a 1ª da galeria),
+    // uma largura só (ver composables/useFotoGuia.ts).
     alias: {
-      capas: 'https://peusailkyxqbhgdgmqyk.supabase.co/storage/v1/object/public',
+      'capas': 'https://peusailkyxqbhgdgmqyk.supabase.co/storage/v1/object/public',
+      'guia-fotos': 'https://xtmwatregednbuupfdbl.supabase.co/storage/v1/object/public',
     },
   },
 
-  // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxt/ui v2 já
-  // instala o @nuxtjs/tailwindcss, que injeta o próprio tailwind.css (com
+  // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxtjs/tailwindcss
+  // (antes instalado pelo @nuxt/ui) injeta o próprio tailwind.css (com
   // @tailwind base/components/utilities). O main.css repetia as mesmas 3
   // diretivas -- o Tailwind inteiro saía DUAS vezes inline no <head> de
   // toda página (~220KB antes das tags og:*). O fonte.css (redesign) só tem
   // @font-face, sem nenhuma diretiva @tailwind.
   css: ['~/assets/css/fonte.css'],
+
+  // CSS em arquivo externo (/_nuxt/entry.*.css, cache de 6 meses pelo
+  // .htaccess), não embutido em cada HTML. Medido na fase 4 do redesign
+  // (celular, 4G lento, CPU 4x, mediana de 5): LCP da 1ª visita 2,27 s ->
+  // 1,87 s na home e 1,98 -> 1,53 s em /noticias; 2ª página 0,97 -> 0,87 s
+  // (matéria) e 2,26 -> 1,46 s (empresa). O HTML da home cai de 114 para
+  // 50 KB. Detalhes em docs/redesign/lighthouse-antes.md.
+  features: {
+    inlineStyles: false,
+  },
 
   // tokens da marca. Dentro de app/ (e não na raiz, onde o módulo procura
   // por padrão) para entrar no hash do MBB_BUILD_ID do deploy.yml, que só

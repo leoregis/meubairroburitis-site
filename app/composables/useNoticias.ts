@@ -47,6 +47,7 @@ export interface Noticia {
   conteudo: string
   imagem_destaque_url: string | null
   imagem_destaque_alt: string | null
+  imagem_destaque_credito?: string | null
   categoria: string | null
   categoria_id: string | null
   subcategoria_guia_id: string | null

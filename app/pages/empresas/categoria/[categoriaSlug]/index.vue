@@ -16,13 +16,9 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-16">
-    <div class="mb-10 text-center">
-      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Comércio local</p>
-      <h1 class="mt-2 text-balance font-serif text-3xl font-bold text-stone-900">{{ categoria?.nome }}</h1>
-    </div>
-
-    <EmpresasFiltroCategorias :categorias="categorias ?? []" :categoria-ativa="categoriaSlug" />
+  <div class="mx-auto flex max-w-[1248px] flex-col gap-5 px-4 pb-16 pt-6 sm:gap-6 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <DiretorioCabecalho eyebrow="Comércio local" :titulo="categoria?.nome ?? ''" :voltar="{ to: '/empresas', rotulo: 'Todas as categorias' }" />
+    <DiretorioCategorias base="/empresas" :categorias="categorias ?? []" :ativa="categoriaSlug" />
     <EmpresasListagem :pagina="1" :categoria-slug="categoriaSlug" />
   </div>
 </template>

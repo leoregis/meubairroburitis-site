@@ -1,29 +1,18 @@
 import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
 
 // Tokens da marca (redesign, fase 1) -- os mesmos do design system do Guia
 // Buritis, para o site e o app parecerem da mesma casa. Contrastes
-// conferidos em docs/redesign/plano.md (seção 1.4).
+// conferidos em docs/redesign/plano.md (seção 1.4). No código do site, use
+// os nomes semânticos (brand, ink, ground, line...).
 //
-// `marca` é a escala 50-950 que o Nuxt UI exige para o `primary` do
-// app.config.ts; no código do site use os nomes semânticos abaixo
-// (brand, ink, ground, line...), não a escala.
+// Plugin de tipografia (classes `prose`): antes vinha do @nuxt/ui, removido
+// na fase 4 do redesign.
 export default <Partial<Config>>{
+  plugins: [typography],
   theme: {
     extend: {
       colors: {
-        marca: {
-          50: '#FDF4F4',
-          100: '#FCECEC',
-          200: '#F8D2D2',
-          300: '#F1AAAA',
-          400: '#E66B6B',
-          500: '#D92B2B',
-          600: '#C42424',
-          700: '#A81E1E',
-          800: '#8B1C1C',
-          900: '#741D1D',
-          950: '#3F0A0A',
-        },
         brand: {
           DEFAULT: '#D92B2B', // fundo de botão, linha do cabeçalho (branco por cima: 4,85:1)
           ink: '#C42424', // texto e link vermelho sobre branco (5,79:1)

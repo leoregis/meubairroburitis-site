@@ -7,7 +7,7 @@ const linkAbrir = computed(() => `https://www.google.com/maps/search/?api=1&quer
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-2xl border border-stone-200">
+  <div class="overflow-hidden rounded-mbb-xl border border-line">
     <iframe
       :src="srcEmbed"
       :title="`Mapa de ${nome}`"
@@ -20,7 +20,7 @@ const linkAbrir = computed(() => `https://www.google.com/maps/search/?api=1&quer
       :href="linkAbrir"
       target="_blank"
       rel="noopener noreferrer"
-      class="block bg-stone-50 px-4 py-2.5 text-center text-sm font-semibold text-orange-700 hover:bg-stone-100 hover:underline"
+      class="block bg-ground px-4 py-2.5 text-center text-sm font-bold text-brand-ink hover:underline"
     >
       Abrir no Google Maps →
     </a>

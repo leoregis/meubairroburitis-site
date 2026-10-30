@@ -8,3 +8,10 @@
   X-Robots-Tag: noindex, nofollow
   Content-Security-Policy: connect-src 'self' https://peusailkyxqbhgdgmqyk.supabase.co/rest/v1/ https://xtmwatregednbuupfdbl.supabase.co/rest/v1/ https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
   Referrer-Policy: strict-origin-when-cross-origin
+
+# Mesmo cache da produção (.htaccess: max-age=16070400 nos assets com hash),
+# para os testes de desempenho da prévia valerem também na segunda visita.
+/_nuxt/*
+  Cache-Control: public, max-age=16070400
+/_ipx/*
+  Cache-Control: public, max-age=16070400

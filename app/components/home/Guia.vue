@@ -10,6 +10,8 @@ const { data: resumo } = await useResumoDiretorioHome()
 const { data: prestadores } = await usePrestadoresDestaqueHome()
 
 const destaques = computed(() => (prestadores.value ?? []).filter((p) => p.total_avaliacoes > 0).slice(0, 3))
+// fotos pelo IPX no build (o mesmo arquivo de 192px das listagens)
+const miniatura = useFotoGuia()
 const formato = new Intl.NumberFormat('pt-BR')
 
 const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=br.com.meubairroburitis.twa'
@@ -46,7 +48,7 @@ function iniciais(nome: string) {
             >
               <img
                 v-if="p.foto_url"
-                :src="p.foto_url"
+                :src="miniatura(p.foto_url, MINIATURA_GUIA, MINIATURA_GUIA) ?? undefined"
                 alt=""
                 width="56"
                 height="56"

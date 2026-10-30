@@ -26,13 +26,9 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-16">
-    <div class="mb-10 text-center">
-      <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Quem faz no bairro</p>
-      <h1 class="mt-2 text-balance font-serif text-3xl font-bold text-stone-900">{{ categoria?.nome }}</h1>
-    </div>
-
-    <PrestadoresFiltroCategorias :categorias="categorias ?? []" :categoria-ativa="categoriaSlug" />
+  <div class="mx-auto flex max-w-[1248px] flex-col gap-5 px-4 pb-16 pt-6 sm:gap-6 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <DiretorioCabecalho eyebrow="Serviços no bairro" :titulo="categoria?.nome ?? ''" :voltar="{ to: '/prestadores', rotulo: 'Todas as categorias' }" />
+    <DiretorioCategorias base="/prestadores" :categorias="categorias ?? []" :ativa="categoriaSlug" />
     <PrestadoresListagem :pagina="pagina" :categoria-slug="categoriaSlug" />
   </div>
 </template>

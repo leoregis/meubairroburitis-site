@@ -11,8 +11,9 @@
     <main id="conteudo" tabindex="-1" class="flex-1 focus:outline-none">
       <slot />
     </main>
-    <LayoutFooter />
-    <LayoutWhatsappFloat />
+    <!-- rodapé: JS só quando aparece; WhatsApp: é um link comum, sem JS -->
+    <LazyLayoutFooter hydrate-on-visible />
+    <LazyLayoutWhatsappFloat hydrate-never />
     <LayoutToastCarrinho />
   </div>
 </template>

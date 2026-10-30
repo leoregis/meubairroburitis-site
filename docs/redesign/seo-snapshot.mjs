@@ -14,10 +14,11 @@
 // Redirects não são seguidos: um 301 aparece como 301 com o destino em "location".
 
 const PRODUCAO = 'https://meubairroburitis.com.br'
-const CAMPOS = ['url', 'status', 'location', 'title', 'meta_description', 'canonical', 'meta_robots', 'x_robots_tag', 'jsonld_types', 'h1_count', 'og_title', 'og_image']
-// og_image da prévia aponta para outro host; h1_count muda de propósito em
-// alguns casos. Os dois saem num bloco separado de "avisos" na comparação.
-const CAMPOS_AVISO = new Set(['h1_count', 'og_image'])
+const CAMPOS = ['url', 'status', 'location', 'title', 'meta_description', 'canonical', 'meta_robots', 'x_robots_tag', 'jsonld_types', 'h1_count', 'og_title', 'og_description', 'og_image']
+// h1_count muda de propósito (h1 do corpo das matérias vira h2, decisão 3):
+// sai num bloco separado de "avisos". og_image e og_description contam como
+// diferença (o og:image da prévia aponta para a produção, igual ao do site).
+const CAMPOS_AVISO = new Set(['h1_count'])
 
 const args = process.argv.slice(2)
 const arg = (nome) => { const i = args.indexOf(nome); return i >= 0 ? args[i + 1] : undefined }
@@ -104,6 +105,7 @@ async function fotografar(urlPublica, base) {
         jsonld_types: tiposJsonLd(html),
         h1_count: (html.match(/<h1\b/gi) || []).length,
         og_title: meta(html, 'property', 'og:title'),
+        og_description: meta(html, 'property', 'og:description'),
         og_image: meta(html, 'property', 'og:image'),
       }
     } catch (erro) {
@@ -148,6 +150,8 @@ async function comparar(arqAntes, arqDepois) {
     const d = depois.get(url)
     if (!d) { erros.push(`${url}: sumiu da fotografia nova`); continue }
     for (const c of CAMPOS.slice(1).filter((c) => !ignorar.has(c))) {
+      // fotografia antiga, sem a coluna: não compara (seo-baseline.csv de 29/10)
+      if (!(c in a) || !(c in d)) continue
       if ((a[c] ?? '') !== (d[c] ?? '')) (CAMPOS_AVISO.has(c) ? avisos : erros).push(`${url} [${c}]\n  antes:  ${a[c]}\n  depois: ${d[c]}`)
     }
   }

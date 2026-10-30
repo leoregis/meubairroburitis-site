@@ -21,7 +21,9 @@ function rotulo(n: Noticia, longo = false) {
   return categoria ? `${categoria} · ${data}` : data
 }
 
-const capa = computed(() => manchete.value?.imagem_destaque_url || '')
+// capa pelo IPX no build (useCapaNoticia), 1200x630 como as outras capas
+const gerarCapa = useCapaNoticia()
+const capa = computed(() => gerarCapa(manchete.value?.imagem_destaque_url))
 </script>
 
 <template>
@@ -33,15 +35,15 @@ const capa = computed(() => manchete.value?.imagem_destaque_url || '')
         <NuxtLink :to="`/noticias/${manchete.slug}`" tabindex="-1" aria-hidden="true" class="block overflow-hidden rounded-[18px] bg-chip sm:rounded-mbb-xl">
           <img
             v-if="capa"
-            :src="imagemStorage(capa, 800, 450)"
-            :srcset="srcsetStorage(capa, [480, 800, 1200], 16 / 9)"
+            :src="capa.src"
+            :srcset="capa.srcset"
             sizes="(min-width: 1248px) 700px, (min-width: 1024px) 58vw, 100vw"
             :alt="manchete.imagem_destaque_alt || ''"
-            width="800"
-            height="450"
+            width="1200"
+            height="630"
             loading="lazy"
             decoding="async"
-            class="aspect-video h-auto w-full object-cover"
+            class="aspect-[1200/630] h-auto w-full object-cover"
           >
         </NuxtLink>
         <BaseEyebrow class="!text-xs">{{ rotulo(manchete, true) }}</BaseEyebrow>

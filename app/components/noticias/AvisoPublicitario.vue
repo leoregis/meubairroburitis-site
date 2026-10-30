@@ -6,12 +6,12 @@
 
   Rótulo em caixa alta via CSS (o texto real fica em caixa normal, pra leitor
   de tela não soletrar). Não é heading de propósito -- não entra no sumário
-  de títulos da página.
+  de títulos da página. Cor de publicidade (sponsor, 5:1 sobre o fundo).
 -->
 <template>
-  <aside aria-label="Aviso de conteúdo publicitário" class="mt-6 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 sm:px-5">
-    <p class="text-xs font-bold uppercase tracking-wider text-stone-700">Conteúdo publicitário</p>
-    <p class="mt-1 text-sm leading-relaxed text-stone-600">
+  <aside aria-label="Aviso de conteúdo publicitário" class="rounded-mbb-lg border border-line border-l-4 border-l-sponsor bg-ground px-4 py-3 sm:px-5">
+    <p class="m-0 text-xs font-bold uppercase tracking-[0.1em] text-sponsor">Conteúdo publicitário</p>
+    <p class="m-0 mt-1 text-sm leading-relaxed text-ink">
       Esta publicação foi produzida mediante contratação de espaço publicitário pelo anunciante.
     </p>
   </aside>

@@ -95,112 +95,187 @@ useJsonLd({
   author: autorJsonLd(noticia.value.autor),
   publisher: ORGANIZACAO_SCHEMA,
 })
+// --- redesign (fase 3) -------------------------------------------------
+// h1 dentro do corpo (veio do WordPress em 42 matérias) vira h2: a página
+// já tem o h1 do título (decisão 3 do plano). Só muda o HTML exibido; o
+// título, a description e o JSON-LD continuam os mesmos.
+const conteudo = computed(() => (noticia.value?.conteudo ?? '')
+  .replace(/<h1(\s|>)/gi, '<h2$1')
+  .replace(/<\/h1>/gi, '</h2>'))
+
+// capa pelo IPX no build (3 larguras em WebP); é o LCP da matéria
+const capa = useCapaNoticia()(noticia.value.imagem_destaque_url)
+const TAMANHOS_CAPA = '(min-width: 928px) 880px, 100vw'
+if (capa?.srcset) {
+  useHead({
+    link: [{ rel: 'preload', as: 'image', imagesrcset: capa.srcset, imagesizes: TAMANHOS_CAPA, fetchpriority: 'high', key: 'capa-materia' }],
+  })
+}
+// crédito da foto: ainda não existe no banco (ver docs/redesign/plano.md);
+// quando a coluna imagem_destaque_credito existir, ele aparece sozinho
+const creditoFoto = computed(() => (noticia.value as { imagem_destaque_credito?: string | null } | null)?.imagem_destaque_credito || '')
+
+const linkCategoria = computed(() => {
+  const id = noticia.value?.categoria_info?.id
+  if (!id) return null
+  return id === 'guias' ? '/conteudo' : `/noticias/categoria/${id}`
+})
+const ehDoVeiculo = (autor: string | null) => !autor?.trim() || autor.trim().toLowerCase() === DADOS_INSTITUCIONAIS.nomeVeiculo.toLowerCase()
 </script>
 
 <template>
-  <div v-if="noticia" class="mx-auto max-w-2xl px-4 py-16">
-    <NuxtLink to="/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Voltar pras notícias</NuxtLink>
+  <div v-if="noticia">
+    <article class="mx-auto flex max-w-[928px] flex-col gap-6 px-4 pb-12 pt-6 sm:gap-8 sm:px-6 sm:pt-10">
+      <header class="mx-auto flex w-full max-w-[720px] flex-col gap-3 sm:gap-4">
+        <p class="m-0 flex flex-wrap items-center gap-x-2 text-xs font-bold uppercase tracking-[0.1em] text-brand-ink">
+          <NuxtLink to="/noticias" class="hover:underline">Notícias</NuxtLink>
+          <span aria-hidden="true" class="text-ink-muted">›</span>
+          <NuxtLink v-if="linkCategoria && noticia.categoria_info" :to="linkCategoria" class="hover:underline">
+            {{ noticia.categoria_info.rotulo }}<template v-if="noticia.subcategoria_info"> · {{ noticia.subcategoria_info.rotulo }}</template>
+          </NuxtLink>
+          <span v-else-if="noticia.categoria">{{ noticia.categoria }}</span>
+        </p>
+        <p v-if="noticia.tipo_conteudo === 'opiniao'" class="m-0 self-start rounded-full bg-ink px-3 py-1 text-xs font-bold uppercase tracking-[0.1em] text-white">Opinião</p>
 
-    <NuxtLink
-      v-if="noticia.categoria_info"
-      :to="noticia.categoria_info.id === 'guias' ? '/conteudo' : `/noticias/categoria/${noticia.categoria_info.id}`"
-      class="mt-6 block text-xs font-semibold uppercase tracking-wide text-orange-700 hover:underline"
-    >
-      {{ noticia.categoria_info.rotulo }}<template v-if="noticia.subcategoria_info"> · {{ noticia.subcategoria_info.rotulo }}</template>
-    </NuxtLink>
-    <p v-else-if="noticia.categoria" class="mt-6 text-xs font-semibold uppercase tracking-wide text-orange-700">
-      {{ noticia.categoria }}
-    </p>
+        <h1 class="m-0 text-balance text-[28px] font-extrabold leading-[34px] tracking-[-0.025em] text-ink sm:text-[42px] sm:leading-[50px]">{{ noticia.titulo }}</h1>
+        <p v-if="noticia.subtitulo" class="m-0 text-lg leading-[27px] text-ink-muted sm:text-[21px] sm:leading-[31px]">{{ noticia.subtitulo }}</p>
 
-    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">{{ noticia.titulo }}</h1>
+        <p class="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
+          <span v-if="noticia.autor && !ehDoVeiculo(noticia.autor)">Por <strong class="font-bold text-ink">{{ noticia.autor }}</strong></span>
+          <span v-else>Da redação do <strong class="font-bold text-ink">Meu Bairro Buritis</strong></span>
+          <template v-if="noticia.data_publicacao">
+            <span aria-hidden="true">·</span>
+            <time :datetime="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</time>
+          </template>
+          <template v-if="noticia.atualizado_em_editorial">
+            <span aria-hidden="true">·</span>
+            <span>Atualizado em <time :datetime="noticia.atualizado_em_editorial">{{ formatarDataNoticia(noticia.atualizado_em_editorial) }}</time></span>
+          </template>
+        </p>
 
-    <p v-if="noticia.subtitulo" class="mt-3 text-lg text-stone-600">{{ noticia.subtitulo }}</p>
+        <NoticiasCompartilhar :titulo="noticia.titulo" :caminho="`/noticias/${noticia.slug}`" class="pt-1" />
 
-    <div class="mt-4 flex items-center gap-2 text-sm text-stone-500">
-      <span v-if="noticia.autor">{{ noticia.autor }}</span>
-      <span v-if="noticia.autor && noticia.data_publicacao">·</span>
-      <span v-if="noticia.data_publicacao">{{ formatarDataNoticia(noticia.data_publicacao) }}</span>
+        <!-- antes da capa de propósito: logo abaixo de autor/data, o aviso já
+        aparece sem rolar no celular (depois da capa ele caía abaixo da dobra) -->
+        <NoticiasAvisoPublicitario v-if="noticia.tipo_conteudo === 'patrocinado'" />
+      </header>
+
+      <figure v-if="capa" class="m-0 flex flex-col gap-2">
+        <!-- proporção 1200x630 fixa (a mesma do og:image): o espaço fica
+        reservado e o texto não salta quando a imagem chega -->
+        <img
+          :src="capa.src"
+          :srcset="capa.srcset"
+          :sizes="TAMANHOS_CAPA"
+          :alt="noticia.imagem_destaque_alt || noticia.titulo"
+          width="1200"
+          height="630"
+          loading="eager"
+          fetchpriority="high"
+          class="aspect-[1200/630] h-auto w-full rounded-[18px] bg-chip object-cover sm:rounded-mbb-xl"
+        >
+        <figcaption v-if="creditoFoto" class="text-xs text-ink-muted">Foto: {{ creditoFoto }}</figcaption>
+      </figure>
+
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div class="noticia-conteudo mx-auto w-full max-w-[640px]" v-html="conteudo" />
+
+      <div class="mx-auto flex w-full max-w-[640px] flex-col gap-6">
+        <NoticiasCtaGuiaBuritis :noticia="noticia" />
+        <NoticiasCompartilhar :titulo="noticia.titulo" :caminho="`/noticias/${noticia.slug}`" />
+        <NoticiasSobreEsteConteudo :noticia="noticia" />
+      </div>
+    </article>
+
+    <div class="mx-auto flex max-w-[1248px] flex-col gap-10 px-4 pb-16 sm:gap-16 sm:px-6 sm:pb-[72px]">
+      <!-- abaixo da dobra: o HTML sai igual no build, mas o JS desses blocos só
+      é baixado quando eles aparecem na tela (menos JS antes da 1ª pintura) -->
+      <LazyNoticiasLeiaTambem :noticia="noticia" hydrate-on-visible />
+      <LazyHomeCanais hydrate-on-visible />
     </div>
-
-    <!-- antes da capa de propósito: logo abaixo de autor/data, o aviso já
-    aparece sem rolar no celular (depois da capa ele caía abaixo da dobra) -->
-    <NoticiasAvisoPublicitario v-if="noticia.tipo_conteudo === 'patrocinado'" />
-
-    <NuxtPicture
-      v-if="noticia.imagem_destaque_url && imagemEhLocal"
-      :src="noticia.imagem_destaque_url"
-      :alt="noticia.imagem_destaque_alt || noticia.titulo"
-      format="avif,webp"
-      :width="700"
-      :height="367"
-      loading="eager"
-      :img-attrs="{ class: 'mt-6 w-full rounded-2xl object-cover' }"
-    />
-    <!-- imagem de Storage (upload pelo admin) não tem dimensão conhecida em
-    build-time -- sem espaço reservado, o texto abaixo saltava ~360px quando
-    ela carregava (era a causa do CLS 0.12 do site). Proporção fixa 1200x630,
-    a mesma do branch local acima e do og:image. -->
-    <img
-      v-else-if="noticia.imagem_destaque_url"
-      :src="noticia.imagem_destaque_url"
-      :alt="noticia.imagem_destaque_alt || noticia.titulo"
-      width="1200"
-      height="630"
-      class="mt-6 aspect-[1200/630] w-full rounded-2xl object-cover"
-    />
-
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <div class="noticia-conteudo mt-8" v-html="noticia.conteudo" />
-
-    <NoticiasCtaGuiaBuritis :noticia="noticia" />
-    <NoticiasSobreEsteConteudo :noticia="noticia" />
-    <NoticiasLeiaTambem :noticia="noticia" />
   </div>
 </template>
 
 <style>
-.noticia-conteudo h2 {
-  font-size: 1.375rem;
-  font-weight: 700;
-  margin: 1.5rem 0 0.5rem;
-}
-
-.noticia-conteudo h3 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 1.25rem 0 0.5rem;
-}
-
-.noticia-conteudo p {
-  margin: 0.75rem 0;
-  color: #44403c;
+/* Corpo da matéria (redesign, fase 3). Leitura confortável: 17px no
+   celular e 18px no computador, entrelinha 1,7 e coluna de 640px (~70-74
+   caracteres por linha). O HTML vem do editor/WordPress: tudo que pode
+   estourar a largura (imagem, tabela, iframe, código, URL comprida) fica
+   contido. Cores pelos tokens da marca (tailwind.config.ts). */
+.noticia-conteudo {
+  font-size: 17px;
   line-height: 1.7;
+  color: theme('colors.ink.DEFAULT');
+  overflow-wrap: break-word;
 }
-
-.noticia-conteudo ul,
-.noticia-conteudo ol {
-  padding-left: 1.5rem;
-  margin: 0.75rem 0;
+@media (min-width: 640px) {
+  .noticia-conteudo { font-size: 18px; line-height: 1.72; }
 }
-
-.noticia-conteudo ul {
-  list-style: disc;
+.noticia-conteudo > :first-child { margin-top: 0; }
+.noticia-conteudo p { margin: 0 0 1.15em; }
+.noticia-conteudo h2 {
+  font-size: 1.35em;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 1.8em 0 0.6em;
 }
-
-.noticia-conteudo ol {
-  list-style: decimal;
+.noticia-conteudo h3 {
+  font-size: 1.15em;
+  line-height: 1.35;
+  font-weight: 700;
+  margin: 1.5em 0 0.5em;
 }
-
-.noticia-conteudo blockquote {
-  border-left: 3px solid #d6d3d1;
-  padding-left: 1rem;
-  color: #57534e;
-  font-style: italic;
-  margin: 1rem 0;
-}
-
+.noticia-conteudo h4 { font-size: 1em; font-weight: 700; margin: 1.3em 0 0.4em; }
+.noticia-conteudo strong, .noticia-conteudo b { font-weight: 700; }
 .noticia-conteudo a {
-  color: #c2410c;
+  color: theme('colors.brand.ink');
   text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
 }
+.noticia-conteudo a:hover { color: theme('colors.brand.deep'); }
+.noticia-conteudo ul, .noticia-conteudo ol { margin: 0 0 1.15em; padding-left: 1.4em; }
+.noticia-conteudo ul { list-style: disc; }
+.noticia-conteudo ol { list-style: decimal; }
+.noticia-conteudo li { margin: 0.35em 0; padding-left: 0.2em; }
+.noticia-conteudo li::marker { color: theme('colors.brand.ink'); }
+.noticia-conteudo blockquote {
+  margin: 1.5em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid theme('colors.brand.DEFAULT');
+  font-size: 1.08em;
+  font-style: italic;
+  color: theme('colors.ink.DEFAULT');
+}
+.noticia-conteudo img, .noticia-conteudo video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em auto;
+  border-radius: 14px;
+}
+.noticia-conteudo figure { margin: 1.5em 0; }
+.noticia-conteudo figure img { margin: 0; }
+.noticia-conteudo figcaption { margin-top: 0.5em; font-size: 0.8em; color: theme('colors.ink.muted'); }
+.noticia-conteudo iframe, .noticia-conteudo embed, .noticia-conteudo object {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.5em 0;
+  border: 0;
+}
+.noticia-conteudo iframe[src*="youtube"], .noticia-conteudo iframe[src*="vimeo"] { aspect-ratio: 16 / 9; height: auto; }
+.noticia-conteudo table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.noticia-conteudo th, .noticia-conteudo td { border: 1px solid theme('colors.line'); padding: 0.5em 0.75em; text-align: left; vertical-align: top; }
+.noticia-conteudo th { background: theme('colors.ground'); font-weight: 700; }
+.noticia-conteudo pre { max-width: 100%; overflow-x: auto; padding: 1em; border-radius: 14px; background: theme('colors.ground'); font-size: 0.85em; }
+.noticia-conteudo hr { margin: 2em 0; border: 0; border-top: 1px solid theme('colors.line'); }
 </style>

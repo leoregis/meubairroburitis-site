@@ -92,6 +92,15 @@ export default defineNuxtConfig({
   // de 1.6-2.3MB que o WhatsApp não usa como thumbnail.
   image: {
     domains: ['peusailkyxqbhgdgmqyk.supabase.co'],
+    // redesign (fase 3): capas das notícias redimensionadas pelo IPX NO
+    // BUILD (arquivos estáticos em _ipx/, sem custo e sem depender do
+    // Supabase em tempo de execução) -- ver composables/useCapaNoticia.ts.
+    // O apelido deixa a URL sem "https:" no caminho: /_ipx/<mods>/capas/...
+    // (no Windows a pasta "https:" não pode ser criada e o arquivo sumia).
+    // O og:image das notícias continua com a URL completa de sempre.
+    alias: {
+      capas: 'https://peusailkyxqbhgdgmqyk.supabase.co/storage/v1/object/public',
+    },
   },
 
   // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxt/ui v2 já

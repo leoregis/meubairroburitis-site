@@ -348,6 +348,14 @@ Regras para todas as fases:
 
 ### Fase 5: Anuncie (`/loja`), produto, carrinho/checkout (só visual), midiakit e `/links`
 
+- **Plano Imobiliário** (decidido pelo Leo em 29/10/2026). Entra na página Anuncie como **cartão sem checkout**, com botão de WhatsApp.
+  - Preço: **R$ 500/mês**.
+  - Contrato cobrado pelo Asaas, fora do carrinho do site.
+  - Inclui anúncios de imóveis pré-aprovados no grupo do Facebook para os corretores indicados, sem limite de corretores nem de publicações.
+  - **Não inclui** outros canais.
+  - O texto do cartão deixa claro o que entra e o que não entra.
+  - Não é produto da tabela `produtos`: nada muda no banco nem no checkout.
+
 - **Arquivos:**
   - `pages/loja/*`, `components/loja/ProdutoCard.vue`;
   - `pages/carrinho.vue`, `components/checkout/*`, `pages/meus-pedidos.vue`, `pages/pedido/[id].vue`, `components/pedido/Acompanhamento.vue` (**só template**);
@@ -472,6 +480,17 @@ As 20 recomendações foram aprovadas, com estes ajustes:
   - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
   - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;
   - Confiber Telecom: `/prestadores/confiber-telecom-168` e `-482`.
+- **PENDÊNCIA URGENTE DO GUIA (`meubairro-app`): nota das empresas sem moderação** (registrada em 29/10/2026; o Leo resolve em sessão separada, o redesign não mexe nisso).
+  - **Evidência:**
+    - A tabela `empresas_avaliacoes` (projeto do Guia, `xtmwatregednbuupfdbl`) **não tem coluna de moderação**. As colunas são `id`, `empresa_unidade_id`, `cliente_id`, `prestador_id`, `nota`, `comentario`, `criado_em`.
+    - Já a `avaliacoes`, dos prestadores, tem `aprovado`: 132 de 136 aprovadas.
+    - Em 29/10 havia **19 avaliações de empresa**, de 10/06 a 24/09/2026, 13 com comentário, valendo para **14 empresas ativas**. Todas entram na nota pública.
+  - **Onde a nota é calculada sem filtro:**
+    - **Listagem (`/empresas`, categorias, paginação, home):** view `public.vw_empresas_publico_listagem`. As colunas `nota_media` (`avg(ea.nota)::numeric(10,2)`) e `total_avaliacoes` (`count(*)`) vêm de uma subconsulta em `empresas_avaliacoes` agrupada por `empresa_id`, sem filtro. A view dos prestadores (`vw_prestadores_publico_listagem`) filtra `a.aprovado = true`.
+    - **Detalhe (`/empresas/[slug]`):** RPC `public.buscar_empresa_publica_seo(p_slug)`. A CTE `avaliacoes_resumo` faz `avg(ea.nota)` e `count(*)` em `empresas_avaliacoes`, também sem filtro, e devolve `nota_media` e `total_avaliacoes`. A RPC dos prestadores (`buscar_prestador_publico_seo`) filtra `a.aprovado = true`.
+    - **JSON-LD (`aggregateRating`):** sim, o mesmo valor. Em `app/pages/empresas/[slug].vue` (linhas 92-93), `aggregateRating: { ratingValue: empresa.nota_media, reviewCount: empresa.total_avaliacoes }` usa o retorno da RPC. A nota sem moderação vai para o Google.
+    - **Meta description:** `utils/seoDiretorio.ts` (linha 153) acrescenta "avaliações" à description quando `total_avaliacoes > 0`.
+  - **No site, o que depende disso:** o card de empresa (`EmpresasCard`), a página de detalhe e o JSON-LD. A home nova (fase 2) mostra só prestadores em "Mais bem avaliados" por causa disso.
 - **Pendência do Guia: `/guia/` sem noindex.** A raiz do app responde sem `X-Robots-Tag`, enquanto `/guia/explorar` sai com `noindex, follow`. Conferir no `meubairro-app` se é proposital.
 - **CSP do `/guia/`:** com o Web Analytics ligado, o beacon envia para `cloudflareinsights.com`, que não está no `connect-src` da CSP *report-only* do app. Nada é bloqueado (é só relatório), mas o endpoint `csp_report` vai receber esses avisos. Acrescentar `https://cloudflareinsights.com` no `connect-src` do `meubairro-app`.
 
@@ -484,6 +503,7 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | 0: investigação e plano | Feita em 29/10/2026 (`2c8cd4c`) |
 | 1: tokens, layout base, prévia, analytics | Feita em 29/10/2026. Prévia em `https://previa.meubairroburitis.com.br`, publicada por `node deploy/previa/publicar.mjs`. Web Analytics ligado pelo Leo em 29/10. O beacon aparece no site e no `/guia/` (injetado só em pedidos de HTML) e não gera aviso na CSP do Guia. |
 | 2: home + busca | Feita em 29/10/2026 (notas abaixo) |
+| 3: notícias | Feita em 29/10/2026 (notas abaixo) |
 
 Notas da fase 1:
 
@@ -513,3 +533,30 @@ Notas da fase 2 (home + busca), 29/10/2026:
 
   Todos ainda com o visual antigo, até as fases 5 e 6.
 - **Texto do protótipo corrigido:** o bloco "Para empresas" não fala em "plano para imobiliárias", porque esse produto não existe na loja.
+
+Notas da fase 3 (notícias), 29/10/2026:
+
+- **Capas pelo IPX no build** (pedido do Leo: nada da transformação paga do Supabase).
+  - `image.alias.capas` no `nuxt.config.ts` aponta para o Storage do site. O IPX gera 480, 800 e 1200 px em WebP, na proporção 1200×630, como arquivos estáticos em `_ipx/.../capas/...` (`composables/useCapaNoticia.ts`). Com o apelido, o caminho não tem `https:` e funciona também no Windows.
+  - O `og:image` continua com a URL de sempre (conferido: zero diferença).
+  - A home também passou a usar o IPX, e `utils/imagemStorage.ts` saiu.
+  - **Custo no build:** +279 arquivos (93 capas do Storage × 3) e +8,7 MB. A prévia tem 3.265 arquivos, de um limite de 20.000.
+  - **Estimativa no FTP da produção:** o envio completo leva ~35 min para ~3.200 arquivos (~0,65 s por arquivo); os +279 arquivos somam **~3 min** a cada build completo. No incremental, cada notícia nova acrescenta 3 imagens (~60 a 100 KB).
+- **Listagens:**
+  - `/noticias` abre com a matéria em destaque (`NoticiasDestaque`, LCP com preload) e segue com a grade (`NoticiaCard`, que vira linha com miniatura no celular).
+  - Chips de editoria (`NoticiasEditorias`) e paginação com os botões da marca.
+  - As listagens, as categorias e o "Leia também" buscam só o resumo, sem o texto inteiro das matérias.
+- **Matéria:**
+  - Coluna de leitura de 640 px, corpo de 17 px no celular e 18 px no computador, 71 a 74 caracteres por linha.
+  - `h1` do corpo vira `h2` (decisão 3).
+  - Linha "Notícias › editoria", selo "Opinião", autor ("Da redação" quando é o veículo), data e "atualizado em".
+  - Compartilhar (WhatsApp, Facebook, copiar link) no topo e no fim.
+  - Aviso publicitário mantido; o card na listagem também mostra "Conteúdo publicitário".
+  - "Leia também" e o bloco dos canais no fim.
+- **Corpo do WordPress** (levantamento em 98 matérias):
+  - O que existe: `h2` (60 matérias), `strong` (56), links (42), `h1` (42), listas (13), `h3` (12), `br` (8), `blockquote` (3) e `img` (1).
+  - O que não existe: tabela, `iframe`, `figure`, embed e `style` inline.
+  - O CSS cobre todos esses elementos, inclusive os que ainda não aparecem.
+- **Hidratação adiada** (`hydrate-on-visible` / `hydrate-never`): rodapé, WhatsApp flutuante, "Leia também" e o bloco dos canais na matéria. O preload da fonte passou a ser só no servidor, porque a hidratação o duplicava.
+- **Decisão pendente: crédito de foto.** Não existe coluna para isso em `noticias`. A matéria já mostra "Foto: …" se a coluna `imagem_destaque_credito` for criada no banco do site, com o campo correspondente no admin. Isso é mudança de banco e de admin, fora do redesign.
+- **Problema de conteúdo:** `/noticias/chalezinho-fecha-para-reforma-e-ainda-nao-tem-data-para-reabrir` tem no corpo `<img src="URL-DA-IMAGEM">`, um marcador esquecido. A imagem aparece quebrada também na produção. Corrigir pelo admin.

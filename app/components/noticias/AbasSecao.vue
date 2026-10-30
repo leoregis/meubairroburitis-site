@@ -1,22 +1,12 @@
 <script setup lang="ts">
+// Abas Notícias | Guias da /conteudo (hub de guias). As listagens de
+// /noticias usam os chips de editoria (NoticiasEditorias) desde o redesign.
 defineProps<{ ativa: 'noticias' | 'guias' }>()
 </script>
 
 <template>
-  <nav class="mb-8 flex justify-center gap-2">
-    <NuxtLink
-      to="/noticias"
-      class="rounded-full border px-4 py-1.5 text-sm font-semibold"
-      :class="ativa === 'noticias' ? 'border-orange-600 bg-orange-50 text-orange-800' : 'border-stone-300 text-stone-600 hover:bg-stone-50'"
-    >
-      Notícias
-    </NuxtLink>
-    <NuxtLink
-      to="/conteudo"
-      class="rounded-full border px-4 py-1.5 text-sm font-semibold"
-      :class="ativa === 'guias' ? 'border-orange-600 bg-orange-50 text-orange-800' : 'border-stone-300 text-stone-600 hover:bg-stone-50'"
-    >
-      Guias
-    </NuxtLink>
+  <nav aria-label="Seções" class="mb-8 flex justify-center gap-2">
+    <BaseChip to="/noticias" :ativo="ativa === 'noticias'">Notícias</BaseChip>
+    <BaseChip to="/conteudo" :ativo="ativa === 'guias'">Guias</BaseChip>
   </nav>
 </template>

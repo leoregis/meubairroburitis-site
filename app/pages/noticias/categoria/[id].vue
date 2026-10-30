@@ -21,7 +21,7 @@ if (!categoria.value) {
   throw createError({ statusCode: 404, message: 'Categoria não encontrada' })
 }
 
-const { data: noticias } = await useNoticiasPorCategoria(categoriaId)
+const { data: noticias } = await useNoticiasPorCategoria(categoriaId, { resumo: true })
 
 useSeoMeta({
   title: () => `${categoria.value?.rotulo} — Meu Bairro Buritis`,
@@ -30,18 +30,21 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-16">
-    <div class="mb-10 text-center">
-      <NuxtLink to="/noticias" class="text-sm text-stone-500 hover:text-orange-700">← Todas as notícias</NuxtLink>
-      <p class="mt-4 text-sm font-semibold uppercase tracking-wide text-orange-700">Categoria</p>
-      <h1 class="mt-2 text-balance font-serif text-3xl font-bold text-stone-900">{{ categoria?.rotulo }}</h1>
-    </div>
+  <div class="mx-auto flex max-w-[1248px] flex-col gap-5 px-4 pb-16 pt-6 sm:gap-6 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <header class="flex flex-col gap-2">
+      <NuxtLink to="/noticias" class="inline-flex min-h-[44px] items-center gap-1.5 self-start text-sm font-bold text-brand-ink hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink">
+        <Icon name="lucide:arrow-left" class="h-4 w-4" aria-hidden="true" />
+        Todas as notícias
+      </NuxtLink>
+      <BaseEyebrow>Editoria</BaseEyebrow>
+      <h1 class="m-0 text-balance text-[32px] font-extrabold leading-[38px] tracking-[-0.025em] text-ink sm:text-[44px] sm:leading-[50px]">{{ categoria?.rotulo }}</h1>
+    </header>
 
-    <p v-if="!noticias?.length" class="text-center text-stone-500">
-      Nenhuma notícia publicada nessa categoria ainda.
-    </p>
-    <div v-else class="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
-      <NoticiasNoticiaCard v-for="noticia in noticias" :key="noticia.id" :noticia="noticia" />
+    <NoticiasEditorias :ativa="categoriaId" />
+
+    <p v-if="!noticias?.length" class="text-ink-muted">Nenhuma notícia publicada nessa editoria ainda.</p>
+    <div v-else class="grid sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-3">
+      <NoticiasNoticiaCard v-for="(noticia, i) in noticias" :key="noticia.id" :noticia="noticia" nivel="h2" :prioridade="i === 0" />
     </div>
   </div>
 </template>

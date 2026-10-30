@@ -215,12 +215,14 @@ export function useNoticiasRelacionadas(
 ) {
   const { $supabase } = useNuxtApp()
 
+  // redesign (fase 3): só as colunas do card (SELECT_NOTICIA_RESUMO) -- antes
+  // o payload de cada matéria levava o texto inteiro de até 3 relacionadas
   return useAsyncData(`noticias-relacionadas-${noticiaId}`, async () => {
     if (!$supabase) return [] as Noticia[]
 
     const { data, error } = await $supabase
       .from('noticias_relacionadas')
-      .select(`ordem, relacionada:noticias!relacionada_id(${SELECT_NOTICIA})`)
+      .select(`ordem, relacionada:noticias!relacionada_id(${SELECT_NOTICIA_RESUMO}, status)`)
       .eq('noticia_id', noticiaId)
       .order('ordem')
 
@@ -239,7 +241,7 @@ export function useNoticiasRelacionadas(
 
     let queryFallback = $supabase
       .from('noticias')
-      .select(SELECT_NOTICIA)
+      .select(SELECT_NOTICIA_RESUMO)
       .eq('status', 'publicado')
       .eq('categoria_id', categoriaId)
       .neq('id', noticiaId)
@@ -334,4 +336,10 @@ export async function salvarRelacionadosNoticia(
 export function formatarDataNoticia(data: string | null) {
   if (!data) return ''
   return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })
+}
+
+// "26 out 2026" -- rótulo dos cards (redesign); mesmo fuso fixo
+export function formatarDataCurta(data: string | null) {
+  if (!data) return ''
+  return new Date(data).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo' }).replace(/\./g, '').replace(/ de /g, ' ')
 }

@@ -127,3 +127,47 @@ Acessibilidade: 100 na prévia (98 no `/links`, que ganhou o `<main>` depois des
   | fonte (`*.woff2`) | 4,17 / 4,42 s (sem efeito) |
 
 - As páginas antigas da produção eram mais simples e carregam menos JS (21 arquivos, ~219 KB, contra 28 e ~244 KB na prévia). O peso fixo continua sendo o dos dois clientes do Supabase. A criação sob demanda foi aprovada pelo Leo em 30/10 e espera o token de teste do Mercado Pago para o teste ponta a ponta.
+
+## Item 1 (clientes do Supabase sob demanda) e critério de publicação, 30/10/2026
+
+O `supabase-js` saiu do JS inicial de todas as páginas: é baixado só quando uma tela precisa dele. Na `/loja`, o JS transferido caiu de ~244 KB para ~190 KB (menos que os ~219 KB da produção).
+
+**Critério do Leo para a fase 7:** nenhuma página com LCP no celular pior que a produção, medida na mesma sessão. Mesma metodologia: 3 rodadas alternadas, mediana.
+
+| Página | Produção | Prévia antes do item 1 | **Prévia depois do item 1** | Critério |
+|---|---|---|---|---|
+| `/` | 5,43 s | 3,80 s (fase 2) | **3,48 s** | ok |
+| `/empresas` | 6,93 s | 4,23 s | **3,57 s** | ok |
+| empresa com muitas fotos (`codice-digital-582`) | 5,80 s | 5,24 s | **4,74 s** | ok |
+| matéria (`carros-eletricos…`) | 9,14 s | 3,91 s (fase 3) | **3,41 s** | ok |
+| `/loja` | 3,10 s | 4,45 s | **4,21 s** | **pior** |
+| produto (`/loja/mbb-premium`) | 3,00 s | 3,51 s | **3,49 s** | **pior** |
+| `/midiakit` | 2,78 s | 3,47 s | **3,26 s** | **pior** |
+
+**Por que três páginas ainda ficam atrás (investigação de 30/10):**
+
+- **Não é o que o navegador pinta.** Num teste em navegador real com o celular emulado (4G lento, CPU 4×), a prévia pinta antes. Nos dois lados há uma entrada de LCP só, igual à primeira pintura:
+
+  | Página | Produção | Prévia |
+  |---|---|---|
+  | `/loja` | 3,5 s | 2,0 s |
+  | `/midiakit` | 0,7 s | 1,3 s |
+
+  No Lighthouse, o FCP simulado da prévia também é menor que o da produção.
+- **É o cálculo simulado do LCP.** Para o LCP, o Lighthouse soma todas as requisições iniciadas antes da pintura observada, não só as que bloqueiam a renderização. Nas páginas novas da loja e do midiakit entram mais requisições: 11 pré-carregamentos de JS, o CSS externo e a fonte própria, contra 6 e nada disso nas páginas antigas.
+- **O servidor da prévia pesa.** No Cloudflare Workers, cada arquivo leva até ~250 ms para começar a chegar, contra ~90 ms na produção (Apache com cache do Cloudflare). Isso é multiplicado por cada requisição.
+- **Comparação do código servido do mesmo jeito** (os dois builds no mesmo servidor local com gzip, 5 rodadas):
+
+  | Página | Produção atual | Prévia |
+  |---|---|---|
+  | `/loja` | 2,67 s | 2,66 s |
+  | `/midiakit` | 2,61 s | 2,72 s |
+  | produto | 2,43 s | 2,80 s |
+
+  Na prévia, o LCP do produto era a foto do pacote, que ficava acima da dobra. Depois da mudança, ficou em 2,74 s com o mesmo elemento de LCP da produção (o texto da descrição).
+- **O que não ajudou** (testado localmente, 5 rodadas cada):
+  - tirar o preload da fonte;
+  - tirar a fonte de fallback;
+  - prioridade alta na foto do produto;
+  - juntar chunks pequenos do JS com `experimentalMinChunkSize`. Esse piorou tudo para ~3,5 s, porque o Rollup pôs o `supabase-js` de volta no JS inicial.
+- **Mudança mantida:** no produto, a foto passou para a caixa de compra. No celular ela vem depois da descrição, e o LCP volta a ser o texto, como na página antiga.

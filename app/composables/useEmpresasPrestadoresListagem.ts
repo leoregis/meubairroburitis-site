@@ -45,10 +45,11 @@ export interface CategoriaOpcao {
 }
 
 export function useEmpresasPagina(pagina: number, categoriaSlug?: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const chave = `empresas-pagina-${pagina}-${categoriaSlug || 'todas'}`
 
   return useAsyncData(chave, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return { itens: [] as EmpresaListagemItem[], totalPaginas: 1 }
 
     const de = (pagina - 1) * ITENS_POR_PAGINA
@@ -70,10 +71,11 @@ export function useEmpresasPagina(pagina: number, categoriaSlug?: string) {
 }
 
 export function usePrestadoresPagina(pagina: number, categoriaSlug?: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const chave = `prestadores-pagina-${pagina}-${categoriaSlug || 'todos'}`
 
   return useAsyncData(chave, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return { itens: [] as PrestadorListagemItem[], totalPaginas: 1 }
 
     const de = (pagina - 1) * ITENS_POR_PAGINA
@@ -105,16 +107,21 @@ export function normalizarBusca(texto: string | null | undefined) {
 }
 
 export function useBuscaDiretorio<T>(view: string, camposPesquisaveis: (item: T) => (string | null)[]) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const termo = ref('')
   const todos = shallowRef<T[] | null>(null)
   const carregando = ref(false)
   const erro = ref(false)
 
   async function carregar() {
-    if (todos.value || carregando.value || !$meubairroApp) return
+    if (todos.value || carregando.value) return
     carregando.value = true
     erro.value = false
+    const $meubairroApp = await obterGuia()
+    if (!$meubairroApp) {
+      carregando.value = false
+      return
+    }
     const { data, error } = await $meubairroApp.from(view).select('*').order('nome', { ascending: true })
     carregando.value = false
     if (error) {
@@ -150,9 +157,10 @@ export const QUANTIDADE_DESTAQUE_HOME = 6
 const UNIDADES_FORA_DO_DESTAQUE = [569]
 
 export function useEmpresasDestaqueHome() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('empresas-destaque-home', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as EmpresaListagemItem[]
 
     const { data, error } = await $meubairroApp
@@ -170,9 +178,10 @@ export function useEmpresasDestaqueHome() {
 }
 
 export function usePrestadoresDestaqueHome() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('prestadores-destaque-home', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as PrestadorListagemItem[]
 
     const { data, error } = await $meubairroApp
@@ -194,9 +203,10 @@ export function usePrestadoresDestaqueHome() {
 export interface CategoriaComTotal { nome: string; slug: string; total: number; tipo: 'empresas' | 'prestadores' }
 
 export function useResumoDiretorioHome(categoriasPorTipo = 4) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('diretorio-resumo-home', async () => {
+    const $meubairroApp = await obterGuia()
     const vazio = { totalEmpresas: 0, totalPrestadores: 0, categorias: [] as CategoriaComTotal[] }
     if (!$meubairroApp) return vazio
 
@@ -227,9 +237,10 @@ export function useResumoDiretorioHome(categoriasPorTipo = 4) {
 }
 
 export function useCategoriasEmpresa() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('empresas-categorias-todas-listagem', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as CategoriaOpcao[]
 
     const { data, error } = await $meubairroApp
@@ -243,9 +254,10 @@ export function useCategoriasEmpresa() {
 }
 
 export function useCategoriasPrestador() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('prestadores-categorias-todas-listagem', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as CategoriaOpcao[]
 
     const { data, error } = await $meubairroApp

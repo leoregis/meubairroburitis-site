@@ -7,9 +7,12 @@ import type { IndiceBusca } from '~/utils/busca'
 // Quando uma notícia, empresa ou prestador muda, o build incremental regera
 // a /busca junto com a home (scripts/incremental/rotas-afetadas.mjs).
 export function useIndiceBusca() {
-  const { $supabase, $meubairroApp } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('busca-indice', async () => {
+    const $supabase = await obterSupabase()
+    const $meubairroApp = await obterGuia()
     const indice: IndiceBusca = { n: [], e: [], p: [] }
 
     if ($supabase) {

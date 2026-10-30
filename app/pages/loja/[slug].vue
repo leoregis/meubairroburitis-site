@@ -69,6 +69,12 @@ useJsonLd({
           <p v-if="produto.descricao_curta" class="m-0 text-[17px] leading-[27px] text-ink-muted">{{ produto.descricao_curta }}</p>
         </header>
 
+        <p class="m-0 whitespace-pre-line text-base leading-[27px] text-ink sm:text-[17px] sm:leading-[29px]">{{ produto.descricao }}</p>
+      </div>
+
+      <aside aria-label="Comprar" class="flex flex-col gap-4 rounded-mbb-xl border border-line bg-white p-5 sm:p-6 lg:sticky lg:top-6">
+        <!-- foto na caixa de compra (fase 5): no celular ela vem depois da
+             descrição, e o texto continua sendo o LCP, como na página antiga -->
         <NuxtPicture
           v-if="produto.imagem_url"
           :src="produto.imagem_url"
@@ -76,14 +82,9 @@ useJsonLd({
           format="avif,webp"
           :width="700"
           :height="420"
-          loading="eager"
-          :img-attrs="{ class: 'w-full rounded-mbb-xl border border-line object-cover' }"
+          sizes="100vw lg:340px"
+          :img-attrs="{ class: 'w-full rounded-mbb-lg border border-line object-cover' }"
         />
-
-        <p class="m-0 whitespace-pre-line text-base leading-[27px] text-ink sm:text-[17px] sm:leading-[29px]">{{ produto.descricao }}</p>
-      </div>
-
-      <aside aria-label="Comprar" class="flex flex-col gap-4 rounded-mbb-xl border border-line bg-white p-5 sm:p-6 lg:sticky lg:top-6">
         <p class="m-0 flex flex-col">
           <span
             v-if="produto.preco_original_centavos && produto.preco_original_centavos > produto.preco_centavos"

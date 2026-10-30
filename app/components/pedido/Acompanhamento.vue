@@ -9,12 +9,13 @@ import type { Entrega, PedidoAcompanhamento } from '~/types/acompanhamento'
 const props = defineProps<{ token?: string, dados?: PedidoAcompanhamento }>()
 
 const config = useRuntimeConfig()
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const carregando = ref(true)
 const falhou = ref(false)
 const pedido = ref<PedidoAcompanhamento | null>(null)
 
 async function carregar() {
+  const $supabase = await obterSupabase()
   if (props.dados) {
     pedido.value = { ...props.dados, encontrado: true, disponivel: !props.dados.expirado }
     carregando.value = false

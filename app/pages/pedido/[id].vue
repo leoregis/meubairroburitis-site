@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
 
 definePageMeta({ ssr: false })
 
@@ -17,7 +17,10 @@ const pedidoId = route.params.id as string
 const ehAcompanhamento = /^[A-Za-z0-9_-]{22}$/.test(pedidoId)
 
 const { consultarStatus } = useCheckout()
-const { $supabase } = useNuxtApp()
+// o cliente do Supabase só é carregado no onMounted (item 1 da fase 5)
+const obterSupabase = useSupabaseSite()
+let clienteSupabase: SupabaseClient | null = null
+let desmontado = false
 const statusAtual = ref<string | null>(null)
 const verificando = ref(false)
 
@@ -52,7 +55,7 @@ let intervaloPolling: ReturnType<typeof setInterval> | null = null
 
 function pararAtualizacaoAutomatica() {
   if (canalRealtime) {
-    $supabase?.removeChannel(canalRealtime)
+    clienteSupabase?.removeChannel(canalRealtime)
     canalRealtime = null
   }
   if (intervaloPolling) {
@@ -61,13 +64,16 @@ function pararAtualizacaoAutomatica() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (ehAcompanhamento) return
   const bruto = sessionStorage.getItem(`mbb-pedido-${pedidoId}`)
   if (bruto) pedidoSalvo.value = JSON.parse(bruto)
   statusAtual.value = pedidoSalvo.value?.status ?? null
 
-  if (statusFinal.value || !$supabase) return
+  if (statusFinal.value) return
+  const $supabase = await obterSupabase()
+  if (!$supabase || desmontado) return
+  clienteSupabase = $supabase
 
   // 🔄 atualização automática, sem precisar de nenhum clique -- duas
   // camadas, a mesma ideia do padrão já usado nas mensagens do app do
@@ -95,6 +101,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  desmontado = true
   pararAtualizacaoAutomatica()
 })
 

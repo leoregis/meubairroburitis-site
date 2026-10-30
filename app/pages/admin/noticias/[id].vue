@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Editar notícia — Admin Meu Bairro Buritis' })
 const route = useRoute()
 const noticiaId = route.params.id as string
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
@@ -44,6 +44,7 @@ const salvando = ref(false)
 const erro = ref('')
 
 onMounted(async () => {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   const { data, error: erroCarregar } = await $supabase
     .from('noticias')
@@ -90,6 +91,7 @@ onMounted(async () => {
 })
 
 async function salvar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   salvando.value = true
   erro.value = ''

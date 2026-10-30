@@ -15,7 +15,7 @@ useHead({ meta: [{ name: 'referrer', content: 'no-referrer' }] })
 const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 
 const CHAVE_SESSAO = 'mbb-meus-pedidos-sessao'
 interface SessaoSalva { sessao: string, expira_em: string, telefone_final: string }
@@ -106,6 +106,7 @@ async function enviarCodigo() {
 }
 
 async function entrar() {
+  const $supabase = await obterSupabase()
   erro.value = null
   if (!/^\d{6}$/.test(codigo.value)) {
     erro.value = 'O código tem 6 números.'
@@ -132,6 +133,7 @@ async function entrar() {
 }
 
 async function carregarLista() {
+  const $supabase = await obterSupabase()
   if (!sessao.value) return
   falhouLista.value = false
   const { data, error } = await $supabase.rpc('meus_pedidos_listar', { p_sessao: sessao.value.sessao })
@@ -152,6 +154,7 @@ async function carregarLista() {
 }
 
 async function sair(noServidor = true) {
+  const $supabase = await obterSupabase()
   const atual = sessao.value
   sessao.value = null
   gravarSessao(null)

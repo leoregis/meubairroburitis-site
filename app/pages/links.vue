@@ -7,7 +7,7 @@ useSeoMeta({
 })
 
 const config = useRuntimeConfig()
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { ehPrevia } = usePrevia()
 
 // links internos usam NuxtLink (mesma aba, sem custo de reload) -- só os
@@ -44,13 +44,14 @@ const redes = [
 // por qualquer motivo -- é só telemetria, não pode ser o que decide se o
 // visitante consegue sair da página.
 function registrarClique(slug: string) {
-  if (!$supabase || ehPrevia) return
-  $supabase
-    .from('links_bio_cliques')
-    .insert({ link_slug: slug, user_agent: navigator.userAgent })
-    .then(({ error }) => {
-      if (error) console.error('Erro ao registrar clique do link da bio:', error)
+  if (ehPrevia) return
+  // o supabase-js só é baixado no primeiro clique (item 1 da fase 5)
+  obterSupabase()
+    .then(($supabase) => $supabase?.from('links_bio_cliques').insert({ link_slug: slug, user_agent: navigator.userAgent }))
+    .then((resposta) => {
+      if (resposta?.error) console.error('Erro ao registrar clique do link da bio:', resposta.error)
     })
+    .catch((erro) => console.error('Erro ao registrar clique do link da bio:', erro))
 }
 </script>
 

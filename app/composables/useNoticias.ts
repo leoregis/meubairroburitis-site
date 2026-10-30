@@ -68,10 +68,11 @@ export interface Noticia {
 }
 
 export function useNoticiasPagina(pagina: number, opcoes?: OpcoesListagem) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
   const { select, sufixo } = selecao(opcoes)
 
   return useAsyncData(`noticias-pagina-${pagina}${sufixo}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return { itens: [] as Noticia[], totalPaginas: 1 }
 
     const de = (pagina - 1) * NOTICIAS_POR_PAGINA
@@ -93,9 +94,10 @@ export function useNoticiasPagina(pagina: number, opcoes?: OpcoesListagem) {
 }
 
 export function useNoticia(slug: string) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData(`noticia-${slug}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return null
 
     const { data, error } = await $supabase
@@ -112,10 +114,11 @@ export function useNoticia(slug: string) {
 
 // Fase 2 -- navegação por categoria (clique no eyebrow de categoria)
 export function useNoticiasPorCategoria(categoriaId: string, opcoes?: OpcoesListagem) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
   const { select, sufixo } = selecao(opcoes)
 
   return useAsyncData(`noticias-categoria-${categoriaId}${sufixo}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as Noticia[]
 
     const { data, error } = await $supabase
@@ -131,9 +134,10 @@ export function useNoticiasPorCategoria(categoriaId: string, opcoes?: OpcoesList
 }
 
 export function useCategoria(categoriaId: string) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData(`categoria-${categoriaId}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return null
 
     const { data, error } = await $supabase
@@ -148,9 +152,10 @@ export function useCategoria(categoriaId: string) {
 }
 
 export function useCategorias() {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData('noticias-categorias-todas', async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as NoticiaCategoria[]
 
     const { data, error } = await $supabase
@@ -166,10 +171,11 @@ export function useCategorias() {
 // Fase 2 -- hub de Guias (rota /conteudo, reaproveitada). `subcategoriaId`
 // opcional filtra dentro de Guias (ex: só "Alimentação").
 export function useGuias(subcategoriaId?: string, opcoes?: OpcoesListagem) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
   const { select, sufixo } = selecao(opcoes)
 
   return useAsyncData(`noticias-guias-${subcategoriaId || 'todos'}${sufixo}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as Noticia[]
 
     let query = $supabase
@@ -188,9 +194,10 @@ export function useGuias(subcategoriaId?: string, opcoes?: OpcoesListagem) {
 }
 
 export function useSubcategoriasGuia() {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData('noticias-subcategorias-guia-todas', async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as NoticiaCategoria[]
 
     const { data, error } = await $supabase
@@ -214,11 +221,12 @@ export function useNoticiasRelacionadas(
   categoriaId: string | null,
   subcategoriaGuiaId: string | null,
 ) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   // redesign (fase 3): só as colunas do card (SELECT_NOTICIA_RESUMO) -- antes
   // o payload de cada matéria levava o texto inteiro de até 3 relacionadas
   return useAsyncData(`noticias-relacionadas-${noticiaId}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as Noticia[]
 
     const { data, error } = await $supabase
@@ -262,9 +270,10 @@ export function useNoticiasRelacionadas(
 // usado no admin (seletor de "Leia também") -- lista enxuta, sem categoria
 // alguma, pra permitir escolher qualquer notícia publicada como relacionada.
 export function useTodasNoticiasPublicadas() {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData('noticias-todas-publicadas-selecao', async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return [] as Pick<Noticia, 'id' | 'titulo'>[]
 
     const { data, error } = await $supabase

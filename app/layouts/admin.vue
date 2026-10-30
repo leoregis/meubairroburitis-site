@@ -1,12 +1,13 @@
 <script setup lang="ts">
 const route = useRoute()
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 
 // noindex em todo o /admin (inclusive login) de uma vez, pelo layout: rotas
 // client-only, o robots:false de routeRules não chega ao HTML.
 useSeoMeta({ robots: 'noindex' })
 
 async function sair() {
+  const $supabase = await obterSupabase()
   await $supabase?.auth.signOut()
   navigateTo('/admin/login')
 }

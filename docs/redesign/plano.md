@@ -476,6 +476,12 @@ As 20 recomendações foram aprovadas, com estes ajustes:
   - política de privacidade atualizada, no `meubairro-app`.
 
   Quando existir, o bloco escuro da home volta a ser o da newsletter.
+- **Projeto depois do redesign: cobrança recorrente automática dos planos MBB Basic e MBB Premium** (pedido do Leo em 30/10/2026). Hoje os dois são vendidos no carrinho como compra avulsa: cada mês é um pedido novo, pago com Pix ou cartão. Avaliar:
+  - **Mercado Pago Preapproval** (assinaturas), já usado no Guia: mesmo provedor do checkout do site, cartão salvo pelo próprio Mercado Pago e cobrança mensal automática;
+  - **Asaas**, já usado nos contratos das imobiliárias (Plano Imobiliário): boleto, Pix e cartão recorrentes, nota fiscal e régua de cobrança.
+  - A decidir: provedor, o que acontece quando a cobrança falha (pausa das publicações, aviso), cancelamento pelo cliente, e como a assinatura aparece na Central e em Meus pedidos.
+  - Até lá, a página Anuncie não fala em "cobrança automática" (texto do protótipo retirado na fase 5).
+- **Pendência do site: permissões (GRANT) da produção fora das migrations** (achado no teste do item 1, 30/10/2026). Um branch de dev criado só pelas migrations sai sem os GRANTs de tabela para `anon`/`authenticated`/`service_role` (a própria chave anon lê `noticias` com "permission denied") e sem o EXECUTE de várias funções para `service_role` (por exemplo `novo_token_acompanhamento`, chamada pelo gatilho de pedido pago). Na produção eles existem, mas não estão em nenhum arquivo. No teste, copiei as permissões da produção para o branch (só leitura na produção). Proposta: uma migration que registre os GRANTs atuais da produção, sem mudar nada nela (aplicar e conferir que a lista de permissões fica idêntica), para os próximos branches nascerem iguais.
 - **Pendência do Guia: cadastros duplicados** (decisão 20). Resolver no `meubairro-app`, desativando o duplicado (o fluxo atual já gera o 301), e não com noindex no site:
   - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
   - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;
@@ -508,7 +514,8 @@ As 20 recomendações foram aprovadas, com estes ajustes:
 | 2: home + busca | Feita em 29/10/2026 (notas abaixo) |
 | 3: notícias | Feita em 29/10/2026 (notas abaixo) |
 | 4: empresas e prestadores (+ remoção do @nuxt/ui, CSS externo, crédito de foto) | Feita em 30/10/2026 (notas abaixo) |
-| 5: Anuncie, produto, carrinho/checkout (visual), midiakit e `/links` | Feita em 30/10/2026 (notas abaixo). Clientes do Supabase sob demanda: aprovado, aguardando o token de teste do Mercado Pago |
+| 5: Anuncie, produto, carrinho/checkout (visual), midiakit e `/links` | Feita em 30/10/2026 (notas abaixo). Item 1 (clientes do Supabase sob demanda) feito em 30/10, testado ponta a ponta; 3 páginas ainda acima da produção no LCP simulado (ver `lighthouse-antes.md`) |
+| 6: institucionais | Não iniciada: espera a decisão do Leo sobre o critério de LCP |
 
 Notas da fase 1:
 
@@ -613,7 +620,7 @@ Notas da fase 4 (empresas e prestadores) e dos itens anteriores, 29-30/10/2026:
   - **Por que valeu:** os logos originais somavam ~3,8 MB numa página de listagem; o LCP de `/empresas` no celular caiu de 5,8 para 4,2 s.
   - A galeria continua direto do Storage, com carregamento sob demanda e logo abaixo do horário e do endereço. Passá-la pelo IPX daria +1.105 arquivos (+12 min) para pouco ganho no LCP, que foi medido.
 - **Ainda carregados em toda página** (próximo passo de desempenho, precisa de aprovação porque mexe no caminho de login, checkout e Meus pedidos): os **dois clientes completos do Supabase** (site e Guia, com Auth e Realtime), criados na abertura por `plugins/supabase.ts` e `plugins/supabase-meubairro-app.ts`. É o principal peso do LCP que sobra (ver `lighthouse-antes.md`, fase 4). O plugin do Mercado Pago só carrega o SDK na hora do pagamento: custo fixo pequeno.
-  - **Aprovado pelo Leo em 30/10/2026**, com teste ponta a ponta num branch de dev do Supabase do site e o Mercado Pago em modo de teste. Fica para quando ele avisar que o token de teste está salvo (ver fase 5).
+  - **Feito em 30/10/2026** (item 1 da fase 5, notas abaixo).
 
 Notas da fase 5 (Anuncie, produto, carrinho/checkout, midiakit e `/links`), 30/10/2026:
 
@@ -632,3 +639,22 @@ Notas da fase 5 (Anuncie, produto, carrinho/checkout, midiakit e `/links`), 30/1
 - **Midiakit:** as mesmas informações, com cabeçalho e abas novos (`MidiakitCabecalho`, `MidiakitTabs` em chips).
 - **`/links`:** fundo `ink`, botão principal vermelho e os outros brancos; só os ícones das redes mantêm as cores de cada uma.
 - **Saíram** os componentes da home sem uso: HeroConversao, NumerosDestaque, AppDestaque, PacotesComparativo, Depoimentos e MidiakitResumo.
+
+Item 1 da fase 5 (clientes do Supabase sob demanda), 30/10/2026:
+
+- **O que mudou:** saíram `plugins/supabase.ts` e `plugins/supabase-meubairro-app.ts`. Agora `composables/useSupabase.ts` cria os clientes do site e do Guia na primeira vez que uma tela precisa deles. O `supabase-js` vira um arquivo à parte, baixado só nessa hora (no HTML fica só um `prefetch` de prioridade mínima).
+  - Os composables de dados pedem o cliente dentro do `useAsyncData`, que no navegador usa o payload do build e não busca nada.
+  - O admin, Meus pedidos, `/pedido`, o acompanhamento, `/links` (no clique) e a busca pedem o cliente quando usam.
+  - O checkout (Pix e cartão) já chamava as funções por `$fetch` e não mudou.
+- **Teste ponta a ponta, antes e depois, fora da produção:**
+  - **Ambiente:** branch de dev do site (`dev-clientes`, criado e apagado no mesmo dia), site servido localmente apontando para ele, Mercado Pago com o token de teste só nos segredos do branch, e dev da Central (`gpoaicfsigsqefbncwpa`) ligado pelo `central-mbb/scripts/acompanhamento/configurar.mjs`.
+  - **Mesmo resultado nas duas versões:**
+    - carrinho: adicionar, quantidade, remover;
+    - Pix até o QR code do Mercado Pago de teste, com aprovação simulada no banco do branch: tela de pago e link de acompanhamento;
+    - cartão APRO aprovado de verdade pelo Mercado Pago de teste;
+    - os dois pedidos chegam ao dev da Central;
+    - /meus-pedidos com o código guardado por uma função temporária do branch (ninguém recebeu WhatsApp) e o link de token;
+    - /pedido/[id];
+    - admin: login real no branch, lista e edição de notícia e de produto.
+  - Nenhuma requisição saiu para a API do site de produção.
+  - **Achado:** o branch nasce sem os GRANTs de tabelas e funções que a produção tem (ver seção 7). Copiei os da produção para o branch, só lendo a produção.

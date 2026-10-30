@@ -2,7 +2,7 @@
 definePageMeta({ ssr: false, layout: 'admin' })
 useSeoMeta({ title: 'Login administrativo — Meu Bairro Buritis' })
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const router = useRouter()
 
 const email = ref('')
@@ -11,6 +11,7 @@ const erro = ref<string | null>(null)
 const carregando = ref(false)
 
 async function entrar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   carregando.value = true
   erro.value = null

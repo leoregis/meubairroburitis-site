@@ -33,7 +33,7 @@ const emit = defineEmits<{ salvar: [] }>()
 // direto nos campos).
 const modelo = defineModel<DadosNoticiaForm>({ required: true })
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 
 const { data: categorias } = await useCategorias()
 const { data: subcategoriasGuia } = await useSubcategoriasGuia()
@@ -101,6 +101,7 @@ const enviandoImagem = ref(false)
 const erroImagem = ref('')
 
 async function selecionarImagemDestaque(e: Event) {
+  const $supabase = await obterSupabase()
   const arquivo = (e.target as HTMLInputElement).files?.[0]
   if (!arquivo || !$supabase) return
 

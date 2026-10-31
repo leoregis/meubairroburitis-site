@@ -1,0 +1,113 @@
+name: Release - proteger da limpeza
+
+# Redesign, fase 7 (docs/redesign/fase-7.md): logo depois do swap da
+# publicação, a release anterior (public_html/_old_<timestamp>) precisa ficar
+# disponível para o rollback durante os 7 dias de observação. A limpeza
+# automática (limpeza-releases.yml) só mantém as 3 _old_* completas mais
+# recentes e, com 2 a 4 deploys por dia, apagaria essa pasta em ~1 dia.
+#
+# Este workflow renomeia _old_<n> para _preredesign_<n>: o nome não casa com
+# ^_old_[0-9]+$, então a limpeza não a apaga e ela não conta no limite de 10
+# pastas antigas do deploy.yml. Não apaga nada.
+#
+# Simulação ligada por padrão: só lista o que faria. Para valer, rodar com
+# simulacao=false. A raiz só pode ser public_html (produção) ou uma pasta
+# dentro de public_html/_staging_test/ (teste: testar-release-manual.yml).
+
+on:
+  workflow_dispatch:
+    inputs:
+      origem:
+        description: 'Pasta a proteger, ex.: _old_1793000000 (a criada pelo swap da publicação)'
+        required: true
+        type: string
+      simulacao:
+        description: 'true = só lista o que faria; false = renomeia'
+        required: false
+        default: true
+        type: boolean
+      raiz:
+        description: 'public_html (produção) ou public_html/_staging_test/... (teste)'
+        required: false
+        default: public_html
+        type: string
+  workflow_call:
+    inputs:
+      origem:
+        required: true
+        type: string
+      simulacao:
+        required: false
+        default: true
+        type: boolean
+      raiz:
+        required: false
+        default: public_html
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  proteger:
+    runs-on: ubuntu-latest
+    # para valer na produção: na fila da limpeza (que poderia estar apagando
+    # justamente esta pasta). Simulação e teste ficam fora das filas de produção.
+    concurrency:
+      group: ${{ (inputs.raiz == 'public_html' && !inputs.simulacao) && 'limpeza-releases' || format('release-proteger-{0}-{1}-{2}', github.run_id, inputs.raiz, inputs.simulacao) }}
+      cancel-in-progress: false
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      ORIGEM: ${{ inputs.origem }}
+      RAIZ: ${{ inputs.raiz }}
+      SIMULACAO: ${{ inputs.simulacao }}
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Confere os parâmetros
+        run: |
+          if ! [[ "$ORIGEM" =~ ^_old_[0-9]+$ ]]; then
+            echo "ERRO: origem '$ORIGEM' não é uma pasta _old_<número>."; exit 1
+          fi
+          if [ "$RAIZ" != "public_html" ] && ! [[ "$RAIZ" =~ ^public_html/_staging_test/[A-Za-z0-9_-]+$ ]]; then
+            echo "ERRO: raiz '$RAIZ' não permitida (só public_html ou public_html/_staging_test/<pasta>)."; exit 1
+          fi
+          echo "DESTINO=_preredesign_${ORIGEM#_old_}" >> "$GITHUB_ENV"
+
+      - name: Lista e confere a pasta (só leitura)
+        run: |
+          cat > lftp-base.txt <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          EOF
+          { cat lftp-base.txt; echo "set cmd:fail-exit no"; echo "echo '### RAIZ'"; echo "cls -1 $RAIZ"; echo "echo '### ORIGEM'"; echo "cls -1 $RAIZ/$ORIGEM"; echo "bye"; } > listar.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < listar.lftp 2>&1 | tr -d '\r' > listagem.txt || true
+          raiz=$(awk '/^### RAIZ/{f=1;next} /^### /{f=0} f' listagem.txt | sed 's#/$##; s#.*/##')
+          origem=$(awk '/^### ORIGEM/{f=1;next} /^### /{f=0} f' listagem.txt | sed 's#/$##; s#.*/##')
+          echo "Conteúdo de $RAIZ:"; echo "$raiz"
+          echo "$raiz" | grep -qx "_current" || { echo "ERRO: $RAIZ sem _current -- servidor fora do estado esperado, nada a fazer."; exit 1; }
+          echo "$raiz" | grep -qx "$ORIGEM" || { echo "ERRO: $ORIGEM não existe em $RAIZ."; exit 1; }
+          if echo "$raiz" | grep -qx "$DESTINO"; then echo "ERRO: $DESTINO já existe em $RAIZ."; exit 1; fi
+          for item in index.html _build.txt _nuxt; do
+            echo "$origem" | grep -qx "$item" || { echo "ERRO: $ORIGEM incompleta (falta $item) -- não serve para rollback."; exit 1; }
+          done
+          echo "OK: $ORIGEM completa (index.html, _build.txt e _nuxt/)."
+
+      - name: Renomeia (ou só mostra, na simulação)
+        run: |
+          if [ "$SIMULACAO" = "true" ]; then
+            echo "SIMULAÇÃO: faria  mv $RAIZ/$ORIGEM  ->  $RAIZ/$DESTINO  (nada foi alterado)"
+            echo "### Simulação: mv $RAIZ/$ORIGEM -> $RAIZ/$DESTINO (nada alterado)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          { cat lftp-base.txt; echo "set cmd:fail-exit yes"; echo "mv $RAIZ/$ORIGEM $RAIZ/$DESTINO"; echo "cls -1 $RAIZ/$DESTINO/_build.txt"; echo "bye"; } > mover.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < mover.lftp
+          echo "Feito: $RAIZ/$ORIGEM agora é $RAIZ/$DESTINO (fora do alcance da limpeza)."
+          echo "### ✅ $RAIZ/$ORIGEM -> $RAIZ/$DESTINO" >> "$GITHUB_STEP_SUMMARY"

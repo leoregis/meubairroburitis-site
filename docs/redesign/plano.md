@@ -491,6 +491,50 @@ As 20 recomendações foram aprovadas, com estes ajustes:
   - **Permissões:** `anon` lê 329 relações e executa 650 funções. As migrations têm GRANT explícito para ~10 tabelas e `grant execute` para 89 funções; o resto depende do padrão antigo de permissões.
   - **Histórico:** 18 das 279 migrations estão sem o SQL salvo (`statements` vazio).
   - **Consequência:** um branch do Guia criado das migrations não reproduziria nem o esquema nem as permissões. A Central já usa um projeto de dev próprio por isso.
+- **PRÉ-REQUISITO OBRIGATÓRIO da futura unificação do backend** (decisão do Leo, 30/10/2026; **não executar agora**). Antes de qualquer trabalho de unificação, no `meubairro-app`:
+  1. **Migration de base (baseline) gerada do esquema real de produção do Guia.**
+     - **O que entra:** tabelas, views e views materializadas, funções, gatilhos, policies (RLS), GRANTs e permissões padrão (`ALTER DEFAULT PRIVILEGES`), sequências, tipos, extensões e os schemas próprios (`public` e `central`).
+     - **Objetivo:** um branch de dev criado das migrations reproduzir a produção.
+     - **Como conferir:** com o mesmo método do site (`20261030200000_permissoes_documentadas`). Comparar as ACLs, a definição das funções e as policies do branch com as da produção, objeto por objeto, até ficar tudo igual. Na produção, a migration é só registrada no histórico (o esquema já existe).
+  2. **Recuperar ou documentar as 18 migrations sem SQL** no histórico (`supabase_migrations.schema_migrations.statements` vazio):
+     - **Recuperáveis (17):** têm o arquivo com o SQL no repositório (672 a 7.046 bytes). Basta regravar o `statements` a partir do arquivo, como foi feito no histórico do site em 22/10.
+       - `20260909169000_cria_csp_reports`
+       - `20260910010000_habilita_realtime_achados_perdidos`
+       - `20260910020000_habilita_realtime_social_atividades`
+       - `20260910030000_habilita_realtime_notificacoes`
+       - `20260910040000_fase3a_favoritos_select_owner_scoped`
+       - `20260910050000_fase3b_p1_helper_criar_notificacao_interna`
+       - `20260910050100_fase3b_p2_converte_invoker_para_definer`
+       - `20260910050200_fase3b_p3_rate_limit_e_rpc_social`
+       - `20260910050300_fase3b_p5_fecha_vetores`
+       - `20260910050400_fase3b_p5b_notificacoes_insert_admin`
+       - `20260910060000_fase4b_cadastro_progresso_parcial`
+       - `20260910060100_fase4b_p2_filtra_cadastro_incompleto`
+       - `20260911100000_radar_alertas_expirados_visiveis`
+       - `20260911120000_radar_alertas_resolvidos_visiveis`
+       - `20261010220000_pedidos_exclusao`
+       - `20261011150000_limpar_registros_acesso`
+       - `20261011170000_verificacao_documento_retencao`
+     - **Sem SQL nenhum (1):** a primeira migration, `20260418021908_remote_schema`, tem o arquivo **vazio (0 bytes)**. Era a base do esquema, e por isso as migrations só criam ~49 das 228 tabelas. A baseline do passo 1 a substitui; documentar no arquivo que ela foi absorvida pela baseline.
+  3. **Números levantados em 30/10/2026** (produção do Guia, só leitura):
+
+     | Item | Quantidade |
+     |---|---|
+     | Tabelas no `public` | 228 |
+     | Views no `public` | 119 |
+     | Views materializadas no `public` | 3 |
+     | Funções no `public` | 726 (`anon` executa 650, `service_role` executa todas) |
+     | Relações que `anon` lê | 329 |
+     | Policies | 357 no `public` (467 no total) |
+     | Gatilhos no `public` | 186 |
+     | Relações no schema `central` | 91 |
+     | Extensões | 12: `btree_gist`, `cube`, `earthdistance`, `pg_cron`, `pg_net`, `pg_stat_statements`, `pg_trgm`, `pgcrypto`, `plpgsql`, `supabase_vault`, `unaccent`, `uuid-ossp` |
+     | Migrations no histórico | 279, de `20260418021908` a `20261021210000` (279 arquivos no repositório) |
+     | Migrations sem SQL no histórico | 18 |
+     | Tabelas criadas nos arquivos de migration | ~49 |
+     | GRANT explícito a `anon`/`authenticated` nos arquivos | ~10 tabelas e 89 funções |
+
+     Todos os objetos pertencem a `postgres`, e todas as permissões foram concedidas por ele. A produção tem as permissões padrão antigas (tabela nova com tudo para `anon`/`authenticated`/`service_role`). Um branch novo vem com as restritas.
 - **Pendência do Guia: cadastros duplicados** (decisão 20). Resolver no `meubairro-app`, desativando o duplicado (o fluxo atual já gera o 301), e não com noindex no site:
   - Alphaville Pizzaria: `/empresas/alphaville-pizzaria-578` e `/prestadores/alphaville-pizzaria-432`;
   - Raquel Bittencourt Odontologia: `/empresas/...-588` e `/prestadores/...-455`;

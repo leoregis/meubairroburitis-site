@@ -80,9 +80,9 @@ useJsonLd({
           :src="produto.imagem_url"
           :alt="produto.nome"
           format="avif,webp"
-          :width="700"
-          :height="420"
-          sizes="100vw lg:340px"
+          :width="340"
+          :height="204"
+          densities="x1 x2"
           :img-attrs="{ class: 'w-full rounded-mbb-lg border border-line object-cover' }"
         />
         <p class="m-0 flex flex-col">

@@ -238,3 +238,23 @@ Diferenças de até ~30 ms ficam dentro da variação entre rodadas (ver as roda
 
   É uma decisão de produto (identidade visual × estabilidade), levada ao Leo.
 - **Cabeçalho travado em uma linha:** o menu de editorias e a barra superior não quebram mais linha no computador. Medido: cabem nas duas fontes a partir de 1024 px, sem rolagem.
+
+**Decisão do Leo (30/10): `font-display: optional`** (opção C).
+
+- **CLS:** com a prévia publicada (versão `914d61ca`), as 252 combinações de largura (360 a 1440 px) ficaram com CLS ≤ 0,05, e o axe ficou sem violações.
+  - Fase 4: 84 combinações; fase 5: 84; fase 6: 60; home, `/noticias`, matéria e `/busca`: 24.
+  - Antes, com `swap`: `/noticias` no computador chegava a 0,11 e a publicidade a 390 px a 0,10.
+- **LCP, `swap` × `optional`** (mesmo servidor local, navegador real com celular emulado, mediana):
+
+  | Página | Rodadas | Produção | `swap` | `optional` |
+  |---|---|---|---|---|
+  | `/loja` | 7 | 0,66 s | 1,21 s | 1,10 s |
+  | `/canais` | 7 | 0,96 s | 1,10 s | 1,02 s |
+  | `/politica-editorial` | 7 | 1,13 s | 1,02 s | 0,98 s |
+  | `/termos-e-condicoes` | 7 | 0,76 s | 0,97 s | 0,98 s |
+  | `/midiakit` | 9 | 0,88 s | 0,94 s | 0,73 s |
+  | produto | 9 | 0,73 s | 0,82 s | 0,89 s |
+
+  Nenhuma piora fora da variação entre rodadas. No produto, as rodadas do `optional` vão de 0,70 a 1,26 s.
+- **Medições desta tarde mais altas:** a máquina estava mais carregada. Os valores absolutos sobem para todas as versões, inclusive a produção, por isso a comparação vale entre as colunas de cada linha.
+- **Junto (fase 6):** imagens com `sizes="100vw ..."` sem prefixo de tela geravam candidatos de 1 e 2 px no `srcset`. Corrigido no produto (340 px com densidades 1x e 2x) e na capa do O Bairro Buritis (`xs:100vw sm:720px`, que também dá ao celular uma capa de 320 ou 640 px).

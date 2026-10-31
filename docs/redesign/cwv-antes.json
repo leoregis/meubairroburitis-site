@@ -1,0 +1,142 @@
+{
+  "desde": "2026-10-29",
+  "ate": null,
+  "geradoEm": "2026-10-31T00:10:11.557Z",
+  "linhas": [
+    {
+      "grupo": "/",
+      "aparelho": "mobile",
+      "nLcp": 8,
+      "lcp": 0.995,
+      "cls": 0,
+      "nInp": 1,
+      "inp": 112
+    },
+    {
+      "grupo": "/",
+      "aparelho": "desktop",
+      "nLcp": 1,
+      "lcp": 0.948,
+      "cls": 0,
+      "nInp": 0,
+      "inp": null
+    },
+    {
+      "grupo": "/",
+      "aparelho": "todos",
+      "nLcp": 9,
+      "lcp": 0.995,
+      "cls": 0,
+      "nInp": 1,
+      "inp": 112
+    },
+    {
+      "grupo": "/loja",
+      "aparelho": "mobile",
+      "nLcp": 3,
+      "lcp": 1.368,
+      "cls": 0,
+      "nInp": 1,
+      "inp": 8
+    },
+    {
+      "grupo": "/loja",
+      "aparelho": "desktop",
+      "nLcp": 1,
+      "lcp": 1.44,
+      "cls": 0,
+      "nInp": 0,
+      "inp": null
+    },
+    {
+      "grupo": "/loja",
+      "aparelho": "todos",
+      "nLcp": 4,
+      "lcp": 1.368,
+      "cls": 0,
+      "nInp": 1,
+      "inp": 8
+    },
+    {
+      "grupo": "/loja/*",
+      "aparelho": "mobile",
+      "nLcp": 0,
+      "lcp": null,
+      "cls": null,
+      "nInp": 0,
+      "inp": null
+    },
+    {
+      "grupo": "/loja/*",
+      "aparelho": "desktop",
+      "nLcp": 0,
+      "lcp": null,
+      "cls": null,
+      "nInp": 0,
+      "inp": null
+    },
+    {
+      "grupo": "/loja/*",
+      "aparelho": "todos",
+      "nLcp": 0,
+      "lcp": null,
+      "cls": null,
+      "nInp": 0,
+      "inp": null
+    },
+    {
+      "grupo": "/empresas/*",
+      "aparelho": "mobile",
+      "nLcp": 18,
+      "lcp": 1.752,
+      "cls": 0,
+      "nInp": 4,
+      "inp": 80
+    },
+    {
+      "grupo": "/empresas/*",
+      "aparelho": "desktop",
+      "nLcp": 10,
+      "lcp": 2.616,
+      "cls": 0,
+      "nInp": 3,
+      "inp": 56
+    },
+    {
+      "grupo": "/empresas/*",
+      "aparelho": "todos",
+      "nLcp": 28,
+      "lcp": 1.9,
+      "cls": 0,
+      "nInp": 7,
+      "inp": 80
+    },
+    {
+      "grupo": "/noticias/*",
+      "aparelho": "mobile",
+      "nLcp": 15,
+      "lcp": 1.636,
+      "cls": 0,
+      "nInp": 4,
+      "inp": 112
+    },
+    {
+      "grupo": "/noticias/*",
+      "aparelho": "desktop",
+      "nLcp": 5,
+      "lcp": 1.084,
+      "cls": 0,
+      "nInp": 1,
+      "inp": 8
+    },
+    {
+      "grupo": "/noticias/*",
+      "aparelho": "todos",
+      "nLcp": 20,
+      "lcp": 1.46,
+      "cls": 0,
+      "nInp": 5,
+      "inp": 112
+    }
+  ]
+}

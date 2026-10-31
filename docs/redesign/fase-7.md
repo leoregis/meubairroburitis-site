@@ -1,10 +1,11 @@
 # Fase 7: plano de publicação do redesign
 
-Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" precisa de você; o resto eu faço na sessão da publicação.
+Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Data: terça, 10/11/2026, às 10:00** (reserva: quarta, 11/11, às 10:00). **Nada da publicação foi executado.** Cada passo marcado "Leo" precisa de você; o resto eu faço na sessão da publicação.
 
 ## 1. Antes do dia (até a véspera)
 
-1. **Conferência final de SEO**, no dia anterior:
+0. **Segunda, 09/11: trazer a `main` para a `redesign`** (`git merge origin/main` na `redesign`, sem tocar na `main`), resolver conflito se houver, publicar a prévia e repetir a comparação de SEO. Pega notícias e cadastros novos e qualquer commit que tenha entrado na `main` desde a criação da `redesign`.
+1. **Conferência final de SEO**, no dia anterior, depois do passo 0:
    - **Comparação prévia × produção:** fotografia das duas com `docs/redesign/seo-snapshot.mjs`, todos os campos e as ~1.016 URLs do sitemap. Pode haver só as diferenças aprovadas:
      - home: title, description, `og:title`, `og:description` e o JSON-LD `WebSite`;
      - `h1` das 42 matérias, que viram 1 por página.
@@ -12,18 +13,27 @@ Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" p
      - `robots.txt` e `sitemap.xml` do build da prévia sem diferença em relação à produção, fora o noindex da prévia;
      - os 4 redirects da seção 2.1;
      - links internos sem 404 novo.
-2. **Core Web Vitals reais "antes"** (seção 4): exportar o p75 de LCP, INP e CLS das páginas da lista. É o "antes" oficial, junto com o que o Web Analytics já coleta desde 29/10.
+2. **Core Web Vitals reais "antes"** (seção 4), em 09/11: `node docs/redesign/cwv.mjs --desde 2026-10-29 --ate 2026-11-10 --saida docs/redesign/cwv-antes.json`, e atualizar `cwv-antes.md` (a 1ª extração, de 29 a 31/10, já está lá).
 3. **Checagens funcionais:**
    - **Admin:** teste local sem gravar na produção.
    - **Carrinho:** fluxo no navegador da prévia.
    - **Pagamento:** só se o código do checkout mudar depois de 30/10. Nesse caso, repetir o teste ponta a ponta num branch de dev (Mercado Pago de teste, como no item 1).
-4. **Proteção da release anterior:** preparar na `redesign` dois workflows manuais. Eles entram no merge, sem efeito até serem disparados.
+4. **Proteção da release anterior: feito e testado em 30/10.** Dois workflows manuais estão na `redesign` e entram no merge, sem efeito até serem disparados. Os dois têm simulação ligada por padrão e só aceitam a raiz `public_html` ou o sandbox `public_html/_staging_test/<pasta>`.
    - **`proteger-release.yml`:** renomeia uma `_old_<timestamp>` para `_preredesign_<timestamp>`.
      - **Por que é preciso:** a limpeza automática (`limpeza-releases.yml`) mantém só as 3 `_old_*` completas mais recentes. Com 2 a 4 deploys por dia, a release de antes do redesign seria apagada em cerca de 1 dia, antes dos 7 de observação.
      - **Fica fora da limpeza:** o nome novo não casa com `^_old_[0-9]+$`, então a limpeza não o apaga.
      - **Fica fora do limite do deploy:** também não conta no limite de 10 pastas antigas que trava o deploy.
    - **`voltar-release.yml`:** troca em dois passos, como o swap do deploy: `_current` vira `_old_<agora>` e a pasta indicada vira `_current`. O `restaurar-emergencial.yml` atual só serve quando o `_current` sumiu, porque não renomeia por cima de um `_current` existente.
-5. **Leo:** escolher o dia (seção 2) e dar o "pode publicar" por escrito na sessão.
+5. **Teste dos workflows** (`testar-release-manual.yml`, run 41148376560, 30/10):
+   - **Sandbox no staging, renomeações reais:**
+     - `proteger-release` levou `_old_2000` para `_preredesign_2000`;
+     - `voltar-release` guardou o `_current` como `_old_<agora>`, pôs `_preredesign_2000` no ar e conferiu o `_build.txt`;
+     - as outras pastas ficaram intactas, e o sandbox foi apagado no fim.
+   - **Produção, só simulação:** os dois listaram o que fariam com a `_old_*` mais recente real, sem alterar nada.
+   - **O que só dá para testar de verdade na produção:**
+     - o `mv` real dentro de `public_html`, porque a conta é a mesma e muda só a pasta;
+     - a purga do Cloudflare do `voltar-release`, que roda só na produção (é o mesmo código e o mesmo segredo do `deploy.yml`, que purga a cada deploy).
+6. **Leo:** dar o "pode publicar" por escrito na sessão.
 
 ## 2. Janela de publicação
 
@@ -35,7 +45,7 @@ Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" p
   - o Leo não publica nada no admin entre o merge e o fim do deploy.
 
   Cuidado com a fila: ela não espera, e um disparo dela entraria na fila do grupo `deploy-producao` logo atrás do merge. O Guia também dispara deploy quando uma empresa é criada ou ativada: conferir antes, sem como bloquear.
-- **Sugestão:** terça 10/11 ou quarta 11/11/2026, às 10:00, num dia útil com você disponível até umas 12:00.
+- **Escolhido pelo Leo:** terça 10/11/2026 às 10:00; reserva quarta 11/11 às 10:00. Disponibilidade dele até umas 12:00.
 
 ## 3. Passo a passo no dia
 
@@ -47,7 +57,7 @@ Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" p
 | 4 | **"Pode fazer o merge"** | **Leo** | — |
 | 5 | Merge (commit de merge, sem squash, para o `git revert -m 1` funcionar) e push na `main`. O push dispara o Deploy completo | eu | 1 min |
 | 6 | Acompanhar o Deploy: build (~10 min), envio por FTP para `_release_*` (~35-40 min, com os ~1.480 arquivos a mais das imagens pelo IPX), conferência e swap | eu | **~51 min** |
-| 7 | Logo depois do swap: rodar `proteger-release.yml` com a `_old_*` que o swap acabou de criar (a release de antes do redesign) | eu | 2 min |
+| 7 | Logo depois do swap: rodar `proteger-release.yml` primeiro em simulação e depois com `simulacao=false`, com a `_old_*` que o swap acabou de criar (a release de antes do redesign; o nome aparece no log do Deploy) | eu | 3 min |
 | 8 | Checagens da seção 5 | eu | ~20 min |
 | 9 | Você abre o site no celular e no computador | **Leo** | 10 min |
 
@@ -58,29 +68,32 @@ Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" p
 
 ## 4. Core Web Vitals reais (item 1 do Leo)
 
-**O que o Cloudflare Web Analytics oferece:**
-- **No painel (Web Analytics → Core Web Vitals):** LCP, INP e CLS com o p75, os elementos que mais pesam e o recorte por caminho da página.
-- **Pela API GraphQL:** o conjunto `rumWebVitalsEventsAdaptiveGroups` traz percentis (como p50 e p75) com recorte por dimensões como caminho e tipo de aparelho.
-  - **Unidade:** em microssegundos, menos o CLS, que não tem unidade.
-  - **Ressalva:** os nomes exatos dos campos de p75 por página precisam ser conferidos no próprio esquema da API quando houver token. As fontes que encontrei são de terceiros.
+**Confirmado em 30/10 com o token:**
+- **Token:** Account > Account Analytics > Read, em `Documents\Projetos-locais\cloudflare-analytics.env`. A permissão basta.
+- **API:** GraphQL, `viewer.accounts(filter: { accountTag }).rumWebVitalsEventsAdaptiveGroups`.
+- **Percentis (`quantiles`):** `largestContentfulPaintP75`, `interactionToNextPaintP75` e `cumulativeLayoutShiftP75`, em microssegundos (o CLS não tem unidade).
+- **Recortes (`dimensions`):** `requestPath`, `requestHost`, `deviceType`, `bot` e `date`.
+- **Filtros:** aceita `requestPath_like` (prefixo) e filtros por métrica (`largestContentfulPaint_gt`).
+- **Script:** `node docs/redesign/cwv.mjs --desde AAAA-MM-DD [--ate AAAA-MM-DD] [--saida arquivo.json]`.
+  - **Filtros fixos:** `meubairroburitis.com.br` (sem a prévia e sem a Central) e sem bots (as medições automáticas com Chrome headless saem como bot).
+  - **Cálculo:** cada p75 só sobre os eventos que mediram aquela métrica.
 
-**Para usar a API, preciso de um token.** O login do wrangler não tem esse acesso (visto na fase 1).
-- **Leo:** criar um token com a permissão **Account → Account Analytics → Read**, só leitura.
-- Salvar em `Documents\Projetos-locais\cloudflare-analytics.env` (`CF_API_TOKEN=…`), como o do Mercado Pago. Eu leio sem exibir.
+**Amostra pequena (ver `cwv-antes.md`):**
+- **Volume:** o Web Analytics registra ~170 visualizações de página por dia na produção, sem bots.
+- **Na 1ª extração (29 a 31/10):** `/loja` teve 4 medições, `/loja/*` nenhuma, `/empresas/*` 28 e `/noticias/*` 20.
+- **Consequência:** com tão poucas medições, "piorar mais de 20%" pode acontecer por acaso.
 
 **Procedimento:**
-- **(a) Antes da publicação:** p75 de LCP, INP e CLS, no celular e no computador, dos últimos 7 dias, para:
+- **(a) Antes da publicação, em 09/11:** `--desde 2026-10-29 --ate 2026-11-10` (12 dias), com o p75 de LCP, INP e CLS no celular, no computador e no total, para:
   - `/` e `/loja` (página exata);
-  - `/loja/*`, `/empresas/*` e `/noticias/*`, agrupando pelo prefixo do caminho.
+  - `/loja/*`, `/empresas/*` e `/noticias/*` (prefixo do caminho).
 
-  Tabela salva em `docs/redesign/cwv-antes.md`.
-- **(b) 7 dias depois:** a mesma consulta e a mesma tabela, com a variação em %. Páginas com poucas visitas na semana (menos de ~50 medições) ficam marcadas como "amostra pequena".
-- **(c) Gatilho de reversão:** se o LCP p75 real da `/loja` ou dos produtos (`/loja/*`) piorar **mais de 20%**:
-  1. volto o site com `voltar-release.yml` e a pasta `_preredesign_*` (minutos, sem rebuild);
+  Resultado em `cwv-antes.md` e `cwv-antes.json`.
+- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17` (7 dias), com a variação em %. **Proposta, a confirmar com o Leo:** grupo com menos de 50 medições de LCP estende para 14 dias (`--ate 2026-11-24`).
+- **(c) Gatilho de reversão:** o LCP p75 real da `/loja` ou dos produtos (`/loja/*`) piorar **mais de 20%**. **Proposta:** vale para grupo com pelo menos 50 medições; abaixo disso, decide a medição de laboratório com o critério novo (mesmo servidor, navegador real com celular emulado). Se o gatilho disparar:
+  1. volto o site com `voltar-release.yml` (simulacao=false) e a pasta `_preredesign_*` (minutos, sem rebuild);
   2. faço `git revert -m 1 <merge>` na `main`; o push dispara um Deploy completo do código antigo com o conteúdo atual (~51 min);
   3. otimizo e preparo uma nova publicação.
-
-**Se a API não separar por página ou não expuser esses dados**, a alternativa mais simples é ler os mesmos números no painel do Web Analytics, filtrando pelo caminho, e registrar à mão nas duas datas. Não precisa de código. O CrUX do Google não serve: só tem dados por URL para páginas com muito tráfego.
 
 ## 5. Checagens logo após a troca
 
@@ -114,8 +127,8 @@ Preparado em 30/10/2026. **Nada aqui foi executado.** Cada passo marcado "Leo" p
 
 ## 7. O que eu preciso de você
 
-1. **Escolher o dia** (seção 2) e estar disponível das 10:00 às 12:00.
-2. **Criar o token do Cloudflare** (só leitura de Analytics) e salvar no arquivo indicado, até a véspera. Sem token, uso o caminho manual pelo painel.
+1. **Estar disponível na terça 10/11, das 10:00 às 12:00** (ou na quarta 11/11, se a terça não der).
+2. **Confirmar a proposta da amostra mínima** do gatilho de reversão (seção 4).
 3. **Dizer "pode fazer o merge"** na sessão, depois de ver o resumo do PR.
 4. **Não publicar nada no admin** durante os ~51 min do deploy.
 5. **Olhar o site** no celular e no computador logo depois da troca.

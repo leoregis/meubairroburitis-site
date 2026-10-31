@@ -20,6 +20,8 @@ import { join } from 'node:path'
 const CONTA = 'b1a5d83a7cf09f04bd1bad6990911693'
 const HOST = 'meubairroburitis.com.br'
 const GRUPOS = [
+  // site inteiro fora do app (/guia/ é outro projeto), pedido do Leo em 30/10
+  { nome: 'site inteiro (sem /guia/)', filtro: { AND: [{ requestPath_notlike: '/guia/%' }, { requestPath_neq: '/guia' }] } },
   { nome: '/', filtro: { requestPath: '/' } },
   { nome: '/loja', filtro: { requestPath: '/loja' } },
   { nome: '/loja/*', filtro: { requestPath_like: '/loja/%' } },

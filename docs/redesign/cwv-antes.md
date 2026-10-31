@@ -9,6 +9,9 @@ Fonte: Cloudflare Web Analytics, pela API GraphQL (`rumWebVitalsEventsAdaptiveGr
 
 | Grupo | Aparelho | Amostra (LCP) | LCP p75 | CLS p75 | Amostra (INP) | INP p75 |
 |---|---|---|---|---|---|---|
+| `site inteiro (sem /guia/)` | celular | 68 | 1,51 s | 0,000 | 16 | 88 ms |
+| `site inteiro (sem /guia/)` | computador | 19 (pequena) | 2,34 s | 0,000 | 4 | 56 ms |
+| `site inteiro (sem /guia/)` | **todos** | 87 | 1,66 s | 0,000 | 20 | 80 ms |
 | `/` | celular | 8 (pequena) | 1,00 s | 0,000 | 1 | 112 ms |
 | `/` | computador | 1 (pequena) | 0,95 s | 0,000 | 0 | — |
 | `/` | **todos** | 9 (pequena) | 1,00 s | 0,000 | 1 | 112 ms |
@@ -29,10 +32,11 @@ Fonte: Cloudflare Web Analytics, pela API GraphQL (`rumWebVitalsEventsAdaptiveGr
 
 - **Volume:** o Web Analytics registra ~170 visualizações de página por dia na produção, sem bots (165 em 29/10 e 179 em 30/10, sem amostragem: `sampleInterval` = 1). Bloqueadores de anúncio e navegadores dentro de apps também deixam parte das visitas sem medição.
 - **Por grupo:** em 7 dias, a `/loja` deve somar ~15 medições e os produtos (`/loja/*`), poucas ou nenhuma. Nessa escala, um p75 muda bastante com 2 ou 3 visitas, e "piorar mais de 20%" pode acontecer por acaso.
-- **Proposta para o gatilho de reversão** (precisa do seu OK):
+- **Regra do gatilho de reversão** (aprovada pelo Leo em 30/10/2026; o texto completo está em `fase-7.md`, seção 4):
   1. **"Antes":** refazer esta extração em 09/11 com `--desde 2026-10-29 --ate 2026-11-10`, 12 dias de dados.
-  2. **"Depois":** 7 dias. O gatilho de 20% vale para os grupos com pelo menos 50 medições de LCP. Abaixo disso, estender para 14 dias.
-  3. **Grupos que nem assim chegarem a 50** (provavelmente `/loja/*`): decidir pela medição de laboratório com o critério novo (mesmo servidor, navegador real com celular emulado), produção antiga × nova, que já está documentada em `lighthouse-antes.md`.
+  2. **"Depois":** 7 dias; grupo com menos de 50 medições de LCP estende para 14 dias.
+  3. **Gatilho de 20% no LCP p75:** só para grupo com 50 ou mais medições. Inclui o **site inteiro (sem `/guia/`)**, que já passa de 50 nestes 2 dias.
+  4. **`/loja` e `/loja/*`, se não chegarem a 50:** decide a medição de laboratório com o critério novo. A `/loja` pode ficar atrás da produção, desde que fique **abaixo de 2,5 s de LCP no laboratório**. Acima disso, revertemos ou otimizamos antes de seguir.
 
 ## Como refazer
 

@@ -1,13 +1,40 @@
 {
   "desde": "2026-10-29",
   "ate": null,
-  "geradoEm": "2026-10-31T00:10:11.557Z",
+  "geradoEm": "2026-10-31T01:19:14.255Z",
   "linhas": [
+    {
+      "grupo": "site inteiro (sem /guia/)",
+      "aparelho": "mobile",
+      "nLcp": 68,
+      "lcp": 1.508,
+      "cls": 0,
+      "nInp": 16,
+      "inp": 88
+    },
+    {
+      "grupo": "site inteiro (sem /guia/)",
+      "aparelho": "desktop",
+      "nLcp": 19,
+      "lcp": 2.34,
+      "cls": 0,
+      "nInp": 4,
+      "inp": 56
+    },
+    {
+      "grupo": "site inteiro (sem /guia/)",
+      "aparelho": "todos",
+      "nLcp": 87,
+      "lcp": 1.66,
+      "cls": 0,
+      "nInp": 20,
+      "inp": 80
+    },
     {
       "grupo": "/",
       "aparelho": "mobile",
-      "nLcp": 8,
-      "lcp": 0.995,
+      "nLcp": 9,
+      "lcp": 1.009,
       "cls": 0,
       "nInp": 1,
       "inp": 112
@@ -24,8 +51,8 @@
     {
       "grupo": "/",
       "aparelho": "todos",
-      "nLcp": 9,
-      "lcp": 0.995,
+      "nLcp": 10,
+      "lcp": 1.009,
       "cls": 0,
       "nInp": 1,
       "inp": 112

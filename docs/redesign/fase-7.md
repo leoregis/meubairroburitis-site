@@ -84,13 +84,21 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
 - **Consequência:** com tão poucas medições, "piorar mais de 20%" pode acontecer por acaso.
 
 **Procedimento:**
+**Regra aprovada pelo Leo em 30/10/2026:**
 - **(a) Antes da publicação, em 09/11:** `--desde 2026-10-29 --ate 2026-11-10` (12 dias), com o p75 de LCP, INP e CLS no celular, no computador e no total, para:
+  - o **site inteiro**: todas as páginas de `meubairroburitis.com.br` fora `/guia/`, sem bots;
   - `/` e `/loja` (página exata);
   - `/loja/*`, `/empresas/*` e `/noticias/*` (prefixo do caminho).
 
   Resultado em `cwv-antes.md` e `cwv-antes.json`.
-- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17` (7 dias), com a variação em %. **Proposta, a confirmar com o Leo:** grupo com menos de 50 medições de LCP estende para 14 dias (`--ate 2026-11-24`).
-- **(c) Gatilho de reversão:** o LCP p75 real da `/loja` ou dos produtos (`/loja/*`) piorar **mais de 20%**. **Proposta:** vale para grupo com pelo menos 50 medições; abaixo disso, decide a medição de laboratório com o critério novo (mesmo servidor, navegador real com celular emulado). Se o gatilho disparar:
+- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17` (7 dias), com a variação em %. Grupo com menos de 50 medições de LCP estende para 14 dias (`--ate 2026-11-24`).
+- **(c) Gatilho de reversão:** o LCP p75 real piorar **mais de 20%** em qualquer grupo com **50 ou mais medições**. Isso inclui o site inteiro, a `/loja` e os produtos (`/loja/*`), se chegarem a 50.
+- **(d) `/loja` e `/loja/*` com menos de 50 medições:** decide a medição de laboratório com o critério novo (mesmo servidor local, navegador real com celular emulado; ver `lighthouse-antes.md`, "Fase 6: critério novo de LCP").
+  - A `/loja` pode ficar atrás da produção, desde que o LCP de laboratório fique **abaixo de 2,5 s**.
+  - Acima de 2,5 s, revertemos ou otimizamos antes de seguir.
+  - Medida de referência em 30/10 (`font-display: optional`): 1,10 s na rodada de 7, com a produção a 0,66 s.
+
+**Se o gatilho (c) disparar, ou a `/loja` passar de 2,5 s em (d):**
   1. volto o site com `voltar-release.yml` (simulacao=false) e a pasta `_preredesign_*` (minutos, sem rebuild);
   2. faço `git revert -m 1 <merge>` na `main`; o push dispara um Deploy completo do código antigo com o conteúdo atual (~51 min);
   3. otimizo e preparo uma nova publicação.

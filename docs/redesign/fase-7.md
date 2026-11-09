@@ -13,7 +13,19 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
      - `robots.txt` e `sitemap.xml` do build da prévia sem diferença em relação à produção, fora o noindex da prévia;
      - os 4 redirects da seção 2.1;
      - links internos sem 404 novo.
-2. **Core Web Vitals reais "antes"** (seção 4), em 09/11: `node docs/redesign/cwv.mjs --desde 2026-10-29 --ate 2026-11-10 --saida docs/redesign/cwv-antes.json`, e atualizar `cwv-antes.md` (a 1ª extração, de 29 a 31/10, já está lá).
+
+   **Resultado em 09/11 (passos 0 e 1):**
+   - **Merge:** `origin/main` entrou na `redesign` sem conflito (`3830f80`, com `c1b6b4f` mov-mp4 e `c9f638e` moderacao_alerta_email). `/ferramentas/mov-mp4.html` está no build, idêntico ao da produção.
+   - **Prévia:** publicada (versão do Worker `8a9a0d7b`), 1.023 páginas, conferências ok.
+   - **SEO prévia × produção:** 1.020 URLs. Só as 5 diferenças aprovadas da home e o `h1` de **43** matérias (2 → 1). A 43ª é `buritis-vai-ganhar-nova-praca-com-mirante-e-letreiro`, publicada depois da baseline de 29/10, com o mesmo `h1` duplicado na produção: é a mesma correção aprovada.
+   - **URLs novas na produção desde a baseline:** 5, todas na prévia com 200.
+   - **`robots.txt`:** igual ao da produção (build local sem `MBB_PREVIA`).
+   - **`sitemap.xml`:** as mesmas 1.016 URLs.
+     - **Achado e corrigido:** as `<image:loc>` do redesign saíam com `&amp;amp;` (3.563 de 4.674), o que daria endereços de imagem inexistentes no Google. Corrigido em `app/server/plugins/sitemap-imagens.ts`.
+     - **Diferença que fica:** o conjunto de imagens de cada URL muda, porque as páginas novas usam outras imagens (miniaturas WebP pelo IPX em vez das JPEG antigas). Não estava na lista de diferenças aprovadas.
+   - **Redirects:** os 4 da seção 2.1 dão 301 na produção e vivem no `deploy/htaccess-producao`, que não muda no merge.
+   - **Links internos:** nenhum 404 novo. O único link quebrado (`/noticias/quanto-custa-e-como-encontrar-uma-boa-diarista-em-bh-um-guia-completo`) já dá 404 na produção hoje; vem do texto de uma matéria.
+2. **Core Web Vitals reais "antes"** (seção 4): **feito em 09/11**, com `node docs/redesign/cwv.mjs --desde 2026-10-29 --ate 2026-11-10 --eventos --saida docs/redesign/cwv-antes.json`. Resultado e o porquê do `--eventos` (amostragem de 10% do Cloudflare) em `cwv-antes.md`.
 3. **Checagens funcionais:**
    - **Admin:** teste local sem gravar na produção.
    - **Carrinho:** fluxo no navegador da prévia.
@@ -38,7 +50,7 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
 ## 2. Janela de publicação
 
 - **Fora de 30/11 a 06/12** (abertura da votação dos Melhores do Ano).
-- **Fora do deploy agendado.** O `cron` é 05:30 UTC (02:30 em Brasília), mas o GitHub atrasa. Nos últimos 7 dias, o agendado começou entre 07:00 e 08:40 (Brasília) e levou ~40 a 44 min. Começar depois das **10:00**, só com o agendado do dia concluído (`gh run list --workflow deploy.yml`).
+- **Fora do deploy agendado.** O `cron` é 05:30 UTC (02:30 em Brasília), mas o GitHub atrasa. Em 30/10, o agendado vinha começando entre 07:00 e 08:40 (Brasília). **Atualizado em 09/11:** de 02 a 08/11 começou entre 08:51 e 10:44 e terminou entre 09:36 e 11:19 (~36 a 47 min); em 09/11, às 10:35, ainda não tinha começado. Começar depois das **10:00**, só com o agendado do dia concluído (`gh run list --workflow deploy.yml`).
 - **Sem notícia na fila:**
   - `deploy_fila_itens` sem item pendente (`atendido_em is null`);
   - nenhum Deploy em andamento ou na fila;
@@ -91,7 +103,7 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
   - `/loja/*`, `/empresas/*` e `/noticias/*` (prefixo do caminho).
 
   Resultado em `cwv-antes.md` e `cwv-antes.json`.
-- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17` (7 dias), com a variação em %. Grupo com menos de 50 medições de LCP estende para 14 dias (`--ate 2026-11-24`).
+- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17 --eventos` (7 dias), com a variação em %, rodado em 17/11 (o Cloudflare só guarda os eventos completos por ~8 dias). Grupo com menos de 50 medições de LCP estende para 14 dias: 2ª semana extraída em 24/11 e somada à 1ª.
 - **(c) Gatilho de reversão:** o LCP p75 real piorar **mais de 20%** em qualquer grupo com **50 ou mais medições**. Isso inclui o site inteiro, a `/loja` e os produtos (`/loja/*`), se chegarem a 50.
 - **(d) `/loja` e `/loja/*` com menos de 50 medições:** decide a medição de laboratório com o critério novo (mesmo servidor local, navegador real com celular emulado; ver `lighthouse-antes.md`, "Fase 6: critério novo de LCP").
   - A `/loja` pode ficar atrás da produção, desde que o LCP de laboratório fique **abaixo de 2,5 s**.

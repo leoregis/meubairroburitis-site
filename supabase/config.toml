@@ -31,3 +31,9 @@ verify_jwt = false
 # visitante sem login (exige só a anon key); a proteção são os limites por
 # número, por IP e o teto diário no banco (meus_pedidos_preparar_codigo).
 verify_jwt = true
+
+[functions.moderacao_alerta_email]
+# chamada pela edge function moderacao-monitor do projeto do Guia (bot de
+# moderação, repo mbb-moderador), que não tem JWT deste projeto; a proteção é
+# o segredo compartilhado (x-alerta-segredo) e o destino fixo no servidor.
+verify_jwt = false

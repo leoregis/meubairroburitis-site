@@ -16,7 +16,7 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
 
    **Resultado em 09/11 (passos 0 e 1):**
    - **Merge:** `origin/main` entrou na `redesign` sem conflito (`3830f80`, com `c1b6b4f` mov-mp4 e `c9f638e` moderacao_alerta_email). `/ferramentas/mov-mp4.html` está no build, idêntico ao da produção.
-   - **Prévia:** publicada (versão do Worker `8a9a0d7b`), 1.023 páginas, conferências ok.
+   - **Prévia:** publicada (versão do Worker `c51875d0`, do commit com a correção do sitemap), 1.023 páginas, conferências ok.
    - **SEO prévia × produção:** 1.020 URLs. Só as 5 diferenças aprovadas da home e o `h1` de **43** matérias (2 → 1). A 43ª é `buritis-vai-ganhar-nova-praca-com-mirante-e-letreiro`, publicada depois da baseline de 29/10, com o mesmo `h1` duplicado na produção: é a mesma correção aprovada.
    - **URLs novas na produção desde a baseline:** 5, todas na prévia com 200.
    - **`robots.txt`:** igual ao da produção (build local sem `MBB_PREVIA`).

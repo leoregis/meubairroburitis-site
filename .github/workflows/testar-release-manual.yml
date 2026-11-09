@@ -1,0 +1,158 @@
+name: Release - teste dos workflows manuais (sandbox no staging)
+
+# Testa proteger-release.yml e voltar-release.yml DE VERDADE, mas numa pasta
+# de teste isolada: public_html/_staging_test/release-teste/ (mesma conta FTP
+# do staging, nunca public_html/_current). Monta lá um _current e três _old_*
+# falsos (pequenos), roda os dois workflows em simulação e depois para valer,
+# confere o resultado e apaga a pasta de teste no fim.
+#
+# Roda num push na branch redesign que mexa nestes três arquivos (workflow
+# disparado à mão só existe depois que o arquivo está na main). Também pode ser
+# disparado à mão depois do merge.
+
+on:
+  push:
+    branches: [redesign]
+    paths:
+      - '.github/workflows/proteger-release.yml'
+      - '.github/workflows/voltar-release.yml'
+      - '.github/workflows/testar-release-manual.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: teste-release-manual
+  cancel-in-progress: false
+
+env:
+  SANDBOX: public_html/_staging_test/release-teste
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Monta o sandbox (_current e _old_* falsos)
+        run: |
+          mkdir -p local/_nuxt
+          echo "teste" > local/_nuxt/x.js
+          {
+            echo "set ftp:ssl-force true"; echo "set ftp:ssl-protect-data true"; echo "set ssl:verify-certificate no"
+            echo "set net:timeout 15"; echo "set net:max-retries 3"
+            echo "set cmd:fail-exit no"; echo "rm -r $SANDBOX"; echo "set cmd:fail-exit yes"
+            echo "mkdir -p $SANDBOX"
+            for pasta in _current _old_1000 _old_2000 _old_3000; do
+              # arquivos locais com nome próprio por pasta (o lftp lê na hora do put)
+              echo "<html>$pasta</html>" > "local/index-$pasta.html"
+              echo "build-$pasta" > "local/build-$pasta.txt"
+              echo "mkdir $SANDBOX/$pasta"
+              echo "put local/index-$pasta.html -o $SANDBOX/$pasta/index.html"
+              echo "put local/build-$pasta.txt -o $SANDBOX/$pasta/_build.txt"
+              # _old_3000 fica incompleta (sem _nuxt/), como uma release que falhou no meio
+              if [ "$pasta" != "_old_3000" ]; then echo "mkdir $SANDBOX/$pasta/_nuxt"; echo "put local/_nuxt/x.js -o $SANDBOX/$pasta/_nuxt/x.js"; fi
+            done
+            echo "cls -1 $SANDBOX"
+            echo "bye"
+          } > montar.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < montar.lftp
+
+  proteger-simulacao:
+    needs: preparar
+    uses: ./.github/workflows/proteger-release.yml
+    with: { origem: _old_2000, simulacao: true, raiz: 'public_html/_staging_test/release-teste' }
+    secrets: inherit
+
+  proteger:
+    needs: proteger-simulacao
+    uses: ./.github/workflows/proteger-release.yml
+    with: { origem: _old_2000, simulacao: false, raiz: 'public_html/_staging_test/release-teste' }
+    secrets: inherit
+
+  voltar-simulacao:
+    needs: proteger
+    uses: ./.github/workflows/voltar-release.yml
+    with: { origem: _preredesign_2000, simulacao: true, raiz: 'public_html/_staging_test/release-teste' }
+    secrets: inherit
+
+  voltar:
+    needs: voltar-simulacao
+    uses: ./.github/workflows/voltar-release.yml
+    with: { origem: _preredesign_2000, simulacao: false, raiz: 'public_html/_staging_test/release-teste' }
+    secrets: inherit
+
+  # simulação contra a produção de verdade: só lista (nada é renomeado). Confere
+  # que a listagem e as checagens funcionam na estrutura real do public_html.
+  producao-listar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      old: ${{ steps.l.outputs.old }}
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - id: l
+        name: Acha a _old_* mais recente da produção (só leitura)
+        run: |
+          { echo "set ftp:ssl-force true"; echo "set ftp:ssl-protect-data true"; echo "set ssl:verify-certificate no"; echo "set net:timeout 15"; echo "cls -1 public_html"; echo "bye"; } > l.lftp
+          old=$(lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < l.lftp | tr -d '\r' | sed 's#/$##; s#.*/##' | grep -E '^_old_[0-9]+$' | sort -t_ -k3 -rn | head -1)
+          echo "_old_* mais recente: $old"
+          [ -n "$old" ] || { echo "ERRO: nenhuma _old_* na produção"; exit 1; }
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+
+  producao-proteger-simulacao:
+    needs: producao-listar
+    uses: ./.github/workflows/proteger-release.yml
+    with: { origem: '${{ needs.producao-listar.outputs.old }}', simulacao: true, raiz: public_html }
+    secrets: inherit
+
+  producao-voltar-simulacao:
+    needs: producao-listar
+    uses: ./.github/workflows/voltar-release.yml
+    with: { origem: '${{ needs.producao-listar.outputs.old }}', simulacao: true, raiz: public_html }
+    secrets: inherit
+
+  conferir-e-limpar:
+    needs: voltar
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+      - name: Confere o resultado e apaga o sandbox
+        run: |
+          base() { echo "set ftp:ssl-force true"; echo "set ftp:ssl-protect-data true"; echo "set ssl:verify-certificate no"; echo "set net:timeout 15"; echo "set net:max-retries 3"; }
+          { base; echo "set cmd:fail-exit no"; echo "echo '### SANDBOX'"; echo "cls -1 $SANDBOX"; echo "echo '### BUILD'"; echo "cat $SANDBOX/_current/_build.txt"; echo "echo"; echo "echo '### PRODUCAO'"; echo "cls -1 public_html"; echo "bye"; } > ver.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < ver.lftp 2>&1 | tr -d '\r' > ver.txt || true
+          bloco() { awk -v d="### $1" '$0==d{f=1;next} /^### /{f=0} f' ver.txt; }
+          sandbox=$(bloco SANDBOX | sed 's#/$##; s#.*/##' | sort); build=$(bloco BUILD | head -1)
+          echo "Sandbox no fim:"; echo "$sandbox"; echo "_current/_build.txt: $build"
+          echo "Pastas da produção (só listagem, nada alterado):"; bloco PRODUCAO | sed 's#/$##; s#.*/##' | grep -E '^_' || true
+          ok=true
+          [ "$build" = "build-_old_2000" ] || { echo "FALHOU: _current deveria ser a antiga _old_2000"; ok=false; }
+          echo "$sandbox" | grep -qx "_old_1000" || { echo "FALHOU: _old_1000 sumiu"; ok=false; }
+          echo "$sandbox" | grep -qx "_old_3000" || { echo "FALHOU: _old_3000 sumiu"; ok=false; }
+          echo "$sandbox" | grep -qx "_old_2000" && { echo "FALHOU: _old_2000 deveria ter virado _preredesign_2000"; ok=false; }
+          echo "$sandbox" | grep -qx "_preredesign_2000" && { echo "FALHOU: _preredesign_2000 deveria ter voltado ao ar como _current"; ok=false; }
+          [ "$(echo "$sandbox" | grep -cE '^_old_[0-9]{10}$')" = "1" ] || { echo "FALHOU: o _current anterior deveria estar guardado como _old_<agora>"; ok=false; }
+          { base; echo "set cmd:fail-exit no"; echo "rm -r $SANDBOX"; echo "bye"; } > limpar.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < limpar.lftp || true
+          echo "Sandbox apagado."
+          $ok && echo "### ✅ Teste dos workflows de release: tudo como esperado" >> "$GITHUB_STEP_SUMMARY"
+          $ok

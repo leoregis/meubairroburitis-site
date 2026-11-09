@@ -16,7 +16,7 @@ interface Pedido {
   pago_em: string | null
 }
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 
 const pedidos = ref<Pedido[]>([])
 const carregando = ref(true)
@@ -25,6 +25,7 @@ const filtroDataInicio = ref('')
 const filtroDataFim = ref('')
 
 async function carregar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   carregando.value = true
 

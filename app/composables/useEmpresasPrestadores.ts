@@ -1,7 +1,8 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 // Fase 4 -- leitura pública de SEO (empresas/prestadores), via as duas RPCs
 // buscar_empresa_publica_seo/buscar_prestador_publico_seo do projeto
-// Supabase do meubairro-app (client $meubairroApp, ver
-// app/plugins/supabase-meubairro-app.ts). Somente leitura -- nenhuma
+// Supabase do meubairro-app (cliente sob demanda useSupabaseGuia, ver
+// app/composables/useSupabase.ts). Somente leitura -- nenhuma
 // escrita acontece por aqui.
 
 export interface HorarioEmpresa {
@@ -62,9 +63,10 @@ export interface PrestadorPublico {
 }
 
 export function useEmpresaPublica(slug: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData(`empresa-publica-${slug}`, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return null
 
     const { data, error } = await $meubairroApp
@@ -86,7 +88,7 @@ export function useEmpresaPublica(slug: string) {
 // Lista inteira buscada UMA vez por processo -- no prerender todas as ~500
 // páginas rodam no mesmo processo, então não vira uma consulta por página.
 // Só o resultado da página vai pro payload.
-type ClienteSupabase = NonNullable<ReturnType<typeof useNuxtApp>['$meubairroApp']>
+type ClienteSupabase = SupabaseClient
 interface UnidadeAtiva { slug: string, nome: string, bairro: string | null }
 let unidadesAtivasCache: Promise<UnidadeAtiva[]> | null = null
 
@@ -115,9 +117,10 @@ function listarUnidadesAtivas(cliente: ClienteSupabase) {
 }
 
 export function useContextoUnidade(slug: string, nome: () => string | undefined) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData(`empresa-contexto-${slug}`, async () => {
+    const $meubairroApp = await obterGuia()
     const nomeAtual = nome()
     if (!$meubairroApp || !nomeAtual) return { ehFilial: false, bairroCadastro: null as string | null }
     const unidades = await listarUnidadesAtivas($meubairroApp)
@@ -130,9 +133,10 @@ export function useContextoUnidade(slug: string, nome: () => string | undefined)
 }
 
 export function usePrestadorPublico(slug: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData(`prestador-publico-${slug}`, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return null
 
     const { data, error } = await $meubairroApp

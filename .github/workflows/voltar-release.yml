@@ -1,0 +1,150 @@
+name: Release - voltar para uma release anterior
+
+# Redesign, fase 7 (docs/redesign/fase-7.md): rollback em minutos, sem rebuild.
+# Troca em dois passos, como o swap do deploy.yml:
+#   1. _current -> _old_<agora>   (a release que estava no ar fica guardada)
+#   2. <origem> -> _current        (a release escolhida volta ao ar)
+# Depois confere que _current/_build.txt é o da origem e, na produção,
+# purga o cache do Cloudflare.
+#
+# Diferente do restaurar-emergencial.yml, que só serve quando _current sumiu
+# (ele não renomeia por cima de um _current existente).
+#
+# Simulação ligada por padrão: só lista o que faria. Para valer, rodar com
+# simulacao=false. A raiz só pode ser public_html (produção) ou uma pasta
+# dentro de public_html/_staging_test/ (teste: testar-release-manual.yml).
+#
+# DEPOIS DE VOLTAR NA PRODUÇÃO: fazer `git revert -m 1 <merge>` na main e push
+# (o Deploy completo recoloca o código antigo com o conteúdo atual). Não usar
+# o Deploy manual sem o revert: ele publicaria de novo o código que se quis tirar.
+
+on:
+  workflow_dispatch:
+    inputs:
+      origem:
+        description: 'Pasta que volta ao ar, ex.: _preredesign_1793000000 (ou uma _old_<número>)'
+        required: true
+        type: string
+      simulacao:
+        description: 'true = só lista o que faria; false = troca'
+        required: false
+        default: true
+        type: boolean
+      raiz:
+        description: 'public_html (produção) ou public_html/_staging_test/... (teste)'
+        required: false
+        default: public_html
+        type: string
+  workflow_call:
+    inputs:
+      origem:
+        required: true
+        type: string
+      simulacao:
+        required: false
+        default: true
+        type: boolean
+      raiz:
+        required: false
+        default: public_html
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  voltar:
+    runs-on: ubuntu-latest
+    # para valer na produção: na mesma fila do deploy (nunca no meio de um
+    # swap). Simulação e teste ficam fora dessa fila: ela só guarda um run
+    # esperando, e um run novo cancelaria um deploy pendente da fila do admin.
+    concurrency:
+      group: ${{ (inputs.raiz == 'public_html' && !inputs.simulacao) && 'deploy-producao' || format('release-voltar-{0}-{1}-{2}', github.run_id, inputs.raiz, inputs.simulacao) }}
+      cancel-in-progress: false
+    timeout-minutes: 10
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      ORIGEM: ${{ inputs.origem }}
+      RAIZ: ${{ inputs.raiz }}
+      SIMULACAO: ${{ inputs.simulacao }}
+    steps:
+      - name: Instala lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Confere os parâmetros
+        run: |
+          if ! [[ "$ORIGEM" =~ ^_(old|preredesign)_[0-9]+$ ]]; then
+            echo "ERRO: origem '$ORIGEM' não é _old_<número> nem _preredesign_<número>."; exit 1
+          fi
+          if [ "$RAIZ" != "public_html" ] && ! [[ "$RAIZ" =~ ^public_html/_staging_test/[A-Za-z0-9_-]+$ ]]; then
+            echo "ERRO: raiz '$RAIZ' não permitida (só public_html ou public_html/_staging_test/<pasta>)."; exit 1
+          fi
+          echo "GUARDAR=_old_$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Lista e confere (só leitura)
+        run: |
+          cat > lftp-base.txt <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:timeout 15
+          set net:max-retries 3
+          EOF
+          { cat lftp-base.txt; echo "set cmd:fail-exit no"; echo "echo '### RAIZ'"; echo "cls -1 $RAIZ"; echo "echo '### ORIGEM'"; echo "cls -1 $RAIZ/$ORIGEM"; echo "echo '### BUILD_ORIGEM'"; echo "cat $RAIZ/$ORIGEM/_build.txt"; echo "echo"; echo "echo '### BUILD_ATUAL'"; echo "cat $RAIZ/_current/_build.txt"; echo "echo"; echo "bye"; } > listar.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < listar.lftp 2>&1 | tr -d '\r' > listagem.txt || true
+          bloco() { awk -v d="### $1" '$0==d{f=1;next} /^### /{f=0} f' listagem.txt; }
+          raiz=$(bloco RAIZ | sed 's#/$##; s#.*/##'); origem=$(bloco ORIGEM | sed 's#/$##; s#.*/##')
+          build_origem=$(bloco BUILD_ORIGEM | head -1); build_atual=$(bloco BUILD_ATUAL | head -1)
+          echo "Conteúdo de $RAIZ:"; echo "$raiz"
+          echo "No ar agora (_current/_build.txt): $build_atual"
+          echo "Vai voltar ($ORIGEM/_build.txt):   $build_origem"
+          echo "$raiz" | grep -qx "_current" || { echo "ERRO: $RAIZ sem _current. Para esse caso use o restaurar-emergencial.yml."; exit 1; }
+          echo "$raiz" | grep -qx "$ORIGEM" || { echo "ERRO: $ORIGEM não existe em $RAIZ."; exit 1; }
+          if echo "$raiz" | grep -qx "$GUARDAR"; then echo "ERRO: $GUARDAR já existe (rode de novo daqui a 1 s)."; exit 1; fi
+          for item in index.html _build.txt _nuxt; do
+            echo "$origem" | grep -qx "$item" || { echo "ERRO: $ORIGEM incompleta (falta $item) -- nada foi alterado."; exit 1; }
+          done
+          [ -n "$build_origem" ] || { echo "ERRO: $ORIGEM/_build.txt vazio."; exit 1; }
+          echo "BUILD_ORIGEM=$build_origem" >> "$GITHUB_ENV"
+
+      - name: Troca (ou só mostra, na simulação)
+        run: |
+          if [ "$SIMULACAO" = "true" ]; then
+            echo "SIMULAÇÃO: faria  mv $RAIZ/_current -> $RAIZ/$GUARDAR  e  mv $RAIZ/$ORIGEM -> $RAIZ/_current  (nada foi alterado)"
+            echo "### Simulação: _current -> $GUARDAR; $ORIGEM -> _current (nada alterado)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # os dois mv na mesma sessão, sem nada entre eles (como o deploy.yml)
+          { cat lftp-base.txt; echo "set cmd:fail-exit yes"; echo "mv $RAIZ/_current $RAIZ/$GUARDAR"; echo "mv $RAIZ/$ORIGEM $RAIZ/_current"; echo "bye"; } > trocar.lftp
+          lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < trocar.lftp
+          echo "Trocado: $ORIGEM está no ar como _current; a release anterior ficou em $GUARDAR."
+
+      - name: Confere que _current é a release escolhida
+        if: inputs.simulacao == false
+        run: |
+          { cat lftp-base.txt; echo "set cmd:fail-exit yes"; echo "cat $RAIZ/_current/_build.txt"; echo "bye"; } > conferir.lftp
+          agora=$(lftp -u "$FTP_USERNAME,$FTP_PASSWORD" "ftp://$FTP_SERVER" < conferir.lftp | tr -d '\r' | head -1)
+          if [ "$agora" != "$BUILD_ORIGEM" ]; then
+            echo "ERRO: _current/_build.txt = '$agora', esperado '$BUILD_ORIGEM'."; exit 1
+          fi
+          echo "OK: _current/_build.txt = $agora"
+          echo "### ✅ No ar: $ORIGEM (_build.txt: $agora). Anterior guardada em $GUARDAR." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Purga o cache do Cloudflare (só na produção)
+        if: inputs.simulacao == false && inputs.raiz == 'public_html'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          status=$(curl -s -o /tmp/purge.json -w "%{http_code}" -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' || true)
+          if [ "$status" != "200" ] || ! grep -q '"success":[[:space:]]*true' /tmp/purge.json; then
+            echo "::warning title=Purga do Cloudflare NAO executada::HTTP $status -- purgar à mão no painel."
+          else
+            echo "Purga do Cloudflare executada."
+          fi
+          echo "### ⚠️ Agora: git revert -m 1 <merge> na main e push (Deploy completo do código antigo com o conteúdo atual)." >> "$GITHUB_STEP_SUMMARY"

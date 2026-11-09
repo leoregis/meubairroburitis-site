@@ -7,7 +7,7 @@ export type StatusPublicacao = 'publicando' | 'ok' | 'erro' | 'sem_publicacao' |
 // ou ativo) -- rascunho não muda nada no site.
 export function useDispararDeploy() {
   const config = useRuntimeConfig()
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   // aviso compartilhado entre páginas do admin: a tela de edição salva,
   // redireciona pra listagem, e a listagem mostra o aviso com a previsão
@@ -17,6 +17,7 @@ export function useDispararDeploy() {
   )
 
   async function dispararDeploy(motivo = 'admin'): Promise<boolean> {
+    const $supabase = await obterSupabase()
     aviso.value = { status: 'publicando', previsaoMinutos: null }
 
     if (!$supabase) {

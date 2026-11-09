@@ -12,22 +12,17 @@ const numeros = [
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl px-4 py-16">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">Midiakit</p>
-    <h1 class="mt-2 font-serif text-3xl font-bold text-stone-900">Dados de alcance</h1>
+  <div class="mx-auto flex max-w-[960px] flex-col gap-8 px-4 pb-16 pt-6 sm:gap-10 sm:px-6 sm:pb-[72px] sm:pt-10">
+    <MidiakitCabecalho titulo="Dados de alcance" />
 
-    <div class="mt-8">
-      <MidiakitTabs />
-    </div>
-
-    <div class="grid gap-6 sm:grid-cols-3">
-      <div v-for="n in numeros" :key="n.legenda" class="rounded-xl border border-stone-200 bg-white p-6 text-center">
-        <p class="font-serif text-3xl font-bold tabular-nums text-orange-800">{{ n.valor }}</p>
-        <p class="mt-2 text-sm text-stone-500">{{ n.legenda }}</p>
+    <dl class="m-0 grid gap-3 sm:grid-cols-3">
+      <div v-for="n in numeros" :key="n.legenda" class="flex flex-col-reverse gap-1 rounded-mbb-xl border border-line bg-white p-5 sm:p-6">
+        <dt class="text-sm leading-5 text-ink-muted">{{ n.legenda }}</dt>
+        <dd class="m-0 text-[30px] font-extrabold leading-9 tracking-[-0.025em] tabular-nums text-ink sm:text-[36px] sm:leading-[42px]">{{ n.valor }}</dd>
       </div>
-    </div>
+    </dl>
 
-    <div class="prose prose-stone mt-10 max-w-none">
+    <div class="prose prose-lg max-w-[680px] text-ink prose-p:text-ink">
       <p>
         Nosso website já está no ar desde 2012, com design moderno e estrutura responsiva. No
         Facebook temos o maior grupo de bairros de BH, sempre em crescimento e com alto volume de

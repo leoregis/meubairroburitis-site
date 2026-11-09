@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ORGANIZACAO_SCHEMA } from '~/constants/institucional'
+import { ORGANIZACAO_SCHEMA, URL_SITE } from '~/constants/institucional'
 
-const tituloHome = 'Meu Bairro Buritis — Anuncie no Buritis e Estoril'
+// Redesign (fase 2): a home passa a ser editorial -- conteúdo primeiro, o
+// funil do anunciante no bloco "Para empresas" e no "Anuncie" fixo do
+// cabeçalho. Title/description aprovados pelo Leo (decisão 1 do
+// docs/redesign/plano.md); a intenção "anunciar" fica com a /loja.
+const tituloHome = 'Meu Bairro Buritis — Notícias e guia do Buritis e Estoril'
 const descricaoHome =
-  'A maior comunidade online do Buritis e Estoril desde 2012. Mais de 150 mil pessoas no Facebook e mais de 55 mil no Instagram. Anuncie sua empresa com quem realmente vive o bairro.'
+  'Notícias, empresas e serviços do Buritis e do Estoril, em BH, desde 2012. A maior comunidade do bairro: 150 mil+ no Facebook e 55 mil+ no Instagram.'
 
 // og:image precisa ser URL absoluta -- WhatsApp/Facebook não resolvem
 // caminho relativo, e a home saía sem preview nenhum ao ser compartilhada.
@@ -16,30 +20,37 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
+// Organization (como antes) + WebSite (decisão 2). Sem SearchAction por
+// enquanto: a /busca é noindex e roda no navegador.
 useJsonLd({
-  ...ORGANIZACAO_SCHEMA,
-  sameAs: [
-    'https://www.instagram.com/meubairroburitis/',
-    'https://www.facebook.com/MeuBairroBuritis/',
-    'https://www.tiktok.com/@meubairroburitis',
+  '@graph': [
+    {
+      ...ORGANIZACAO_SCHEMA,
+      sameAs: [
+        'https://www.instagram.com/meubairroburitis/',
+        'https://www.facebook.com/MeuBairroBuritis/',
+        'https://www.tiktok.com/@meubairroburitis',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${URL_SITE}/#website`,
+      name: 'Meu Bairro Buritis',
+      url: `${URL_SITE}/`,
+      inLanguage: 'pt-BR',
+      publisher: { '@id': ORGANIZACAO_SCHEMA['@id'] },
+    },
   ],
 })
 </script>
 
 <template>
-  <div>
-    <HomeHeroConversao />
-    <HomeNumerosDestaque />
-    <HomeAppDestaque />
-    <HomePacotesComparativo />
-    <HomeInstagramEmbed />
-    <HomeUltimasNoticias />
-    <!-- depois das notícias de propósito: o topo da home é o funil do
-    anunciante (hero -> números -> app -> pacotes) e não deve ser empurrado;
-    notícias + vitrine do comércio formam o bloco de conteúdo pro morador. -->
-    <HomeGuiaLocalDestaque />
-    <HomeDepoimentos />
-    <HomeTimeSection />
-    <HomeMidiakitResumo />
+  <div class="mx-auto flex max-w-[1248px] flex-col gap-10 px-4 pb-16 pt-4 sm:gap-16 sm:px-6 sm:pb-[72px] sm:pt-8">
+    <HomeHero />
+    <HomeUltimas />
+    <HomeCanais />
+    <HomeGuia />
+    <HomeEspacoPublicitario />
+    <HomeParaEmpresas />
   </div>
 </template>

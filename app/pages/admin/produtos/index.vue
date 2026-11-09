@@ -11,13 +11,14 @@ interface ProdutoAdmin {
   ativo: boolean
 }
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 
 const produtos = ref<ProdutoAdmin[]>([])
 const carregando = ref(true)
 
 async function carregar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   carregando.value = true
   const { data } = await $supabase
@@ -40,6 +41,7 @@ function pedirConfirmacaoExclusao(produto: ProdutoAdmin) {
 }
 
 async function confirmarExclusao() {
+  const $supabase = await obterSupabase()
   if (!produtoParaExcluir.value || !$supabase) return
   // só republica se o item excluído estava no ar
   const estavaNoAr = produtoParaExcluir.value.ativo

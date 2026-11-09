@@ -47,6 +47,12 @@
         ],
         "createdAt": "2026-10-05T17:57:10.420Z",
         "reason": "Claude: L77 is a regex literal matching <img> tags in getHTML() output, not a rendered image"
+      },
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-10-29T20:59:47.081Z",
+        "reason": "user confirmed: o Leo definiu Plus Jakarta Sans no briefing do redesign (mesma fonte da marca do app Guia Buritis)"
       }
     ]
   }

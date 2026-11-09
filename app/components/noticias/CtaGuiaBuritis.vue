@@ -7,7 +7,7 @@ defineProps<{ noticia: Noticia }>()
 <template>
   <p
     v-if="noticia.cta_texto && noticia.cta_href"
-    class="mt-8 rounded-lg bg-stone-50 p-4 text-sm text-stone-600"
+    class="m-0 rounded-mbb-lg bg-ground p-4 text-[15px] leading-[23px] text-ink"
   >
     {{ noticia.cta_texto }}
     <!-- /guia/ é o app separado (meubairro-app), fora do router deste site
@@ -17,7 +17,7 @@ defineProps<{ noticia: Noticia }>()
       :href="noticia.cta_href"
       target="_blank"
       rel="noopener noreferrer"
-      class="font-semibold text-orange-700 hover:underline"
+      class="font-bold text-brand-ink underline-offset-2 hover:underline"
     >
       Guia Buritis
     </a>

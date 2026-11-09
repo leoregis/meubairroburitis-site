@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Editar notícia — Admin Meu Bairro Buritis' })
 const route = useRoute()
 const noticiaId = route.params.id as string
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
@@ -18,6 +18,7 @@ const dados = ref<DadosNoticiaForm>({
   conteudo: '',
   imagem_destaque_url: '',
   imagem_destaque_alt: '',
+  imagem_destaque_credito: '',
   categoria: '',
   categoria_id: '',
   subcategoria_guia_id: '',
@@ -43,6 +44,7 @@ const salvando = ref(false)
 const erro = ref('')
 
 onMounted(async () => {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   const { data, error: erroCarregar } = await $supabase
     .from('noticias')
@@ -73,6 +75,7 @@ onMounted(async () => {
     conteudo: data.conteudo ?? '',
     imagem_destaque_url: data.imagem_destaque_url ?? '',
     imagem_destaque_alt: data.imagem_destaque_alt ?? '',
+    imagem_destaque_credito: data.imagem_destaque_credito ?? '',
     categoria: data.categoria ?? '',
     categoria_id: data.categoria_id ?? '',
     subcategoria_guia_id: data.subcategoria_guia_id ?? '',
@@ -88,6 +91,7 @@ onMounted(async () => {
 })
 
 async function salvar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   salvando.value = true
   erro.value = ''
@@ -103,6 +107,7 @@ async function salvar() {
       conteudo: dados.value.conteudo,
       imagem_destaque_url: dados.value.imagem_destaque_url || null,
       imagem_destaque_alt: dados.value.imagem_destaque_alt || null,
+      imagem_destaque_credito: dados.value.imagem_destaque_credito?.trim() || null,
       categoria: dados.value.categoria || null,
       categoria_id: dados.value.categoria_id || null,
       subcategoria_guia_id: dados.value.categoria_id === 'guias' ? (dados.value.subcategoria_guia_id || null) : null,

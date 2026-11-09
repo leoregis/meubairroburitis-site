@@ -21,7 +21,7 @@ const fontes = computed(() => {
 </script>
 
 <template>
-  <div class="mt-10 border-t border-stone-200 pt-4 text-sm text-stone-500">
+  <div class="flex flex-col gap-1 border-t border-line pt-4 text-sm leading-[21px] text-ink-muted [&_p]:m-0">
     <p>Publicado em {{ formatarDataNoticia(noticia.data_publicacao) }}</p>
     <p v-if="noticia.atualizado_em_editorial">Atualizado em {{ formatarDataNoticia(noticia.atualizado_em_editorial) }}</p>
     <p v-if="noticia.tipo_conteudo === 'guia' && noticia.ultima_verificacao">
@@ -29,27 +29,27 @@ const fontes = computed(() => {
     </p>
     <p v-if="noticia.autor">Por {{ noticia.autor }}</p>
 
-    <div v-if="fontes.length" class="mt-2">
+    <div v-if="fontes.length" class="mt-1">
       Fontes consultadas:
       <template v-for="(fonte, i) in fontes" :key="fonte.href">
-        <a :href="fonte.href" target="_blank" rel="noopener noreferrer" class="text-orange-700 hover:underline">{{ fonte.texto }}</a><span v-if="i < fontes.length - 1">, </span>
+        <a :href="fonte.href" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand-ink underline-offset-2 hover:underline">{{ fonte.texto }}</a><span v-if="i < fontes.length - 1">, </span>
       </template>
     </div>
 
-    <p v-if="noticia.tipo_conteudo === 'guia'" class="mt-2">
+    <p v-if="noticia.tipo_conteudo === 'guia'" class="!mt-1">
       Este guia reúne estabelecimentos e prestadores de serviço do Buritis e do Estoril com base em
       pesquisa própria e informações públicas. A inclusão não representa recomendação editorial nem
       indica parceria comercial, e a ordem de apresentação não é um ranking. Preços, horários e
       endereços podem mudar — confirme diretamente com o estabelecimento antes de ir.
     </p>
 
-    <p class="mt-2">
+    <p class="!mt-1">
       Encontrou uma informação desatualizada ou incorreta?
       <a
         :href="`https://wa.me/${config.public.whatsappNumero}`"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-orange-700 underline hover:no-underline"
+        class="font-semibold text-brand-ink underline underline-offset-2 hover:no-underline"
       >Avise a gente</a>.
     </p>
   </div>

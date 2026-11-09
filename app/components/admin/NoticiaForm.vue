@@ -6,6 +6,7 @@ export interface DadosNoticiaForm {
   conteudo: string
   imagem_destaque_url: string
   imagem_destaque_alt: string
+  imagem_destaque_credito: string
   categoria: string
   categoria_id: string
   subcategoria_guia_id: string
@@ -32,7 +33,7 @@ const emit = defineEmits<{ salvar: [] }>()
 // direto nos campos).
 const modelo = defineModel<DadosNoticiaForm>({ required: true })
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 
 const { data: categorias } = await useCategorias()
 const { data: subcategoriasGuia } = await useSubcategoriasGuia()
@@ -100,6 +101,7 @@ const enviandoImagem = ref(false)
 const erroImagem = ref('')
 
 async function selecionarImagemDestaque(e: Event) {
+  const $supabase = await obterSupabase()
   const arquivo = (e.target as HTMLInputElement).files?.[0]
   if (!arquivo || !$supabase) return
 
@@ -226,6 +228,14 @@ const limiteMetaDescricao = 160
         v-model="modelo.imagem_destaque_alt"
         type="text"
         placeholder="Texto alternativo da imagem (importante pra SEO e acessibilidade)"
+        class="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
+      />
+      <!-- crédito opcional: a matéria mostra "Foto: <crédito>" só quando preenchido -->
+      <input
+        v-model="modelo.imagem_destaque_credito"
+        type="text"
+        aria-label="Crédito da foto (opcional)"
+        placeholder="Crédito da foto (opcional) -- ex.: Léo Orrico, Divulgação"
         class="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
       />
     </div>

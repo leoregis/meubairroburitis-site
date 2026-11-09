@@ -1,0 +1,22 @@
+// Prévia do redesign (docs/redesign/plano.md, seção 3) -- Worker só com
+// arquivos estáticos, como a Central MBB. Não tem nada a ver com o deploy
+// da produção (FTP, deploy.yml): é publicado à mão por
+// `node deploy/previa/publicar.mjs`, de qualquer máquina com o wrangler logado.
+{
+  "$schema": "https://unpkg.com/wrangler@4.146.0/config-schema.json",
+  "name": "mbb-site-previa",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "../../.output/public",
+    // igual ao .htaccess da produção: /canais/ -> 301 -> /canais
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "previa.meubairroburitis.com.br", "custom_domain": true }
+  ],
+  // um endereço só (o previa.), sem *.workers.dev nem URLs de versão
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false }
+}

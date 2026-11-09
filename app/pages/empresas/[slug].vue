@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { linkTelefoneEmpresa, linkWhatsappEmpresa } from '~/utils/telefone'
-import { nomeDiaSemana, formatarHora } from '~/composables/useEmpresasPrestadores'
+import { formatarHora } from '~/composables/useEmpresasPrestadores'
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -12,12 +12,6 @@ if (!empresa.value) {
 }
 
 const DIAS_SCHEMA_ORG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-// só marcado depois de montar no client -- SSR sempre renderiza "sem
-// destaque" (determinístico), evita mismatch de hidratação entre o dia do
-// build e o dia real de quem visita.
-const diaAtual = ref<number | null>(null)
-onMounted(() => { diaAtual.value = new Date().getDay() })
 
 const descricaoTexto = computed(() => empresa.value?.descricao?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || undefined)
 
@@ -41,7 +35,6 @@ const linkGuia = computed(() => `https://meubairroburitis.com.br/guia/empresa/${
 const imagemHero = computed(() => empresa.value?.imagem_hero || empresa.value?.imagens?.[0] || null)
 
 const temLocalizacao = computed(() => Boolean(empresa.value?.latitude && empresa.value?.longitude))
-const temLinksSecundarios = computed(() => Boolean(empresa.value?.website || empresa.value?.instagram || empresa.value?.ifood_url))
 
 useSeoMeta({
   title: () => tituloSeo.value,
@@ -102,179 +95,140 @@ useJsonLd({
     { '@type': 'ListItem', position: 3, name: empresa.value.nome, item: canonicalUrl.value },
   ],
 })
+// --- redesign (fase 4) ---------------------------------------------------
+// Foto de destaque = 1ª da galeria (nenhuma empresa tem imagem_hero hoje),
+// pelo IPX no build (useFotoGuia). É o LCP: preload + prioridade alta.
+const fotoDestaque = computed(() => useFotoGuia()(imagemHero.value))
+if (fotoDestaque.value) {
+  useHead({ link: [{ rel: 'preload', as: 'image', href: fotoDestaque.value, fetchpriority: 'high', key: 'foto-empresa' }] })
+}
+const logo = computed(() => useFotoGuia()(empresa.value?.logo_url, MINIATURA_GUIA, MINIATURA_GUIA))
+const iniciais = computed(() => (empresa.value?.nome ?? '').split(/\s+/).filter((p) => /\p{L}/u.test(p[0] ?? '')).slice(0, 2).map((p) => p[0]!.toUpperCase()).join(''))
+const linkInstagram = computed(() => (empresa.value?.instagram ? `https://instagram.com/${empresa.value.instagram}` : null))
 </script>
 
 <template>
-  <div v-if="empresa">
-    <!-- Hero -->
-    <div class="relative z-0 h-56 w-full overflow-hidden bg-stone-800 sm:h-80">
-      <NuxtPicture
-        v-if="imagemHero"
-        :src="imagemHero"
-        :alt="empresa.nome"
-        format="avif,webp"
-        :width="1400"
-        :height="500"
-        fetchpriority="high"
+  <div v-if="empresa" class="mx-auto flex max-w-[1080px] flex-col gap-6 px-4 pb-16 pt-5 sm:gap-8 sm:px-6 sm:pb-[72px] sm:pt-8">
+    <nav aria-label="Breadcrumb" class="text-sm text-ink-muted">
+      <ol class="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
+        <li><NuxtLink to="/" class="hover:text-ink hover:underline">Início</NuxtLink></li>
+        <li aria-hidden="true">›</li>
+        <li><NuxtLink to="/empresas" class="hover:text-ink hover:underline">Empresas</NuxtLink></li>
+        <li aria-hidden="true">›</li>
+        <li class="truncate text-ink" aria-current="page">{{ empresa.nome }}</li>
+      </ol>
+    </nav>
+
+    <!-- foto de destaque (a 1ª da galeria), proporção fixa: sem salto de layout -->
+    <div v-if="fotoDestaque" class="overflow-hidden rounded-[18px] bg-chip sm:rounded-mbb-xl">
+      <img
+        :src="fotoDestaque"
+        :alt="`Foto de ${empresa.nome}`"
+        width="960"
+        height="540"
         loading="eager"
-        :img-attrs="{ class: 'absolute inset-0 h-full w-full object-cover' }"
-        class="absolute inset-0 h-full w-full"
-      />
-      <div v-else class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-stone-800 to-stone-900">
-        <img v-if="empresa.logo_url" :src="empresa.logo_url" :alt="empresa.nome" class="h-24 w-24 rounded-2xl object-cover shadow-lg sm:h-32 sm:w-32" />
-      </div>
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        fetchpriority="high"
+        class="aspect-[16/9] h-auto w-full object-cover sm:aspect-[21/9]"
+      >
     </div>
 
-    <div class="mx-auto max-w-3xl px-4">
-      <!-- Cabeçalho sobreposto ao hero -->
-      <div class="relative z-10 -mt-12 flex items-end gap-4 sm:-mt-16">
-        <img
-          v-if="empresa.logo_url && imagemHero"
-          :src="empresa.logo_url"
-          :alt="empresa.nome"
-          class="h-20 w-20 shrink-0 rounded-full border-4 border-white bg-white object-cover shadow-md sm:h-28 sm:w-28"
-        />
-      </div>
-
-      <nav class="mt-4 flex flex-wrap items-center gap-1 text-sm text-stone-500" aria-label="Breadcrumb">
-        <NuxtLink to="/" class="hover:text-orange-700">Início</NuxtLink>
-        <span aria-hidden="true">/</span>
-        <NuxtLink to="/empresas" class="hover:text-orange-700">Empresas</NuxtLink>
-        <span aria-hidden="true">/</span>
-        <span class="text-stone-700">{{ empresa.nome }}</span>
-      </nav>
-
-      <div class="mt-3 flex flex-wrap items-center gap-3">
-        <h1 class="text-balance font-serif text-3xl font-bold text-stone-900 sm:text-4xl">
-          {{ empresa.nome }}<template v-if="unidade"><span class="sr-only"> – </span><span class="block text-lg font-semibold text-stone-600 sm:text-xl">Unidade {{ unidade }}</span></template>
-        </h1>
-        <span
-          v-if="empresa.funciona_24h || empresa.aberto_agora"
-          class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-        >
-          {{ empresa.funciona_24h ? 'Aberto 24 horas' : 'Aberto agora' }}
-        </span>
-        <span v-else class="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600">
-          Fechado no momento
-        </span>
-      </div>
-
-      <NuxtLink
-        v-if="empresa.categoria_slug"
-        :to="`/empresas/categoria/${empresa.categoria_slug}`"
-        class="mt-2 inline-block text-sm font-semibold uppercase tracking-wide text-orange-700 hover:underline"
+    <header class="flex items-start gap-4">
+      <img
+        v-if="logo"
+        :src="logo"
+        :alt="`Logo de ${empresa.nome}`"
+        width="96"
+        height="96"
+        class="h-[72px] w-[72px] flex-none rounded-mbb-xl border border-line bg-white object-cover sm:h-24 sm:w-24"
       >
-        {{ empresa.categoria_nome }}<template v-if="empresa.subcategoria_nome"> · {{ empresa.subcategoria_nome }}</template>
-      </NuxtLink>
-      <p v-else-if="empresa.categoria_nome" class="mt-2 text-sm font-semibold uppercase tracking-wide text-orange-700">
-        {{ empresa.categoria_nome }}<template v-if="empresa.subcategoria_nome"> · {{ empresa.subcategoria_nome }}</template>
-      </p>
+      <span v-else class="flex h-[72px] w-[72px] flex-none items-center justify-center rounded-mbb-xl border border-line bg-ground text-2xl font-extrabold text-ink-muted sm:h-24 sm:w-24" aria-hidden="true">{{ iniciais }}</span>
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <NuxtLink
+          v-if="empresa.categoria_slug"
+          :to="`/empresas/categoria/${empresa.categoria_slug}`"
+          class="self-start text-xs font-bold uppercase tracking-[0.1em] text-brand-ink hover:underline"
+        >
+          {{ empresa.categoria_nome }}<template v-if="empresa.subcategoria_nome"> · {{ empresa.subcategoria_nome }}</template>
+        </NuxtLink>
+        <p v-else-if="empresa.categoria_nome" class="m-0 text-xs font-bold uppercase tracking-[0.1em] text-brand-ink">
+          {{ empresa.categoria_nome }}<template v-if="empresa.subcategoria_nome"> · {{ empresa.subcategoria_nome }}</template>
+        </p>
+        <h1 class="m-0 text-balance text-[28px] font-extrabold leading-[34px] tracking-[-0.025em] text-ink sm:text-[40px] sm:leading-[46px]">
+          {{ empresa.nome }}<template v-if="unidade"><span class="sr-only"> – </span><span class="block text-lg font-semibold tracking-normal text-ink-muted sm:text-xl">Unidade {{ unidade }}</span></template>
+        </h1>
+        <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
+          <BaseNota v-if="empresa.total_avaliacoes > 0" :nota="Number(empresa.nota_media)" :total="empresa.total_avaliacoes" />
+          <span v-else>Ainda sem avaliações</span>
+          <span v-if="empresa.funciona_24h" class="rounded-full bg-success-tint px-2.5 py-0.5 text-xs font-bold text-success-ink">Aberto 24 horas</span>
+        </p>
+      </div>
+    </header>
 
-      <!-- Descrição -- antes do contato (a Fase 5 original punha contato
-      primeiro; mudou por decisão do Leo: primeiro quem é, depois como falar). -->
-      <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-if="empresa.descricao" class="prose prose-stone mt-8 max-w-none text-stone-600" v-html="empresa.descricao" />
+    <!-- contato: só os botões que têm dado; telefone/WhatsApp de empresa são
+    públicos (empresa não tem opt-in de contato, decisão da Fase 2) -->
+    <div v-if="empresa.whatsapp || empresa.telefone || temLocalizacao || empresa.endereco || empresa.instagram || empresa.website || empresa.ifood_url" class="flex flex-wrap gap-2">
+      <a
+        v-if="empresa.whatsapp"
+        :href="linkWhatsappEmpresa(empresa.whatsapp)"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex min-h-[48px] flex-[1_1_100%] items-center justify-center gap-2 rounded-mbb-md bg-success-ink px-5 text-[15px] font-bold text-white transition-colors hover:bg-[#145530] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:flex-none"
+      >
+        <Icon name="simple-icons:whatsapp" class="h-5 w-5" aria-hidden="true" />
+        Chamar no WhatsApp<span class="sr-only"> (abre em nova aba)</span>
+      </a>
+      <BaseBotao v-if="empresa.telefone" :href="linkTelefoneEmpresa(empresa.telefone)" variante="contorno" class="flex-1 sm:flex-none">
+        <Icon name="lucide:phone" class="h-[18px] w-[18px]" aria-hidden="true" />
+        Ligar
+      </BaseBotao>
+      <BaseBotao
+        v-if="temLocalizacao || empresa.endereco"
+        :href="temLocalizacao ? `https://www.google.com/maps/dir/?api=1&destination=${empresa.latitude},${empresa.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(empresa.endereco ?? '')}`"
+        variante="contorno"
+        nova-aba
+        class="flex-1 sm:flex-none"
+      >
+        <Icon name="lucide:navigation" class="h-[18px] w-[18px]" aria-hidden="true" />
+        Rota
+      </BaseBotao>
+      <BaseBotao v-if="linkInstagram" :href="linkInstagram" variante="contorno" nova-aba class="flex-1 sm:flex-none">
+        <Icon name="lucide:instagram" class="h-[18px] w-[18px]" aria-hidden="true" />
+        Instagram
+      </BaseBotao>
+      <BaseBotao v-if="empresa.website" :href="empresa.website" variante="contorno" nova-aba class="flex-1 sm:flex-none">
+        <Icon name="lucide:globe" class="h-[18px] w-[18px]" aria-hidden="true" />
+        Site
+      </BaseBotao>
+      <BaseBotao v-if="empresa.ifood_url" :href="empresa.ifood_url" variante="contorno" nova-aba class="flex-1 sm:flex-none">
+        <Icon name="lucide:shopping-bag" class="h-[18px] w-[18px]" aria-hidden="true" />
+        iFood
+      </BaseBotao>
+    </div>
 
-      <!-- Contato -->
-      <section class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 font-serif text-lg font-bold text-stone-900">Contato</h2>
-        <!-- telefone/whatsapp de empresa sempre visíveis -- empresa não tem
-        opt-in de contato (decisão da Fase 2). -->
-        <div class="flex flex-wrap gap-3">
-          <a
-            v-if="empresa.whatsapp"
-            :href="linkWhatsappEmpresa(empresa.whatsapp)"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#20bd5a]"
-          >
-            WhatsApp
-          </a>
-          <a
-            v-if="empresa.telefone"
-            :href="linkTelefoneEmpresa(empresa.telefone)"
-            class="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50"
-          >
-            Ligar
-          </a>
-        </div>
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+      <div class="flex min-w-0 flex-col gap-8">
+        <section v-if="empresa.descricao" aria-labelledby="sobre-titulo" class="flex flex-col gap-3">
+          <h2 id="sobre-titulo" class="m-0 border-b border-line pb-3 text-xl font-extrabold tracking-[-0.015em] text-ink">Sobre</h2>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="prose max-w-none text-[16px] leading-[26px] text-ink prose-p:my-3 prose-a:text-brand-ink" v-html="empresa.descricao" />
+        </section>
 
-        <div v-if="temLinksSecundarios" class="mt-4 flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4 text-sm">
-          <!-- ícones (mesmo set lucide do rodapé) em vez de texto; o nome vai
-          no aria-label/title pra leitor de tela e tooltip. 44px de área de toque. -->
-          <a
-            v-if="empresa.instagram"
-            :href="`https://instagram.com/${empresa.instagram}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="`Instagram de ${empresa.nome}`"
-            title="Instagram"
-            class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-          >
-            <Icon name="lucide:instagram" class="h-5 w-5" aria-hidden="true" />
-          </a>
-          <a
-            v-if="empresa.website"
-            :href="empresa.website"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="`Site de ${empresa.nome}`"
-            title="Site"
-            class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 text-stone-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
-          >
-            <Icon name="lucide:globe" class="h-5 w-5" aria-hidden="true" />
-          </a>
-          <a v-if="empresa.ifood_url" :href="empresa.ifood_url" target="_blank" rel="noopener noreferrer" class="font-medium text-orange-700 hover:underline">iFood</a>
-        </div>
-      </section>
+        <DiretorioHorario v-if="empresa.horarios.length" :horarios="empresa.horarios" :funciona24h="empresa.funciona_24h" />
 
-      <!-- Galeria -->
-      <section v-if="empresa.imagens.length" class="mt-8">
-        <h2 class="mb-3 font-serif text-lg font-bold text-stone-900">Fotos</h2>
-        <UiLightbox :imagens="empresa.imagens" :alt="empresa.nome" />
-      </section>
+        <DiretorioMapa :endereco="empresa.endereco" :latitude="empresa.latitude" :longitude="empresa.longitude" :nome="empresa.nome" />
 
-      <!-- Horário -->
-      <section v-if="empresa.horarios.length" class="mt-8 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-3 font-serif text-lg font-bold text-stone-900">Horário de funcionamento</h2>
-        <ul class="divide-y divide-stone-100 text-sm">
-          <li
-            v-for="h in empresa.horarios"
-            :key="h.dia_semana"
-            class="flex justify-between py-1.5"
-            :class="h.dia_semana === diaAtual ? 'font-semibold text-orange-700' : 'text-stone-600'"
-          >
-            <span>{{ nomeDiaSemana(h.dia_semana) }}</span>
-            <span v-if="h.fechado">Fechado</span>
-            <span v-else>{{ formatarHora(h.hora_abertura) }} – {{ formatarHora(h.hora_fechamento) }}</span>
-          </li>
-        </ul>
-      </section>
+        <!-- galeria depois do horário e do endereço: as fotos originais (100-330 KB)
+        não disputam a banda com o topo da página no celular -->
+        <section v-if="empresa.imagens.length" aria-labelledby="fotos-titulo" class="flex flex-col gap-3">
+          <h2 id="fotos-titulo" class="m-0 border-b border-line pb-3 text-xl font-extrabold tracking-[-0.015em] text-ink">Fotos</h2>
+          <UiLightbox :imagens="empresa.imagens" :alt="empresa.nome" />
+        </section>
+      </div>
 
-      <!-- Localização -->
-      <section v-if="empresa.endereco || temLocalizacao" class="mt-8">
-        <h2 class="mb-3 font-serif text-lg font-bold text-stone-900">Localização</h2>
-        <p v-if="empresa.endereco" class="mb-3 text-sm text-stone-600">{{ empresa.endereco }}</p>
-        <UiMapaEmbed v-if="temLocalizacao" :latitude="empresa.latitude!" :longitude="empresa.longitude!" :nome="empresa.nome" />
-      </section>
-
-      <!-- Avaliações -->
-      <p class="mt-8 text-sm text-stone-500">
-        <template v-if="empresa.total_avaliacoes > 0">
-          ⭐ <span class="font-semibold text-stone-700">{{ empresa.nota_media.toFixed(1) }}</span> · {{ empresa.total_avaliacoes }} avaliaç{{ empresa.total_avaliacoes === 1 ? 'ão' : 'ões' }}
-        </template>
-        <template v-else>Ainda sem avaliações</template>
-      </p>
-
-      <p class="my-10 rounded-2xl bg-stone-50 p-5 text-sm text-stone-600">
-        Veja mais detalhes, avaliações e outras empresas do bairro no
-        <!-- /guia/ é o app separado (meubairro-app), fora do router deste
-        site -- <a> comum, não NuxtLink (mesmo padrão de CtaGuiaBuritis.vue). -->
-        <a :href="linkGuia" target="_blank" rel="noopener noreferrer" class="font-semibold text-orange-700 hover:underline">
-          Guia Buritis
-        </a>.
-      </p>
+      <div class="flex flex-col gap-6">
+        <DiretorioAppGuia :link="linkGuia" :nome="empresa.nome" />
+        <DiretorioDono tipo="empresa" :link="linkGuia" />
+      </div>
     </div>
   </div>
 </template>

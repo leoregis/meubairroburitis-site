@@ -16,33 +16,33 @@ const modelo = defineModel<{ nome: string; telefone: string; email: string; empr
     </div>
 
     <div>
-      <label class="mb-1 block text-sm font-medium text-stone-700" for="nome">Nome completo</label>
+      <label class="mb-1 block text-sm font-bold text-ink" for="nome">Nome completo</label>
       <input
         id="nome"
         v-model="modelo.nome"
         type="text"
         required
-        class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+        class="min-h-[44px] w-full rounded-mbb-md border border-line px-3 py-2 text-ink focus:border-ink focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink"
       />
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-stone-700" for="telefone">WhatsApp</label>
+      <label class="mb-1 block text-sm font-bold text-ink" for="telefone">WhatsApp</label>
       <input
         id="telefone"
         v-model="modelo.telefone"
         type="tel"
         placeholder="31990000000"
         required
-        class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+        class="min-h-[44px] w-full rounded-mbb-md border border-line px-3 py-2 text-ink focus:border-ink focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink"
       />
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-stone-700" for="email">E-mail (opcional)</label>
+      <label class="mb-1 block text-sm font-bold text-ink" for="email">E-mail (opcional)</label>
       <input
         id="email"
         v-model="modelo.email"
         type="email"
-        class="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-orange-500 focus:outline-none"
+        class="min-h-[44px] w-full rounded-mbb-md border border-line px-3 py-2 text-ink focus:border-ink focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink"
       />
     </div>
   </div>

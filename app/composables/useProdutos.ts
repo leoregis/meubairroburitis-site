@@ -16,9 +16,10 @@ export interface Produto {
 }
 
 export function useProdutos() {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData('produtos', async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return PRODUTOS_SEED
 
     const { data, error } = await $supabase
@@ -33,9 +34,10 @@ export function useProdutos() {
 }
 
 export function useProduto(slug: string) {
-  const { $supabase } = useNuxtApp()
+  const obterSupabase = useSupabaseSite()
 
   return useAsyncData(`produto-${slug}`, async () => {
+    const $supabase = await obterSupabase()
     if (!$supabase) return PRODUTOS_SEED.find((p) => p.slug === slug) ?? null
 
     const { data, error } = await $supabase

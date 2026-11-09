@@ -11,13 +11,14 @@ interface NoticiaAdmin {
   criado_em: string
 }
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 
 const noticias = ref<NoticiaAdmin[]>([])
 const carregando = ref(true)
 
 async function carregar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   carregando.value = true
   const { data } = await $supabase
@@ -40,6 +41,7 @@ function pedirConfirmacaoExclusao(noticia: NoticiaAdmin) {
 }
 
 async function confirmarExclusao() {
+  const $supabase = await obterSupabase()
   if (!noticiaParaExcluir.value || !$supabase) return
   // só republica se o item excluído estava no ar
   const estavaNoAr = noticiaParaExcluir.value.status === 'publicado'

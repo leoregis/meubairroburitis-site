@@ -4,7 +4,7 @@ import type { DadosProdutoForm } from '~/components/admin/ProdutoForm.vue'
 definePageMeta({ middleware: 'admin', ssr: false, layout: 'admin' })
 useSeoMeta({ title: 'Novo produto — Admin Meu Bairro Buritis' })
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
@@ -24,6 +24,7 @@ const salvando = ref(false)
 const erro = ref('')
 
 async function salvar() {
+  const $supabase = await obterSupabase()
   if (!$supabase || dados.value.preco_reais === null) return
   salvando.value = true
   erro.value = ''

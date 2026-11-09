@@ -227,6 +227,11 @@ try {
   completo(`erro lendo o banco: ${e.message}`)
 }
 
+// redesign (fase 2): a /busca leva no payload o índice de notícias, empresas
+// e prestadores (useIndiceBusca). Tudo que regera a home mexeu num desses
+// (ou num produto, que não está no índice -- regerar a mais não faz mal).
+if (regerar.has('/')) regerar.add('/busca')
+
 for (const r of remover) regerar.delete(r)
 if (regerar.size + remover.size > LIMITE_ROTAS) completo(`${regerar.size + remover.size} rotas (limite ${LIMITE_ROTAS})`)
 

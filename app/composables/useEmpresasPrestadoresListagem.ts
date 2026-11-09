@@ -45,10 +45,11 @@ export interface CategoriaOpcao {
 }
 
 export function useEmpresasPagina(pagina: number, categoriaSlug?: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const chave = `empresas-pagina-${pagina}-${categoriaSlug || 'todas'}`
 
   return useAsyncData(chave, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return { itens: [] as EmpresaListagemItem[], totalPaginas: 1 }
 
     const de = (pagina - 1) * ITENS_POR_PAGINA
@@ -70,10 +71,11 @@ export function useEmpresasPagina(pagina: number, categoriaSlug?: string) {
 }
 
 export function usePrestadoresPagina(pagina: number, categoriaSlug?: string) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const chave = `prestadores-pagina-${pagina}-${categoriaSlug || 'todos'}`
 
   return useAsyncData(chave, async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return { itens: [] as PrestadorListagemItem[], totalPaginas: 1 }
 
     const de = (pagina - 1) * ITENS_POR_PAGINA
@@ -105,16 +107,21 @@ export function normalizarBusca(texto: string | null | undefined) {
 }
 
 export function useBuscaDiretorio<T>(view: string, camposPesquisaveis: (item: T) => (string | null)[]) {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
   const termo = ref('')
   const todos = shallowRef<T[] | null>(null)
   const carregando = ref(false)
   const erro = ref(false)
 
   async function carregar() {
-    if (todos.value || carregando.value || !$meubairroApp) return
+    if (todos.value || carregando.value) return
     carregando.value = true
     erro.value = false
+    const $meubairroApp = await obterGuia()
+    if (!$meubairroApp) {
+      carregando.value = false
+      return
+    }
     const { data, error } = await $meubairroApp.from(view).select('*').order('nome', { ascending: true })
     carregando.value = false
     if (error) {
@@ -150,9 +157,10 @@ export const QUANTIDADE_DESTAQUE_HOME = 6
 const UNIDADES_FORA_DO_DESTAQUE = [569]
 
 export function useEmpresasDestaqueHome() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('empresas-destaque-home', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as EmpresaListagemItem[]
 
     const { data, error } = await $meubairroApp
@@ -170,9 +178,10 @@ export function useEmpresasDestaqueHome() {
 }
 
 export function usePrestadoresDestaqueHome() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('prestadores-destaque-home', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as PrestadorListagemItem[]
 
     const { data, error } = await $meubairroApp
@@ -188,10 +197,50 @@ export function usePrestadoresDestaqueHome() {
   })
 }
 
+// Home (redesign, fase 2) -- totais de empresas e prestadores e as
+// categorias com mais cadastros de cada tipo, para os chips. Só as colunas
+// de categoria: o payload leva apenas o resumo, não as ~800 linhas.
+export interface CategoriaComTotal { nome: string; slug: string; total: number; tipo: 'empresas' | 'prestadores' }
+
+export function useResumoDiretorioHome(categoriasPorTipo = 4) {
+  const obterGuia = useSupabaseGuia()
+
+  return useAsyncData('diretorio-resumo-home', async () => {
+    const $meubairroApp = await obterGuia()
+    const vazio = { totalEmpresas: 0, totalPrestadores: 0, categorias: [] as CategoriaComTotal[] }
+    if (!$meubairroApp) return vazio
+
+    const [empresas, prestadores] = await Promise.all([
+      $meubairroApp.from('vw_empresas_publico_listagem').select('categoria_nome, categoria_slug', { count: 'exact' }).range(0, 4999),
+      $meubairroApp.from('vw_prestadores_publico_listagem').select('categoria_nome, categoria_slug', { count: 'exact' }).range(0, 4999),
+    ])
+    if (empresas.error) throw empresas.error
+    if (prestadores.error) throw prestadores.error
+
+    function maisFrequentes(linhas: { categoria_nome: string | null; categoria_slug: string | null }[], tipo: CategoriaComTotal['tipo']) {
+      const contagem = new Map<string, CategoriaComTotal>()
+      for (const l of linhas) {
+        if (!l.categoria_slug || !l.categoria_nome) continue
+        const c = contagem.get(l.categoria_slug) || { nome: l.categoria_nome, slug: l.categoria_slug, total: 0, tipo }
+        c.total++
+        contagem.set(l.categoria_slug, c)
+      }
+      return [...contagem.values()].sort((a, b) => b.total - a.total).slice(0, categoriasPorTipo)
+    }
+
+    return {
+      totalEmpresas: empresas.count ?? empresas.data?.length ?? 0,
+      totalPrestadores: prestadores.count ?? prestadores.data?.length ?? 0,
+      categorias: [...maisFrequentes(empresas.data ?? [], 'empresas'), ...maisFrequentes(prestadores.data ?? [], 'prestadores')],
+    }
+  })
+}
+
 export function useCategoriasEmpresa() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('empresas-categorias-todas-listagem', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as CategoriaOpcao[]
 
     const { data, error } = await $meubairroApp
@@ -205,9 +254,10 @@ export function useCategoriasEmpresa() {
 }
 
 export function useCategoriasPrestador() {
-  const { $meubairroApp } = useNuxtApp()
+  const obterGuia = useSupabaseGuia()
 
   return useAsyncData('prestadores-categorias-todas-listagem', async () => {
+    const $meubairroApp = await obterGuia()
     if (!$meubairroApp) return [] as CategoriaOpcao[]
 
     const { data, error } = await $meubairroApp

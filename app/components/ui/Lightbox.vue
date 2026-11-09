@@ -39,7 +39,7 @@ onUnmounted(() => window.removeEventListener('keydown', aoTeclar))
         v-for="(url, i) in imagens"
         :key="i"
         type="button"
-        class="aspect-square h-32 w-32 shrink-0 overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 sm:h-40 sm:w-40"
+        class="aspect-square h-32 w-32 shrink-0 overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ink sm:h-40 sm:w-40"
         :aria-label="`Ampliar foto ${i + 1} de ${alt}`"
         @click="abrir(i)"
       >

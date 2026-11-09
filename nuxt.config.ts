@@ -22,7 +22,9 @@ export default defineNuxtConfig({
       // /termos-e-condicoes (Fase 7d) tem o mesmo problema -- só existe
       // pra receber o redirect da URL antiga do WordPress, sem link em
       // nenhuma página navegável ainda.
-      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes'],
+      // /busca (redesign, fase 2) também entra direto: o índice dela é
+      // montado no build e o botão do cabeçalho é o único link até ela.
+      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes', '/busca'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.
@@ -53,6 +55,9 @@ export default defineNuxtConfig({
     // .htaccess) -- existe só pra ser servida como erro, nunca deve
     // aparecer no sitemap nem ser indexada como se fosse conteúdo.
     '/pagina-nao-encontrada': { robots: false },
+    // busca do site (redesign, fase 2): página de resultados, nunca indexada
+    // nem no sitemap -- o conteúdo dela são links para páginas que já estão lá.
+    '/busca': { robots: false },
   },
 
   // combinado com routeRules acima, o manifesto client-side de route-rules
@@ -63,8 +68,13 @@ export default defineNuxtConfig({
     appManifest: false,
   },
 
+  // Redesign (29/10/2026): sem @nuxt/ui. O site não usava nenhum componente
+  // dele -- só o Tailwind que ele registrava (agora direto, abaixo) e o plugin
+  // de tipografia (agora no tailwind.config). O resto que ele trazia (color-
+  // mode, Headless UI, forms/aspect-ratio/container-queries e a escala de cor
+  // "primary") pesava CSS e JS em toda página sem uso.
   modules: [
-    '@nuxt/ui',
+    '@nuxtjs/tailwindcss',
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxtjs/seo',
@@ -72,6 +82,13 @@ export default defineNuxtConfig({
 
   icon: {
     serverBundle: false,
+    // redesign: os ícones usados nos componentes vão no JS do cliente. Sem
+    // isso, um ícone que só aparece no navegador (ex.: o X do menu do
+    // celular, montado ao abrir) era buscado na API do Iconify em tempo de
+    // execução -- chegava tarde, e a CSP da prévia só libera a API por isso.
+    clientBundle: {
+      scan: true,
+    },
   },
 
   // Storage do Supabase do site (upload de capas pelo admin) liberado no
@@ -79,14 +96,49 @@ export default defineNuxtConfig({
   // 1200x630 (ver noticias/[slug].vue), em vez de apontar pro PNG original
   // de 1.6-2.3MB que o WhatsApp não usa como thumbnail.
   image: {
-    domains: ['peusailkyxqbhgdgmqyk.supabase.co'],
+    // site (capas) e Guia (fotos de empresas, fase 4 do redesign)
+    domains: ['peusailkyxqbhgdgmqyk.supabase.co', 'xtmwatregednbuupfdbl.supabase.co'],
+    // redesign (fase 3): capas das notícias redimensionadas pelo IPX NO
+    // BUILD (arquivos estáticos em _ipx/, sem custo e sem depender do
+    // Supabase em tempo de execução) -- ver composables/useCapaNoticia.ts.
+    // O apelido deixa a URL sem "https:" no caminho: /_ipx/<mods>/capas/...
+    // (no Windows a pasta "https:" não pode ser criada e o arquivo sumia).
+    // O og:image das notícias continua com a URL completa de sempre.
+    // /guia-fotos: a foto de destaque da página da empresa (a 1ª da galeria),
+    // uma largura só (ver composables/useFotoGuia.ts).
+    alias: {
+      'capas': 'https://peusailkyxqbhgdgmqyk.supabase.co/storage/v1/object/public',
+      'guia-fotos': 'https://xtmwatregednbuupfdbl.supabase.co/storage/v1/object/public',
+    },
   },
 
-  // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxt/ui v2 já
-  // instala o @nuxtjs/tailwindcss, que injeta o próprio tailwind.css (com
+  // sem `css: ['~/assets/css/main.css']` de propósito: o @nuxtjs/tailwindcss
+  // (antes instalado pelo @nuxt/ui) injeta o próprio tailwind.css (com
   // @tailwind base/components/utilities). O main.css repetia as mesmas 3
   // diretivas -- o Tailwind inteiro saía DUAS vezes inline no <head> de
-  // toda página (~220KB antes das tags og:*).
+  // toda página (~220KB antes das tags og:*). O fonte.css (redesign) só tem
+  // @font-face, sem nenhuma diretiva @tailwind.
+  css: ['~/assets/css/fonte.css'],
+
+  // CSS embutido em cada HTML (o padrão do Nuxt). Na fase 4 o CSS externo
+  // tinha vencido, medido na prévia em páginas com imagem como LCP. Na fase 6
+  // (30/10), com as duas versões servidas do mesmo jeito e navegador real com
+  // celular emulado, o CSS externo atrasava a 1ª pintura das páginas de texto:
+  // ela esperava o arquivo de CSS, que disputava a banda com o JS. Junto com
+  // tirar o preload da fonte e a fonte de fallback com local(), o LCP da /loja
+  // caiu de 2,19 para 1,26 s, o do /quem-somos de 2,13 para 1,28 s e o do
+  // /expediente de 1,77 para 1,11 s. Detalhes em docs/redesign/lighthouse-antes.md.
+  features: {
+    inlineStyles: true,
+  },
+
+  // tokens da marca. Dentro de app/ (e não na raiz, onde o módulo procura
+  // por padrão) para entrar no hash do MBB_BUILD_ID do deploy.yml, que só
+  // olha app/, nuxt.config.ts e package*.json: CSS novo com buildId antigo
+  // misturaria estilos num build incremental.
+  tailwindcss: {
+    configPath: '~/tailwind.config',
+  },
 
   app: {
     head: {
@@ -155,8 +207,10 @@ export default defineNuxtConfig({
     name: 'Meu Bairro Buritis',
     defaultLocale: 'pt-BR',
     // MBB_STAGING=1 (deploy-staging.yml): o build de teste em /_staging_test/
-    // sai com noindex, nofollow em toda página.
-    ...(process.env.MBB_STAGING === '1' ? { indexable: false } : {}),
+    // sai com noindex, nofollow em toda página. MBB_PREVIA=1 (prévia do
+    // redesign, deploy/previa/): idem, e o robots.txt da prévia sai com
+    // Disallow: / -- o canonical continua apontando pra produção (site.url).
+    ...(process.env.MBB_STAGING === '1' || process.env.MBB_PREVIA === '1' ? { indexable: false } : {}),
   },
 
   // geração automática de OG image via satori está quebrando no build
@@ -181,6 +235,10 @@ export default defineNuxtConfig({
       // NUXT_PUBLIC_SUPABASE_URL acima (que é o do site).
       meubairroAppSupabaseUrl: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_URL || '',
       meubairroAppSupabaseAnonKey: process.env.NUXT_PUBLIC_MEUBAIRRO_APP_SUPABASE_ANON_KEY || '',
+      // prévia do redesign (deploy/previa/): lê o banco de produção, mas não
+      // pode gravar nada nele -- ver usePrevia() e as travas no carrinho,
+      // em /meus-pedidos e em /links.
+      previa: process.env.MBB_PREVIA === '1',
     },
   },
 

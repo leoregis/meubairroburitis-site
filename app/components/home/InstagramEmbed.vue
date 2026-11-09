@@ -17,20 +17,33 @@ const posts = [
 </script>
 
 <template>
-  <section class="mx-auto max-w-5xl px-4 py-16 text-center">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-700">No Instagram</p>
-    <h2 class="mt-2 text-balance text-2xl font-bold text-stone-900 sm:text-3xl">
-      Um pouco do que já publicamos
-    </h2>
+  <section aria-labelledby="instagram-titulo" class="mx-auto max-w-[1248px] px-4 py-14 sm:px-6 sm:py-16">
+    <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-line pb-3">
+      <div class="flex flex-col gap-2">
+        <BaseEyebrow>No Instagram</BaseEyebrow>
+        <h2 id="instagram-titulo" class="m-0 text-balance text-[26px] font-extrabold leading-8 tracking-[-0.02em] text-ink sm:text-[34px] sm:leading-[40px]">
+          Um pouco do que já publicamos
+        </h2>
+      </div>
+      <a
+        href="https://www.instagram.com/meubairroburitis/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex min-h-[44px] items-center text-sm font-bold text-brand-ink hover:text-brand-deep hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
+      >
+        Ver mais no @meubairroburitis →
+        <span class="sr-only">(abre em nova aba)</span>
+      </a>
+    </div>
 
-    <div class="mt-8 grid grid-cols-2 gap-2 sm:gap-6 lg:grid-cols-3">
+    <div class="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
       <a
         v-for="post in posts"
         :key="post.id"
         :href="post.permalink"
         target="_blank"
         rel="noopener noreferrer"
-        class="group block overflow-hidden rounded-xl shadow-sm transition hover:shadow-md sm:rounded-2xl"
+        class="group block overflow-hidden rounded-mbb-lg border border-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:rounded-mbb-xl"
       >
         <NuxtPicture
           :src="`/instagram/${post.id}.jpg`"
@@ -42,14 +55,5 @@ const posts = [
         />
       </a>
     </div>
-
-    <a
-      href="https://www.instagram.com/meubairroburitis/"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="mt-8 inline-block text-sm font-semibold text-orange-700 hover:underline"
-    >
-      Ver mais no @meubairroburitis →
-    </a>
   </section>
 </template>

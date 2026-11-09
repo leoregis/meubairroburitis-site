@@ -7,7 +7,7 @@ useSeoMeta({ title: 'Editar produto — Admin Meu Bairro Buritis' })
 const route = useRoute()
 const produtoId = route.params.id as string
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
@@ -30,6 +30,7 @@ const salvando = ref(false)
 const erro = ref('')
 
 onMounted(async () => {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   const { data, error: erroCarregar } = await $supabase
     .from('produtos')
@@ -59,6 +60,7 @@ onMounted(async () => {
 })
 
 async function salvar() {
+  const $supabase = await obterSupabase()
   if (!$supabase || dados.value.preco_reais === null) return
   salvando.value = true
   erro.value = ''

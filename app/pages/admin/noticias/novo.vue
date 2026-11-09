@@ -4,7 +4,7 @@ import type { DadosNoticiaForm } from '~/components/admin/NoticiaForm.vue'
 definePageMeta({ middleware: 'admin', ssr: false, layout: 'admin' })
 useSeoMeta({ title: 'Nova notícia — Admin Meu Bairro Buritis' })
 
-const { $supabase } = useNuxtApp()
+const obterSupabase = useSupabaseSite()
 const { dispararDeploy, avisarSemPublicacao, fecharAviso, aviso } = useDispararDeploy()
 const router = useRouter()
 
@@ -15,6 +15,7 @@ const dados = ref<DadosNoticiaForm>({
   conteudo: '',
   imagem_destaque_url: '',
   imagem_destaque_alt: '',
+  imagem_destaque_credito: '',
   categoria: '',
   categoria_id: '',
   subcategoria_guia_id: '',
@@ -32,6 +33,7 @@ const salvando = ref(false)
 const erro = ref('')
 
 onMounted(async () => {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   const { data: sessao } = await $supabase.auth.getSession()
   if (!sessao.session) return
@@ -46,6 +48,7 @@ onMounted(async () => {
 })
 
 async function salvar() {
+  const $supabase = await obterSupabase()
   if (!$supabase) return
   salvando.value = true
   erro.value = ''
@@ -59,6 +62,7 @@ async function salvar() {
       conteudo: dados.value.conteudo,
       imagem_destaque_url: dados.value.imagem_destaque_url || null,
       imagem_destaque_alt: dados.value.imagem_destaque_alt || null,
+      imagem_destaque_credito: dados.value.imagem_destaque_credito?.trim() || null,
       categoria: dados.value.categoria || null,
       categoria_id: dados.value.categoria_id || null,
       subcategoria_guia_id: dados.value.categoria_id === 'guias' ? (dados.value.subcategoria_guia_id || null) : null,

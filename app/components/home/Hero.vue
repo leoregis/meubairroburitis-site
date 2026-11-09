@@ -3,7 +3,8 @@
 // + preload, sem lazy, e tamanhos responsivos pelo IPX. No celular o quadro
 // é quase quadrado e a foto (3:2) é cortada pelas laterais (object-cover):
 // por isso "150vw" -- a imagem precisa ser 1,5x mais larga que a tela para
-// cobrir a altura sem esticar. A foto é do Leo; o crédito fica sempre.
+// cobrir a altura sem esticar. A foto é do Leo; o crédito sobre a foto saiu
+// a pedido dele em 09/11/2026, depois da publicação do redesign.
 //
 // srcset montado à mão: o `sizes` do <NuxtImg> não entende "150vw" (gerava
 // larguras de 2px) e ampliava a foto até 2400px. O original tem 1200x800,
@@ -34,9 +35,6 @@ useHead({
       decoding="async"
       class="absolute inset-0 -z-10 h-full w-full object-cover"
     >
-    <span class="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white sm:right-[18px] sm:top-4">
-      Foto: Léo Orrico
-    </span>
 
     <div class="m-3 flex max-w-[720px] flex-col gap-2 rounded-[18px] bg-ink/[0.82] p-[18px] text-white sm:m-6 sm:gap-3.5 sm:rounded-mbb-xl sm:px-8 sm:py-7">
       <BaseEyebrow tom="escuro">

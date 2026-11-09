@@ -1,6 +1,6 @@
 # Fase 7: plano de publicação do redesign
 
-Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Data: terça, 10/11/2026, às 10:00** (reserva: quarta, 11/11, às 10:00). **Nada da publicação foi executado.** Cada passo marcado "Leo" precisa de você; o resto eu faço na sessão da publicação.
+Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Data: segunda, 09/11/2026**, antecipada pelo Leo no próprio dia; antes estava marcada para terça 10/11 às 10:00, com reserva na quarta 11/11. **Nada da publicação foi executado.** Cada passo marcado "Leo" precisa de você; o resto eu faço na sessão da publicação.
 
 ## 1. Antes do dia (até a véspera)
 
@@ -81,7 +81,8 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
   - o Leo não publica nada no admin entre o merge e o fim do deploy.
 
   Cuidado com a fila: ela não espera, e um disparo dela entraria na fila do grupo `deploy-producao` logo atrás do merge. O Guia também dispara deploy quando uma empresa é criada ou ativada: conferir antes, sem como bloquear.
-- **Escolhido pelo Leo:** terça 10/11/2026 às 10:00; reserva quarta 11/11 às 10:00. Disponibilidade dele até umas 12:00.
+- **Escolhido pelo Leo:** segunda 09/11/2026, decidido no próprio dia; antes estava marcada para terça 10/11 às 10:00, com reserva na quarta 11/11.
+  - **Janela de 09/11:** às 11:20 o agendado do dia (iniciado às 11:12) estava rodando; pela regra, o merge espera ele terminar.
 
 ## 3. Passo a passo no dia
 
@@ -127,7 +128,7 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
   - `/loja/*`, `/empresas/*` e `/noticias/*` (prefixo do caminho).
 
   Resultado em `cwv-antes.md` e `cwv-antes.json`.
-- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17 --eventos` (7 dias), com a variação em %, rodado em 17/11 (o Cloudflare só guarda os eventos completos por ~8 dias). Grupo com menos de 50 medições de LCP estende para 14 dias: 2ª semana extraída em 24/11 e somada à 1ª.
+- **(b) Depois:** `--desde 2026-11-10 --ate 2026-11-17 --eventos` (7 dias, mantido pelo Leo com a publicação em 09/11: o dia da troca fica fora dos dois lados, e o "antes" foi congelado às ~13:30 UTC de 09/11, antes do merge), com a variação em %, rodado em 17/11 (o Cloudflare só guarda os eventos completos por ~8 dias). Grupo com menos de 50 medições de LCP estende para 14 dias: 2ª semana extraída em 24/11 e somada à 1ª.
 - **(c) Gatilho de reversão:** o LCP p75 real piorar **mais de 20%** em qualquer grupo com **50 ou mais medições**. **Confirmado pelo Leo em 09/11**, com os limites do `cwv-antes.md` (todos os aparelhos):
   - site inteiro (sem `/guia/`): 1,26 s, gatilho acima de 1,51 s;
   - `/empresas/*`: 1,50 s, gatilho acima de 1,80 s;
@@ -176,7 +177,7 @@ Preparado em 30/10/2026 e atualizado com as decisões do Leo da mesma data. **Da
 
 ## 7. O que eu preciso de você
 
-1. **Estar disponível na terça 10/11, das 10:00 às 12:00** (ou na quarta 11/11, se a terça não der).
+1. **Estar disponível na segunda 09/11**, do merge até o fim das checagens: ~1h30 depois do fim do agendado.
 2. **Confirmar a proposta da amostra mínima** do gatilho de reversão (seção 4).
 3. **Dizer "pode fazer o merge"** na sessão, depois de ver o resumo do PR.
 4. **Não publicar nada no admin** durante os ~51 min do deploy.

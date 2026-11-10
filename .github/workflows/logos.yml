@@ -1,0 +1,21 @@
+name: logos
+on:
+  push:
+    branches: [logos-tmp]
+    paths: [logos.txt]
+permissions:
+  contents: write
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p out
+          while read id url; do
+            curl -sfL "$url" -o /tmp/l || continue
+            convert /tmp/l[0] -auto-orient -resize 96x96^ -gravity center -extent 96x96 -quality 82 out/$id.webp || true
+          done < logos.txt
+          ls out | wc -l; du -sh out
+          git config user.name "logos-bot"; git config user.email "logos-bot@users.noreply.github.com"
+          git add out && git commit -qm "logos 96px" && git push

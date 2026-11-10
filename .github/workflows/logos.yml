@@ -2,7 +2,6 @@ name: logos
 on:
   push:
     branches: [logos-tmp]
-    paths: [logos.txt]
 permissions:
   contents: write
 jobs:
@@ -10,12 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: pip install pillow
       - run: |
-          mkdir -p out
-          while read id url; do
-            curl -sfL "$url" -o /tmp/l || continue
-            convert /tmp/l[0] -auto-orient -resize 96x96^ -gravity center -extent 96x96 -quality 82 out/$id.webp || true
-          done < logos.txt
-          ls out | wc -l; du -sh out
+          python3 - <<'PY'
+          import os, io, urllib.request
+          from PIL import Image, ImageOps
+          os.makedirs('out', exist_ok=True); ok = 0
+          for line in open('logos.txt'):
+              i, url = line.split()
+              try:
+                  b = urllib.request.urlopen(url, timeout=30).read()
+                  im = ImageOps.exif_transpose(Image.open(io.BytesIO(b))).convert('RGBA')
+                  im = ImageOps.fit(im, (96, 96), Image.LANCZOS)
+                  bg = Image.new('RGBA', im.size, (255, 255, 255, 255)); bg.alpha_composite(im)
+                  bg.convert('RGB').save(f'out/{i}.webp', quality=80); ok += 1
+              except Exception as e:
+                  print('falhou', i, e)
+          print('ok', ok)
+          PY
           git config user.name "logos-bot"; git config user.email "logos-bot@users.noreply.github.com"
           git add out && git commit -qm "logos 96px" && git push

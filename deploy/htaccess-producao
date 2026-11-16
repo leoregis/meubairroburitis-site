@@ -36,6 +36,11 @@ RewriteRule ^wordpress_backup_2026/ - [F,L]
 # (a de barra final, mais abaixo, mandaria pra versao sem barra e 404).
 RewriteRule ^politica-de-privacidade/?$ https://meubairroburitis.com.br/guia/privacidade/ [R=301,L]
 
+# Regras da comunidade (16/11/2026): o bot do WhatsApp mandava
+# meubairroburitis.com.br/regras, que nunca existiu (404). As regras ficam no
+# Guia, em /guia/comunidade/. Com e sem barra, antes da regra de barra final.
+RewriteRule ^regras/?$ https://meubairroburitis.com.br/guia/comunidade/ [R=301,L]
+
 # og:image das noticias (29/set): o IPX gera JPEG mas o arquivo mantem o
 # nome/extensao da capa original (.png, do Storage), entao o Apache servia
 # "image/png" com conteudo JPEG. Navegador e WhatsApp toleram; outros

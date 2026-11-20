@@ -43,7 +43,7 @@ try {
 }
 if (!Array.isArray(itens) || itens.length === 0) completo('sem itens')
 
-const TIPOS = { site: ['noticia', 'produto'], guia: ['empresa', 'prestador'] }
+const TIPOS = { site: ['noticia', 'produto', 'game'], guia: ['empresa', 'prestador'] }
 for (const i of itens) {
   const origem = i.o || 'site'
   if (i.t === 'estrutura') completo(`mudança de estrutura (${i.id || 'categorias'})`)
@@ -149,6 +149,10 @@ try {
       regerar.add('/')
       regerar.add('/loja')
     }
+
+    // jogos (20/11/2026): todos vivem numa página só, /games (sem página
+    // própria por jogo; o card leva para o link do jogo)
+    if (itensSite.some((i) => i.t === 'game')) regerar.add('/games')
   }
 
   // -------------------------------------------------------------- Guia

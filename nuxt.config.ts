@@ -24,7 +24,8 @@ export default defineNuxtConfig({
       // nenhuma página navegável ainda.
       // /busca (redesign, fase 2) também entra direto: o índice dela é
       // montado no build e o botão do cabeçalho é o único link até ela.
-      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes', '/busca'],
+      // /games (20/11/2026) ainda não tem link no menu: entra direto também.
+      routes: ['/', '/sitemap.xml', '/links', '/pagina-nao-encontrada', '/termos-e-condicoes', '/busca', '/games'],
       // não deixa um link quebrado (ou externo/cross-app, como /guia/)
       // abortar o build inteiro — só evita que aquela rota específica saia
       // do build, o resto continua normalmente.
